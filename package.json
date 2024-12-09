@@ -4,6 +4,10 @@
   "description": "",
   "main": "server/server.js",
   "dependencies": {
+    "sharp": "*"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "*"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
