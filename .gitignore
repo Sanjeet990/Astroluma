@@ -140,3 +140,4 @@ server/app
 app
 storage
 
+**/package-lock.json
