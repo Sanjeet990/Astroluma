@@ -15,7 +15,7 @@ exports.doLogin = async (req, res) => {
     if (!error) {
         try {
             // Find the user by username
-            const user = await User.findOne({ username });
+            const user = await User.findOne({ username: new RegExp(`^${username}$`, 'i') });
 
             if (user) {
                 // Check if the password matches
