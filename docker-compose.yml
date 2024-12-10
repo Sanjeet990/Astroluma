@@ -21,7 +21,7 @@ services:
     network_mode: "host" ## is important to function the network scanning. The bridge mode puts it behind NAT and the host mode puts it on the same network as the host.
 
   mongodb:
-    image: mongo:6.0
+    image: mongo:4.0 ##More recent versions of MongoDB needs AVX2 support, so it's better to use the 4.0 version.
     container_name: astroluma_mongodb
     ports:
       - "27017:27017"
