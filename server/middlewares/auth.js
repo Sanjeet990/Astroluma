@@ -24,7 +24,7 @@ exports.verifyToken = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.SECRET || "SomeRandomStringSecret");
 
         // Find user by username
-        const user = await User.findOne({ username: decoded.username }).exec();
+        const user = await User.findOne({ username: new RegExp(`^${decoded.username}$`, 'i') }).exec();
 
         if (user) {
             // Records found, handle the result
