@@ -8,6 +8,10 @@ A powerful, self-hosted home lab dashboard built with the MERN stack.
 
 Astroluma is a feature-rich, user-friendly dashboard designed to help you manage multiple aspects of your daily tasks and services. Built with flexibility in mind, it allows you to control various features like task management, device monitoring, app integration, and real-time weather updates, all from a single platform. With its responsive design and dynamic configuration options, Astroluma offers a unique blend of customization, usability, and productivity.
 
+> [!IMPORTANT]  
+> Astroluma doe not work with ARM devices for the time being. Please follow this issue for update: https://github.com/Sanjeet990/Astroluma/issues/5
+
+
 ![Listing View](https://getastroluma.com/assets/images/1-d3f32aa2f73f3fbba0ad15bc58bfa2b4.png)
 
 ## Features
