@@ -31,7 +31,7 @@ exports.saveAccount = async (req, res) => {
     try {
         if (!userId) {
             // Check if username exists
-            const existingUser = await User.findOne({ username });
+            const existingUser = await User.findOne({ username: new RegExp(`^${username}$`, 'i') });
 
             if (existingUser) {
                 return res.status(400).json({
