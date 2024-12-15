@@ -1,8 +1,10 @@
 const fs = require('fs');
+const vm = require('vm');
 const path = require('path');
 const Integration = require('../models/Integration');
 const Listing = require('../models/Listing');
 const CryptoJS = require('crypto-js');
+const allowedModules = require('../utils/allowedModules');
 
 exports.listInstalledApps = (req, res) => {
     const userId = req.user?._id;
@@ -160,6 +162,7 @@ exports.removeApp = async (req, res) => {
 }
 
 exports.runIntegratedApp = async (req, res) => {
+    
     const userId = req.user?._id;
     let appId = req.params.appId;
     let listingId = req.params.listingId;
@@ -167,19 +170,16 @@ exports.runIntegratedApp = async (req, res) => {
     if (appId === 'undefined') appId = null;
     if (listingId === 'undefined') listingId = null;
 
-    //put a validation
     if (!appId || !listingId) {
         return res.status(400).send();
     }
 
-    //find listing info
     try {
         const [integration, listing] = await Promise.all([
             Integration.findOne({ userId, _id: appId }),
             Listing.findOne({ userId, _id: listingId })
         ]);
 
-        //if any of these empty
         if (!integration || !listing) {
             return res.status(400).send();
         }
@@ -188,25 +188,12 @@ exports.runIntegratedApp = async (req, res) => {
             return res.status(400).send();
         }
 
-        const modulePath = `../apps/${integration.appId}/app.js`;
-
-        // Dynamically require the module
-        let appModule;
-        try {
-            appModule = require(modulePath);
-        } catch (error) {
-            return res.status(401).send();
-        }
-
-        // Ensure the module has the initialize function
-        if (typeof appModule.initialize !== 'function') {
-            return res.status(402).send();
-        }
+        const modulePath = path.join(__dirname, `../apps/${integration.appId}/app.js`);
+        const moduleCode = fs.readFileSync(modulePath, 'utf8');
 
         const decryptedBytes = CryptoJS.AES.decrypt(integration.config, process.env.SECRET_KEY);
         const decryptedConfig = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
 
-        // Put the config in the req object
         req.config = decryptedConfig;
         req.payload = listing;
 
@@ -251,15 +238,41 @@ exports.runIntegratedApp = async (req, res) => {
             sendError
         }
 
+        const sandbox = {
+            application,
+            require: (module) => {
+                if (!allowedModules.includes(module)) {
+                    throw new Error(`Importing of module '${module}' is not allowed.`);
+                }
+                return require(module);
+            },
+            console,
+            setTimeout,
+            setInterval,
+            clearTimeout,
+            clearInterval,
+            global: {
+                eval: undefined,   // Disable eval
+                Function: undefined,
+            }
+        };
+
         try {
-            await appModule.initialize(application);
+            const script = new vm.Script(moduleCode);
+            const context = new vm.createContext(sandbox);
+            script.runInContext(context);
+            if (typeof sandbox.global.initialize === 'function') {
+                await sandbox.global.initialize(application);
+            } else {
+                console.log("No initialize function found.");
+                return res.status(400).send();
+            }
         } catch (error) {
             console.log(error);
             return res.status(400).send();
         }
-    }
-    catch (err) {
-        //console.log(err);
+    } catch (err) {
+        console.log(err);
         return res.status(400).send();
     }
 }

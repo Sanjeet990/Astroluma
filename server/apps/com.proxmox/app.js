@@ -1,14 +1,14 @@
 const axios = require('axios');
 const https = require('https');
 
-exports.initialize = async (application) => {
+const initialize = async (application) => {
 
     const username = application?.config?.username;
     const password = application?.config?.password;
     const realm = application?.config?.realm;
 
     const listingUrl = application?.payload?.localUrl || application?.config?.listingUrl;
-    
+
     const sanitizedListingUrl = listingUrl.endsWith('/') ? listingUrl.slice(0, -1) : listingUrl;
 
     const proxmoxURL = `${sanitizedListingUrl}/api2/json`;
@@ -19,7 +19,7 @@ exports.initialize = async (application) => {
         })
     });
 
-    //get sonar setup here
+    //get proxmox setup here
     try {
 
         const response = await axiosInstance.post(`${proxmoxURL}/access/ticket`, {
@@ -73,3 +73,5 @@ exports.initialize = async (application) => {
     }
 
 }
+
+global.initialize = initialize;
