@@ -147,6 +147,8 @@ exports.removeApp = async (req, res) => {
             //also remove association from listing
             await Listing.updateMany({ integration: appId }, { integration: null });
 
+            await AppSetting.deleteMany({ appId });
+
             return res.status(200).json({
                 error: false,
                 message: "Integration removed."
