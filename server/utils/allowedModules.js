@@ -1,7 +1,7 @@
 module.exports = [
     // Node.js Built-in Modules (Safe Subset)
-    'assert', 'buffer', 'crypto', 'dns', 'events', 'fs', 'http', 'https', 
-    'os', 'path', 'querystring', 'stream', 'timers', 'url', 'util', 'zlib',
+    'assert', 'buffer', 'crypto', 'dns', 'events', 'http', 'https', 
+    'querystring', 'stream', 'timers', 'url', 'util', 'zlib',
     'readline', 'string_decoder', 'perf_hooks',
 
     // Common Third-party Libraries
@@ -12,10 +12,8 @@ module.exports = [
     'uuid',          // Generate unique identifiers
     'date-fns',      // Modern date utility library
     'debug',         // Debugging utility
-    'dotenv',        // Load environment variables
     'node-fetch',    // Fetch API for Node.js
     'form-data',     // Handling form data
-    'xml2js',        // XML to JSON and vice versa
     'jsonschema',    // JSON schema validation
     'jsonwebtoken',  // JSON Web Token utilities
     'bcrypt',        // Password hashing

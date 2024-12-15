@@ -5,6 +5,7 @@ const Integration = require('../models/Integration');
 const Listing = require('../models/Listing');
 const CryptoJS = require('crypto-js');
 const allowedModules = require('../utils/allowedModules');
+const AppSetting = require('../models/AppSetting');
 
 exports.listInstalledApps = (req, res) => {
     const userId = req.user?._id;
@@ -230,9 +231,30 @@ exports.runIntegratedApp = async (req, res) => {
             return res.status(errorCode).send(errorMessage);
         }
 
+        const setSettings = async (key, value) => {
+            const settings = await AppSetting.findOne({ settingsKey: key, appId, userId });
+            if (settings) {
+                settings.settingsValue = value;
+                await settings.save();
+            } else {
+                await new AppSetting({ settingsKey: key, settingsValue: value, appId, userId }).save();
+            }
+        }
+
+        const getSettings = async (key, defaultValue = null) => {
+            const settings = await AppSetting.findOne({ settingsKey: key, appId, userId });
+            if (settings) {
+                return settings.settingsValue;
+            } else {
+                return defaultValue;
+            }
+        }
+
         const application = {
             config: decryptedConfig,
             payload: listing,
+            setSettings,
+            getSettings,
             req,
             sendResponse,
             sendError
