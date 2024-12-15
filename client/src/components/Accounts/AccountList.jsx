@@ -77,7 +77,7 @@ const AccountList = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="w-full"
+        className="w-full mt-4"
       >
         <ul className="space-y-4 w-full">
           {
@@ -97,14 +97,15 @@ const AccountList = () => {
                     initial={{ x: -100, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.2 * user._id }}
-                    className="border-internalCardBorder bg-internalCardBg text-internalCardText shadow-md rounded-lg p-2 flex justify-between items-center w-full md:p-4" >
-                    <div className="flex space-x-2 mt-2 md:mt-0 mr-auto">
-                      <h2 className=" text-sm md:text-base">{user.username}</h2>
-                      <p className="text-sm md:text-base">{user.fullName}</p>
+                    className="border-internalCardBorder bg-internalCardBg text-internalCardText shadow-md rounded-lg p-2 flex flex-col md:flex-row justify-between items-start md:items-center w-full md:p-4"
+                  >
+                    <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mt-2 md:mt-0 mr-auto">
+                      <div className="text-base md:text-base">{user.fullName}</div>
+                      <div className="text-sm md:text-base md:ml-4">({user.username})</div>
                     </div>
                     <div className="flex space-x-2 mt-2 md:mt-0 ml-auto">
                       <NiceLink
-                        label='Edit'
+                        label="Edit"
                         className="bg-buttonGeneric text-buttonText"
                         to={`/manage/accounts/${user._id}`}
                       />
@@ -115,7 +116,7 @@ const AccountList = () => {
                         disabled={user.isSuperAdmin}
                       />
                       <NiceButton
-                        label="Change Password"
+                        label="Reset Password"
                         className="bg-buttonSuccess text-buttonText"
                         onClick={() => changePassword(user._id)}
                       />
