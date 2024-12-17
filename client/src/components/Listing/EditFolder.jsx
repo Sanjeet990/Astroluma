@@ -49,8 +49,8 @@ const EditFolder = () => {
                     setShowInSidebar(data?.message?.listing?.inSidebar);
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
-                    if (data?.message?.listing?.listingIcon) {
-                        setSelectedImage({ iconPath: data?.message?.listing?.listingIcon });
+                    if (data?.message?.listing?.listingIconItem) {
+                        setSelectedImage(data?.message?.listing?.listingIconItem );
                     }
 
                     if (data?.message?.listing?.listingType !== "category") {
@@ -74,16 +74,15 @@ const EditFolder = () => {
     const handleFormSubmit = () => {
 
 
-        if (!folderName || !selectedImage?.iconPath) {
+        if (!folderName || !selectedImage) {
             makeToast("warning", "Please fill all the fields");
             return;
         }
 
         //Call the API to store the data
-        const iconPath = selectedImage ? selectedImage.iconPath : "folder";
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/folder', { listingId, parentId, folderName, folderIcon: iconPath, showInSidebar, showOnFeatured }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/folder', { listingId, parentId, folderName, folderIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token)
             .then(() => {
                 setSelectedImage(null);
                 setFolderName("");

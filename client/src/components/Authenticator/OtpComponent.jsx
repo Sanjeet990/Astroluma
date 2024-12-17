@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { useRecoilState } from 'recoil';
-import { selectedAuthState } from '../../atoms';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { colorThemeState, selectedAuthState } from '../../atoms';
 import { TOTP } from "totp-generator"
 import ImageView from '../Misc/ImageView';
 import { motion } from 'framer-motion';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceLoader from '../NiceViews/NiceLoader';
+import SystemThemes from '../../utils/SystemThemes';
 
 const OtpComponent = () => {
     const [selectedService, setSelectedService] = useRecoilState(selectedAuthState);
@@ -13,6 +14,14 @@ const OtpComponent = () => {
     const [timeLeft, setTimeLeft] = useState(30);
     const [totalTime, setTotalTime] = useState(30);
     const [otpGenerated, setOtpGenerated] = useState(false);
+
+    const colorTheme = useRecoilValue(colorThemeState);
+    const [themeType, setThemeType] = useState("light");
+
+    useEffect(() => {
+        const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
+        setThemeType(newThemeType);
+    }, [colorTheme]);
 
     useEffect(() => {
         setTimeLeft(30);
@@ -30,10 +39,21 @@ const OtpComponent = () => {
         return () => clearInterval(timer);
     }, [selectedService]);
 
+    const decideTheIcon = useCallback((service) => {
+        const iconObject = service?.listingIconItem;
+
+        if (themeType === "dark" && iconObject?.iconUrlLight) {
+            return iconObject?.iconUrlLight;
+        } else {
+            return iconObject?.iconUrl;
+        }
+
+    }, [themeType]);
+
     return (
         <div className="card mt-4 p-4 bg-authPanelSingleItemBg rounded relative h-112">
             <div className="flex justify-center items-center mb-4">
-                <ImageView alt="Link" src={selectedService.serviceIcon} defaultSrc="/authenticator.png" errorSrc="/authenticator.png" height="100px" width="100px" />
+                <ImageView alt="Link" src={decideTheIcon(selectedService)} defaultSrc="/authenticator.png" errorSrc="/authenticator.png" height="100px" width="100px" />
             </div>
             <h2 className="text-3xl  text-center">{selectedService.serviceName}</h2>
             <span className="mx-2 text-sm text-center block mb-4">

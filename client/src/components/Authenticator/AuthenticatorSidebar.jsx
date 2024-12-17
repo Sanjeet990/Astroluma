@@ -1,16 +1,25 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { IoCloseOutline, IoChevronForward } from "react-icons/io5";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { authListState, authenticatorPanelState, selectedAuthState } from '../../atoms';
+import { authListState, authenticatorPanelState, colorThemeState, selectedAuthState } from '../../atoms';
 import OtpComponent from './OtpComponent';
 import ImageView from '../Misc/ImageView';
 import { motion, AnimatePresence } from 'framer-motion';
 import ClickOutside from '../ClickOutside';
+import SystemThemes from '../../utils/SystemThemes';
 
 const AuthenticatorSidebar = () => {
 
     const setShowAuthenticator = useSetRecoilState(authenticatorPanelState);
     const [selectedService, setSelectedService] = useRecoilState(selectedAuthState);
+
+    const colorTheme = useRecoilValue(colorThemeState);
+    const [themeType, setThemeType] = useState("light");
+
+    useEffect(() => {
+        const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
+        setThemeType(newThemeType);
+    }, [colorTheme]);
 
     const services = useRecoilValue(authListState);
 
@@ -18,6 +27,17 @@ const AuthenticatorSidebar = () => {
         setShowAuthenticator(false);
         setSelectedService(null);
     }
+
+    const decideTheIcon = useCallback((service) => {
+        const iconObject = service?.listingIconItem;
+
+        if (themeType === "dark" && iconObject?.iconUrlLight) {
+            return iconObject?.iconUrlLight;
+        } else {
+            return iconObject?.iconUrl;
+        }
+
+    }, [themeType]);
 
     return (
         <ClickOutside onClick={() => closeAuthenticator()} className="relative">
@@ -59,7 +79,7 @@ const AuthenticatorSidebar = () => {
                                                 transition={{ type: 'spring', stiffness: 300, damping: 20, duration: 0.3, delay: index * 0.1 }}
                                             >
                                                 <div className="flex items-center">
-                                                    <ImageView alt="Link" src={service.serviceIcon} defaultSrc="/authenticator.png" errorSrc="/authenticator.png" height="40px" width="40px" />
+                                                    <ImageView alt="Link" src={decideTheIcon(service)} defaultSrc="/authenticator.png" errorSrc="/authenticator.png" height="40px" width="40px" />
                                                     <div className="flex-col items-start self-start ml-2">
                                                         <span className="mx-2 text-lg text-authPanelSingleItemText">{service.serviceName}</span>
                                                         <span className="mx-2 text-xs block text-authPanelSingleItemText">

@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { imageModalState, loadingState, loginState, reloadDashboardDataState, selectedImageState } from '../../atoms';
+import { loadingState, loginState, reloadDashboardDataState, selectedImageState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
 import { isValidSecretKey, validateOTPAuthURL } from '../../utils/Helper';
 import jsQR from "jsqr";
-import ImageView from '../Misc/ImageView';
 import { Helmet } from 'react-helmet';
 import { useNavigate, useParams } from 'react-router-dom';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
@@ -14,6 +13,7 @@ import NiceBack from '../NiceViews/NiceBack';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceInput from '../NiceViews/NiceInput';
 import makeToast from '../../utils/ToastUtils';
+import NiceUploader from '../NiceViews/NiceUploader';
 
 const EditAuthenticator = () => {
 
@@ -24,8 +24,6 @@ const EditAuthenticator = () => {
 
     const loginData = useRecoilValue(loginState);
     const setLoading = useSetRecoilState(loadingState);
-
-    const setModalState = useSetRecoilState(imageModalState);
 
     const setReloadData = useSetRecoilState(reloadDashboardDataState);
 
@@ -45,7 +43,7 @@ const EditAuthenticator = () => {
             setLoading(true);
             ApiService.get(`/api/v1/totp/${authId}`, loginData?.token)
                 .then(data => {
-                    setSelectedImage({ iconPath: data?.message?.serviceIcon });
+                    setSelectedImage(data?.message?.listingIconItem);
                     setServiceName(data?.message?.serviceName);
                     setAccountName(data?.message?.accountName);
                     setSecretKey(data?.message?.secretKey);
@@ -98,10 +96,8 @@ const EditAuthenticator = () => {
             return;
         }
 
-        const iconPath = selectedImage ? selectedImage.iconPath : serviceIcon;
-
         setLoading(true);
-        ApiService.post('/api/v1/totp/save', { authId, serviceIcon: iconPath, serviceName, secret, accountName }, loginData?.token)
+        ApiService.post('/api/v1/totp/save', { authId, serviceIcon: selectedImage, serviceName, secret, accountName }, loginData?.token)
             .then(() => {
                 makeToast("success", "Service saved.");
                 setServiceIcon("authenticator");
@@ -218,17 +214,12 @@ const EditAuthenticator = () => {
                         <p className="text-center">Upload QR</p>
                     </div>
 
-                    <div className="mb-4">
-                        <label htmlFor="serviceIcon" className="block mb-2">Service Icon</label>
-                        {selectedImage && (
-                            <div role="button" onClick={() => setModalState({ isOpen: true, data: null })} className="flex justify-center items-center mb-4">
-                                <ImageView src={selectedImage.iconPath} alt="Selected Authenticator" defaultSrc="/default.png" errorSrc="/default.png" width="80px" height="80px" className="w-12 h-12 rounded-full" />
-                            </div>
-                        )}
-                        <div role="button" onClick={() => setModalState({ isOpen: true, data: null })} className="appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline bg-inputBg border-inputBorder text-inputText">
-                            Select or upload icon
-                        </div>
-                    </div>
+                    <NiceUploader
+                        label="Service Icon"
+                        selectedImage={selectedImage}
+                        placeholder="Select or upload icon"
+                    />
+
                     <NiceInput
                         label="Service Name"
                         value={serviceName}

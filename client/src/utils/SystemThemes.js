@@ -3,7 +3,7 @@ const SystemThemes = [
     { value: 'themoon', label: 'The Moon', type: 'light', accentColor: '#c9d7e3' },
     { value: 'aurora', label: 'Aurora', type: 'light', accentColor: '#ffffff' },
     { value: 'iceberg', label: 'Iceberg', type: 'light', accentColor: '#ffffff' },
-    { value: 'solarflare', label: 'Solar Flare', type: 'dark', accentColor: '#ff7043' },
+    { value: 'solarflare', label: 'Solar Flare', type: 'light', accentColor: '#ff7043' },
     { value: 'dark', label: 'Dark', type: 'dark', accentColor: '#4a4a4a' },
     { value: 'deepspace', label: 'Deep Space', type: 'dark', accentColor: '#12181f' },
     { value: 'themars', label: 'The Mars', type: 'dark', accentColor: '#3d1a1a' },
