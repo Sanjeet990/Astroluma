@@ -1,25 +1,27 @@
 const axios = require('axios');
 const https = require('https');
 
-exports.initialize = async (application) => {
+const initialize = async (application) => {
 
-    const username = application?.config?.username;
-    const password = application?.config?.password;
-    const realm = application?.config?.realm;
+    const {username, password, realm} = application.config;
 
     const listingUrl = application?.payload?.localUrl || application?.config?.listingUrl;
-    
+
+    if(!username || !password || !realm || !listingUrl) {
+        return await application.sendError(400, 'Please provide all the required configuration parameters');
+    }
+
     const sanitizedListingUrl = listingUrl.endsWith('/') ? listingUrl.slice(0, -1) : listingUrl;
 
     const proxmoxURL = `${sanitizedListingUrl}/api2/json`;
 
     const axiosInstance = axios.create({
         httpsAgent: new https.Agent({
-            rejectUnauthorized: false // Disable SSL verification
+            rejectUnauthorized: false // Disable SSL verification, usually Proxmox is behaind self signed SSL
         })
     });
 
-    //get sonar setup here
+    //get proxmox setup here
     try {
 
         const response = await axiosInstance.post(`${proxmoxURL}/access/ticket`, {
@@ -73,3 +75,5 @@ exports.initialize = async (application) => {
     }
 
 }
+
+global.initialize = initialize;

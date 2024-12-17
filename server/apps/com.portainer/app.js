@@ -1,10 +1,14 @@
 const axios = require('axios');
 
-exports.initialize = async (application) => {
-    const username = application?.config?.username;
-    const password = application?.config?.password;
+const initialize = async (application) => {
+
+    const {username, password} = application.config;
 
     const listingUrl = application?.payload?.listingUrl || application?.payload?.localUrl;
+
+    if(!username || !password || !listingUrl) {
+        return await application.sendError(400, 'Please provide all the required configuration parameters');
+    }
 
     const sanitizedListingUrl = listingUrl.endsWith('/') ? listingUrl.slice(0, -1) : listingUrl;
 
@@ -57,3 +61,5 @@ exports.initialize = async (application) => {
         await application.sendError(400, 'Error in fetching data from Portainer.');
     }
 }
+
+global.initialize = initialize;
