@@ -50,7 +50,7 @@ const App = () => {
   const [themeType, setThemeType] = useState("dark");
   const [accentColor, setAccentColor] = useState("#f5f5f5");
 
-  const colorTheme = useRecoilValue(colorThemeState)
+  const colorTheme = useRecoilValue(colorThemeState);
 
   useEffect(() => {
 
