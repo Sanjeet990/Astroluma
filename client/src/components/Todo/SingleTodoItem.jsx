@@ -7,7 +7,6 @@ import ApiService from '../../utils/ApiService';
 import { motion } from 'framer-motion';
 import makeToast from '../../utils/ToastUtils';
 
-// Define prop types for the component
 const todoShape = PropTypes.shape({
     _id: PropTypes.string.isRequired,
     todoItem: PropTypes.string.isRequired,
@@ -59,65 +58,121 @@ const SingleTodoItem = ({ listingId, todo }) => {
             });
     };
 
+    // Mobile content
+    const MobileView = () => (
+        <div className="md:hidden w-full">
+            <div className="flex flex-col space-y-2 p-2">
+                <div role="button" className="cursor-pointer flex items-center" onClick={manageCompleted}>
+                    {todoItem.completed ? (
+                        <div className="ml-2 w-4 h-4 rounded-full bg-taskStatusDotColor flex-shrink-0" />
+                    ) : (
+                        <div className="ml-2 w-4 h-4 rounded-full border border-taskStatusDotColor flex-shrink-0" />
+                    )}
+                    <h1 className={`ml-4 text-sm two-lines ${todoItem.completed ? 'line-through' : ''}`}>
+                        {todoItem.todoItem}
+                    </h1>
+                </div>
 
-    return (
-        !isDeleted && <div className="flex flex-row space-x-4 mb-4 rounded-lg p-2 items-center bg-taskCardBg border-taskCardBorder text-taskCardText hover:bg-taskCardHoverBg hover:border-taskCardHoverBorder hover:text-taskCardHoverText">
-            <div className="w-full md:block">
-                <div className="grid grid-cols-1 md:grid-cols-12 items-center p-2">
-                    <div role="button" className={`cursor-pointer ${!listingId ? 'col-span-6 md:col-span-6' : 'col-span-6 md:col-span-8'} flex items-center`} onClick={manageCompleted}>
-                        {todoItem.completed ? (
-                            <div className="ml-2 w-4 h-4 rounded-full bg-taskStatusDotColor flex-shrink-0" />
-                        ) : (
-                            <div className="ml-2 w-4 h-4 rounded-full border border-taskStatusDotColor flex-shrink-0" />
-                        )}
-                        <h1 className={`ml-4 text-sm two-lines ${todoItem.completed ? 'line-through' : ''}`}>
-                            {todoItem.todoItem}
-                        </h1>
+                {!listingId && (
+                    <div className="ml-10 text-sm">
+                        {todoItem?.parent?.listingName}
                     </div>
-                    {!listingId && <div className="col-span-2 md:col-span-2 flex items-center justify-end md:justify-center mt-4 mr-2">
-                        <span>
-                            {todoItem?.parent?.listingName}
-                        </span>
-                    </div>}
-                    <div className="col-span-2 md:col-span-2 flex items-center justify-end md:justify-center mt-4">
-                        <span className={new Date(todoItem.dueDate) < new Date() ? 'text-red-500' : ''}>
-                            {todoItem.dueDate ? new Date(todoItem.dueDate).toISOString().split('T')[0] : null}
-                        </span>
-                    </div>
-                    <div className="col-span-1 md:col-span-1 flex items-center justify-end md:justify-center ml-4 mt-4">
+                )}
+
+                <div className="ml-10 flex items-center justify-between">
+                    <span className={`text-sm ${new Date(todoItem.dueDate) < new Date() ? 'text-red-500' : ''}`}>
+                        {todoItem.dueDate ? new Date(todoItem.dueDate).toISOString().split('T')[0] : null}
+                    </span>
+                    <div className="flex items-center space-x-4">
                         {todoItem.priority === 3 && <div className="w-4 h-4 rounded-full bg-yellow-500" />}
                         {todoItem.priority === 2 && <div className="w-4 h-4 rounded-full bg-green-500" />}
                         {todoItem.priority === 1 && <div className="w-4 h-4 rounded-full bg-red-500" />}
                         {(todoItem.priority !== 1 && todoItem.priority !== 2 && todoItem.priority !== 3) && <div className="w-4 h-4 rounded-full bg-transparent" />}
-                    </div>
-                    <div className="col-span-1 md:col-span-1 flex items-center justify-end ml-4 mt-4">
+                        
                         <motion.div
                             whileHover={{ scale: 1.3 }}
-                            className="cursor-pointer mr-4"
+                            className="cursor-pointer"
                             onClick={() => setModalState({ isOpen: true, data: { listingId, todoItem } })}
                         >
-                            <RiEdit2Line className="cursor-pointer text-taskCardIconColor hover:text-taskCardIconHoverColor" />
+                            <RiEdit2Line className="text-taskCardIconColor hover:text-taskCardIconHoverColor" />
                         </motion.div>
                         <motion.div
                             whileHover={{ scale: 1.3 }}
-                            className="cursor-pointer mr-4"
+                            className="cursor-pointer"
                             onClick={() => setDeleteModalState({ isOpen: true, data: { listingId, todoItem } })}
                         >
-                            <RiDeleteBinLine className="cursor-pointer text-taskCardIconColor hover:text-taskCardIconHoverColor" />
+                            <RiDeleteBinLine className="text-taskCardIconColor hover:text-taskCardIconHoverColor" />
                         </motion.div>
                     </div>
                 </div>
             </div>
         </div>
     );
+
+    // Desktop content (original layout)
+    const DesktopView = () => (
+        <div className="hidden md:block w-full">
+            <div className="grid grid-cols-1 md:grid-cols-12 items-center p-2">
+                <div role="button" className={`cursor-pointer ${!listingId ? 'col-span-6 md:col-span-6' : 'col-span-6 md:col-span-8'} flex items-center`} onClick={manageCompleted}>
+                    {todoItem.completed ? (
+                        <div className="ml-2 w-4 h-4 rounded-full bg-taskStatusDotColor flex-shrink-0" />
+                    ) : (
+                        <div className="ml-2 w-4 h-4 rounded-full border border-taskStatusDotColor flex-shrink-0" />
+                    )}
+                    <h1 className={`ml-4 text-sm two-lines ${todoItem.completed ? 'line-through' : ''}`}>
+                        {todoItem.todoItem}
+                    </h1>
+                </div>
+                {!listingId && <div className="col-span-2 md:col-span-2 flex items-center justify-end md:justify-center mt-4 mr-2">
+                    <span>
+                        {todoItem?.parent?.listingName}
+                    </span>
+                </div>}
+                <div className="col-span-2 md:col-span-2 flex items-center justify-end md:justify-center mt-4">
+                    <span className={new Date(todoItem.dueDate) < new Date() ? 'text-red-500' : ''}>
+                        {todoItem.dueDate ? new Date(todoItem.dueDate).toISOString().split('T')[0] : null}
+                    </span>
+                </div>
+                <div className="col-span-1 md:col-span-1 flex items-center justify-end md:justify-center ml-4 mt-4">
+                    {todoItem.priority === 3 && <div className="w-4 h-4 rounded-full bg-yellow-500" />}
+                    {todoItem.priority === 2 && <div className="w-4 h-4 rounded-full bg-green-500" />}
+                    {todoItem.priority === 1 && <div className="w-4 h-4 rounded-full bg-red-500" />}
+                    {(todoItem.priority !== 1 && todoItem.priority !== 2 && todoItem.priority !== 3) && <div className="w-4 h-4 rounded-full bg-transparent" />}
+                </div>
+                <div className="col-span-1 md:col-span-1 flex items-center justify-end ml-4 mt-4">
+                    <motion.div
+                        whileHover={{ scale: 1.3 }}
+                        className="cursor-pointer mr-4"
+                        onClick={() => setModalState({ isOpen: true, data: { listingId, todoItem } })}
+                    >
+                        <RiEdit2Line className="cursor-pointer text-taskCardIconColor hover:text-taskCardIconHoverColor" />
+                    </motion.div>
+                    <motion.div
+                        whileHover={{ scale: 1.3 }}
+                        className="cursor-pointer mr-4"
+                        onClick={() => setDeleteModalState({ isOpen: true, data: { listingId, todoItem } })}
+                    >
+                        <RiDeleteBinLine className="cursor-pointer text-taskCardIconColor hover:text-taskCardIconHoverColor" />
+                    </motion.div>
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        !isDeleted && (
+            <div className="flex flex-row space-x-4 mb-4 rounded-lg items-center bg-taskCardBg border-taskCardBorder text-taskCardText hover:bg-taskCardHoverBg hover:border-taskCardHoverBorder hover:text-taskCardHoverText">
+                <MobileView />
+                <DesktopView />
+            </div>
+        )
+    );
 };
 
-// Add prop types validation
 SingleTodoItem.propTypes = {
     listingId: PropTypes.string,
     todo: todoShape.isRequired
 };
 
-// Name the exported component for React Refresh
 const NamedSingleTodoItem = React.memo(SingleTodoItem);
 export default NamedSingleTodoItem;
