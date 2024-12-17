@@ -8,6 +8,7 @@ import { GrVirtualMachine } from "react-icons/gr";
 import { motion } from 'framer-motion';
 import PropTypes from 'prop-types';
 import SystemThemes from '../../utils/SystemThemes';
+import useDetectProtocol from '../../hooks/useDetectProtocol';
 
 const SingleDeviceItemFront = (props) => {
 
@@ -19,6 +20,8 @@ const SingleDeviceItemFront = (props) => {
     const colorTheme = useRecoilValue(colorThemeState);
     const [themeType, setThemeType] = useState("light");
 
+    const protocol = useDetectProtocol();
+    
     useEffect(() => {
         const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
         setThemeType(newThemeType);
@@ -38,7 +41,7 @@ const SingleDeviceItemFront = (props) => {
         setIsInstantLoading(true);
 
         if (props.item.deviceIp) {
-            const host = import.meta.env.VITE_API_WS_URL || `ws://${window.location.host}`;
+            const host = import.meta.env.VITE_API_WS_URL || `${protocol === "http" ? "ws" : "wss"}://${window.location.host}`;
 
             const ws = new WebSocket(`${host}?token=${loginData?.token}`);
 
