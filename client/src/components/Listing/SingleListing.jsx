@@ -1,21 +1,29 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import ImageView from '../Misc/ImageView';
 import { FiEdit, FiMove, FiTrash } from 'react-icons/fi';
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Link, useNavigate } from 'react-router-dom';
 import { TbHandMove } from "react-icons/tb";
-import { useRecoilState } from 'recoil';
-import { moveItemState } from '../../atoms';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { colorThemeState, moveItemState } from '../../atoms';
 import { motion } from 'framer-motion';
 import NiceButton from '../NiceViews/NiceButton';
 import makeToast from '../../utils/ToastUtils';
 import PropTypes from 'prop-types';
+import SystemThemes from '../../utils/SystemThemes';
 
 const SingleListing = (props) => {
     const navigate = useNavigate();
 
     const [moveItem, setMoveItem] = useRecoilState(moveItemState);
+    const colorTheme = useRecoilValue(colorThemeState);
+    const [themeType, setThemeType] = useState("light");
+
+    useEffect(() => {
+        const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
+        setThemeType(newThemeType);
+    }, [colorTheme]);
 
     const {
         attributes,
@@ -69,6 +77,17 @@ const SingleListing = (props) => {
             return `/manage/listing/save/link/${props.item._id}`;
         }
     }
+
+    const decideTheIcon = useCallback(() => {
+        const iconObject = props.item?.listingIconItem;
+
+        if (themeType === "dark" && iconObject?.iconUrlLight) {
+            return iconObject?.iconUrlLight;
+        } else {
+            return iconObject?.iconUrl;
+        }
+
+    }, [props.item?.listingIconItem, themeType]);
 
     const doEdit = (e) => {
         e.preventDefault();
@@ -127,7 +146,7 @@ const SingleListing = (props) => {
                 ) : (
                     <>
                         <div className='flex items-center justify-center p-8'>
-                            <ImageView alt="Link" src={props.item.listingIcon ? props.item.listingIcon : getDefaultIcon()} defaultSrc={getDefaultIcon()} errorSrc={getDefaultIcon()} height="80px" width="80px" />
+                            <ImageView alt="Link" src={decideTheIcon()} defaultSrc={getDefaultIcon()} errorSrc={getDefaultIcon()} height="80px" width="80px" />
                         </div>
                         <div className='flex items-center justify-center text-center overflow-hidden !min-h-20 !max-h-20'>{props.item.listingName}</div>
                         <div

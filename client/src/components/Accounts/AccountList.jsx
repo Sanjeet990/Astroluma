@@ -59,7 +59,7 @@ const AccountList = () => {
         <title>User Accounts</title>
       </Helmet>
 
-      <Breadcrumb type="custom" pageTitle={"User accounts"} breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }]} />
+      <Breadcrumb type="custom" pageTitle={"User Accounts"} breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }]} />
 
       <div className="flex flex-col justify-between">
         <div className="text-left w-full md:w-auto" />

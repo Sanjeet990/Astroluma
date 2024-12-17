@@ -50,7 +50,7 @@ const EditSnippetList = () => {
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
                     if (data?.message?.listing?.listingIcon) {
-                        setSelectedImage({ iconPath: data?.message?.listing?.listingIcon });
+                        setSelectedImage(data?.message?.listing?.listingIcon);
                     }
 
                     if (data?.message?.listing?.listingType !== "snippet") {
@@ -74,16 +74,13 @@ const EditSnippetList = () => {
     const handleFormSubmit = () => {
 
 
-        if (!snippetName || !selectedImage?.iconPath) {
+        if (!snippetName || !selectedImage) {
             makeToast("warning", "Please fill all the fields");
             return;
         }
 
-        //Call the API to store the data
-        const iconPath = selectedImage ? selectedImage.iconPath : "snippet";
-
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/snippet', { listingId, parentId, snippetName, snippetIcon: iconPath, showInSidebar, showOnFeatured }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/snippet', { listingId, parentId, snippetName, snippetIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token)
             .then(() => {
                 setSelectedImage(null);
                 setSnippetName("");
