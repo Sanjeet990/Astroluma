@@ -27,6 +27,8 @@ exports.dashboard = async (req, res) => {
             IconPack.find({ $or: [{ userId: userId }, { userId: null }] }) // Icon packs of the user
         ]);
 
+        userData.password = undefined; // Remove the password from the user data
+
         // Add a default "Home" item to the sidebar
         sidebarItems.unshift({
             _id: null,
