@@ -151,58 +151,66 @@ const SingleListing = ({ item, deleteListing, id }) => {
             <div className='flex items-center justify-center text-center overflow-hidden !min-h-20 !max-h-20'>
                 {item.listingName}
             </div>
-            <div
-                title="Reorder"
-                {...listeners}
-                {...attributes}
-                style={{ touchAction: "none" }}
-                className="absolute top-0 left-0 p-2 cursor-move opacity-50 m-2 transition-opacity hover:opacity-100 text-internalCardIconColor hover:text-internalCardIconHoverColor"
-            >
-                <FiMove size={20} />
-            </div>
-        </>
-    );
-
-    const renderActions = () => (
-        <>
-            {
-                item?.onFeatured && <div
-                    className="absolute opacity-70 bottom-2 left-2 flex justify-center items-center bg-red-600 py-0.5 px-1 text-xs rounded-md z-5"
-                >
-                    Featured
-                </div>
-            }
-            <div
-                title="Delete"
-                role="button"
-                onClick={handleDeleteClick}
-                className="absolute top-0 right-0 p-2 cursor-pointer opacity-50 m-2 transition-opacity hover:opacity-100 ml-8 text-internalCardIconColor hover:text-internalCardIconHoverColor"
-            >
-                <FiTrash size={20} />
-            </div>
-            <div
-                title="Edit"
-                role="button"
-                onClick={handleEdit}
-                className="absolute top-0 right-8 p-2 cursor-pointer opacity-50 m-2 transition-opacity hover:opacity-100 text-internalCardIconColor hover:text-internalCardIconHoverColor"
-            >
-                <FiEdit size={20} />
-            </div>
-            {item.listingType !== "stream" && (
+            {!moveItem && (
                 <div
-                    title="Move"
-                    role="button"
-                    onClick={handleMove}
-                    className={`absolute top-0 right-16 p-2 cursor-pointer opacity-50 m-2 transition-opacity hover:opacity-100 ${moveItem?._id === item._id
-                        ? 'rounded-full bg-internalCardIconSelectedBg text-internalCardIconSelectedColor'
-                        : 'text-internalCardIconColor hover:text-internalCardIconHoverColor'
-                        }`}
+                    title="Reorder"
+                    {...listeners}
+                    {...attributes}
+                    style={{ touchAction: "none" }}
+                    className="absolute top-0 left-0 p-2 cursor-move opacity-50 m-2 transition-opacity hover:opacity-100 text-internalCardIconColor hover:text-internalCardIconHoverColor"
                 >
-                    <TbHandMove size={20} />
+                    <FiMove size={20} />
                 </div>
             )}
         </>
     );
+
+    const renderActions = () => {
+        if (moveItem) {
+            return null; // No actions when moving
+        }
+
+        return (
+            <>
+                {
+                    item?.onFeatured && <div
+                        className="absolute opacity-70 bottom-2 left-2 flex justify-center items-center bg-red-600 py-0.5 px-1 text-xs rounded-md z-5"
+                    >
+                        Featured
+                    </div>
+                }
+                <div
+                    title="Delete"
+                    role="button"
+                    onClick={handleDeleteClick}
+                    className="absolute top-0 right-0 p-2 cursor-pointer opacity-50 m-2 transition-opacity hover:opacity-100 ml-8 text-internalCardIconColor hover:text-internalCardIconHoverColor"
+                >
+                    <FiTrash size={20} />
+                </div>
+                <div
+                    title="Edit"
+                    role="button"
+                    onClick={handleEdit}
+                    className="absolute top-0 right-8 p-2 cursor-pointer opacity-50 m-2 transition-opacity hover:opacity-100 text-internalCardIconColor hover:text-internalCardIconHoverColor"
+                >
+                    <FiEdit size={20} />
+                </div>
+                {item.listingType !== "stream" && (
+                    <div
+                        title="Move"
+                        role="button"
+                        onClick={handleMove}
+                        className={`absolute top-0 right-16 p-2 cursor-pointer opacity-50 m-2 transition-opacity hover:opacity-100 ${moveItem?._id === item._id
+                            ? 'rounded-full bg-internalCardIconSelectedBg text-internalCardIconSelectedColor'
+                            : 'text-internalCardIconColor hover:text-internalCardIconHoverColor'
+                            }`}
+                    >
+                        <TbHandMove size={20} />
+                    </div>
+                )}
+            </>
+        );
+    };
 
     return (
         <Link
@@ -212,7 +220,17 @@ const SingleListing = ({ item, deleteListing, id }) => {
             className="relative"
         >
             <motion.div
-                whileHover={{ scale: 1.03 }}
+                whileHover={!moveItem ? { scale: 1.03 } : {}}
+                animate={moveItem && item.listingType === 'category' 
+                    ? { 
+                        x: [-2, 2, -2, 2, 0],
+                        transition: { 
+                            duration: 0.3, 
+                            repeat: Infinity, 
+                            repeatType: 'loop' 
+                        }
+                    } 
+                    : {}}
                 className="relative border-2 border-internalCardBorder bg-internalCardBg text-internalCardText pt-10 pb-10 rounded-xl shadow-md h-80"
                 style={{ overflow: 'hidden' }}
             >
@@ -228,9 +246,10 @@ SingleListing.propTypes = {
         _id: PropTypes.string.isRequired,
         listingType: PropTypes.string.isRequired,
         listingName: PropTypes.string.isRequired,
+        onFeatured: PropTypes.bool,
         listingIconItem: PropTypes.shape({
             iconUrl: PropTypes.string,
-            iconUrlLight: PropTypes.string
+            iconUrlLight: PropTypes.string,
         })
     }).isRequired,
     deleteListing: PropTypes.func.isRequired,
