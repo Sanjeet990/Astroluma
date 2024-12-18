@@ -7,7 +7,7 @@ import useDynamicFilter from '../../hooks/useDynamicFilter';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import SingleSettingsItem from './SingleSettingsItem';
 import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt } from "react-icons/md";
-import { FaCloudSunRain, FaTshirt, FaHome } from "react-icons/fa";
+import { FaCloudSunRain, FaTshirt, FaHome, FaIcons } from "react-icons/fa";
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import { BsAppIndicator } from "react-icons/bs";
 import { useNavigate } from 'react-router-dom';
@@ -76,6 +76,14 @@ const Settings = () => {
         },
         {
             id: 7,
+            title: 'Icon Packs',
+            description: 'Manage icon pack settings of your account',
+            icon: <FaIcons />,
+            show: true,
+            route: '/manage/iconpack'
+        },
+        {
+            id: 8,
             title: 'Stream Hub',
             description: 'Setup and stream your RTSP/HLS/DASH feeds',
             icon: <MdSmartDisplay />,
@@ -83,7 +91,7 @@ const Settings = () => {
             route: '/manage/streaming'
         },
         {
-            id: 8,
+            id: 9,
             title: 'Network Devices',
             description: 'Manage network devices and their settings',
             icon: <MdOutlineImportantDevices />,
@@ -91,7 +99,7 @@ const Settings = () => {
             route: '/manage/networkdevices'
         },
         {
-            id: 9,
+            id: 10,
             title: 'TOTP Authenticator',
             description: 'Manage your TOTP authenticator settings',
             icon: <IoQrCode />,
@@ -99,7 +107,7 @@ const Settings = () => {
             route: '/manage/totp'
         },
         {
-            id: 10,
+            id: 11,
             title: 'App Integration',
             description: 'Setup integrations with number of other supported apps',
             icon: <BsAppIndicator />,
@@ -107,7 +115,7 @@ const Settings = () => {
             route: '/manage/apps'
         },
         {
-            id: 11,
+            id: 12,
             title: 'User Account',
             description: 'Manage account settings and preferences',
             icon: <MdFace />,

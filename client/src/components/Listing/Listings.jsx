@@ -72,19 +72,6 @@ const Listings = ({ type }) => {
         setActiveId(event.active.id);
     }, []);
 
-    const handleDragEnd = useCallback((event) => {
-        setActiveId(null);
-        const { active, over } = event;
-
-        if (active.id !== over.id) {
-            const oldIndex = itemList.findIndex(item => item._id === active.id);
-            const newIndex = itemList.findIndex(item => item._id === over.id);
-            const reorderedArray = arrayMove(itemList, oldIndex, newIndex);
-            setItemList(reorderedArray);
-            updateReorderStatusOnServer(reorderedArray);
-        }
-    }, [itemList, updateReorderStatusOnServer]);
-
     const updateReorderStatusOnServer = useCallback(async (reorderedArray) => {
         setLoading(true);
         try {
@@ -100,6 +87,19 @@ const Listings = ({ type }) => {
             setLoading(false);
         }
     }, [listingId, loginData?.token, setLoading]);
+
+    const handleDragEnd = useCallback((event) => {
+        setActiveId(null);
+        const { active, over } = event;
+
+        if (active.id !== over.id) {
+            const oldIndex = itemList.findIndex(item => item._id === active.id);
+            const newIndex = itemList.findIndex(item => item._id === over.id);
+            const reorderedArray = arrayMove(itemList, oldIndex, newIndex);
+            setItemList(reorderedArray);
+            updateReorderStatusOnServer(reorderedArray);
+        }
+    }, [itemList, updateReorderStatusOnServer]);
 
     const moveHere = useCallback(async () => {
         if (!moveItem) return;
