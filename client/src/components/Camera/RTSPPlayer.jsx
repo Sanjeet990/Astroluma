@@ -139,7 +139,7 @@ const RTSPPlayer = ({ videoId }) => {
       }
       setIsLoading(false);
     };
-  }, [videoId, loginData, isComponentVisible]);
+  }, [videoId, loginData, isComponentVisible, protocol]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
