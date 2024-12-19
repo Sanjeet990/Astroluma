@@ -5,14 +5,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    ##ports:
-    ##  - "8000:8000"
     container_name: astroluma
     environment:
       PORT: 8000
       NODE_ENV: production
       SECRET_KEY: jK8hB2mL6qv9NxX0PzWrDt5Yc3FgT4Vu
-      MONGODB_URI: mongodb://localhost:27017/astroluma
+      MONGODB_URI: mongodb://127.0.0.1:27017/astroluma
     volumes:
       - uploads_data:/app/storage/uploads
     depends_on:
@@ -34,3 +32,36 @@ volumes:
     driver: local
   uploads_data:
     driver: local
+
+## Alt config, with more locked down networking & simplified addressing
+#services:
+#  app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8000:8000"
+#    container_name: astroluma
+#    environment:
+#      PORT: 8000
+#      NODE_ENV: production
+#      SECRET_KEY: jK8hB2mL6qv9NxX0PzWrDt5Yc3FgT4Vu
+#      MONGODB_URI: mongodb://mongodb/astroluma
+#    volumes:
+#      - uploads_data:/app/storage/uploads
+#    depends_on:
+#      - mongodb
+#    restart: always
+
+#  mongodb:
+#    image: mongo:4.0 ##More recent versions of MongoDB needs AVX2 support, so it's better to use the 4.0 version.
+#    container_name: astroluma_mongodb
+#    volumes:
+#      - mongo_data:/data/db
+#    restart: always
+
+#volumes:
+#  mongo_data:
+#    driver: local
+#  uploads_data:
+#    driver: local
