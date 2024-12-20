@@ -4,7 +4,6 @@ const { create, listIconPacks, addiconpack, deleteIconPack } = require('../contr
 
 const router = express.Router();
 
-router.get('/iconpack/add', create);
 router.get('/iconpack/list', verifyToken, listIconPacks);
 router.post('/iconpack/add', verifyToken, addiconpack);
 router.get('/iconpack/delete/:id', verifyToken, deleteIconPack);

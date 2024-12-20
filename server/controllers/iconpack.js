@@ -1,24 +1,6 @@
 const IconPack = require("../models/IconPack");
 const axios = require("axios");
 
-exports.create = async (req, res) => {
-    const IconPackInstance = new IconPack({
-        iconProvider: "com.astroluma.billuhost",
-        iconPack: "Billu Host",
-        iconPackVersion: "1.0.0",
-        jsonUrl: "https://icons.getastroluma.com/selfh.st.json",
-        packDeveloper: "Sanjeet990",
-        user: null
-    });
-
-    try {
-        const savedIconPack = await IconPackInstance.save();
-        res.json(savedIconPack);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
-
 exports.listIconPacks = async (req, res) => {
     const userId = req.user?._id;
 
@@ -91,6 +73,7 @@ exports.addiconpack = async (req, res) => {
                 iconPackVersion: data?.iconPackVersion,
                 jsonUrl: iconpackUrl,
                 packDeveloper: data?.packDeveloper,
+                credit: data?.credit,
                 userId: userId
             });
 

@@ -77,6 +77,10 @@ const seedUserData = async () => {
             iconPackVersion: '1.0.0',
             jsonUrl: 'https://icons.getastroluma.com/selfh.st.json',
             packDeveloper: 'Sanjeet990',
+            credit: {
+                name: 'Selfh.st',
+                url: 'https://selfh.st'
+            },
             userId: null //Default icon pack will have null in userid
         });
 
