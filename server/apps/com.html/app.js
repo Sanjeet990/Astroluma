@@ -1,5 +1,5 @@
 
-const initialize = async (application) => {
+exports.initialize = async (application) => {
 
     const htmlcode = application?.config?.htmlcode;
     
@@ -15,5 +15,3 @@ const initialize = async (application) => {
        await application.sendError(400, 'Error in fetching data from GitHub.');
     }
 }
-
-global.initialize = initialize;

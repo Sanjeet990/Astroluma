@@ -1,14 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import ImageView from '../Misc/ImageView';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { colorThemeState, loginState, sendmagicPacketState } from '../../atoms';
+import { loginState, sendmagicPacketState } from '../../atoms';
 import DeviceStatus from './DeviceStatus';
 import { BsEthernet } from "react-icons/bs";
 import { GrVirtualMachine } from "react-icons/gr";
 import { motion } from 'framer-motion';
 import PropTypes from 'prop-types';
-import SystemThemes from '../../utils/SystemThemes';
-import useDetectProtocol from '../../hooks/useDetectProtocol';
 
 const SingleDeviceItemFront = (props) => {
 
@@ -17,16 +15,6 @@ const SingleDeviceItemFront = (props) => {
 
     const [isAlive, setIsAlive] = useState(props.item.isAlive);
     const [isInstantLoading, setIsInstantLoading] = useState(false);
-    const colorTheme = useRecoilValue(colorThemeState);
-    const [themeType, setThemeType] = useState("light");
-
-    const protocol = useDetectProtocol();
-    
-    useEffect(() => {
-        const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
-        setThemeType(newThemeType);
-    }, [colorTheme]);
-
 
     const handleDeviceWakeUp = () => {
         //console.log('Wake up device');
@@ -41,7 +29,7 @@ const SingleDeviceItemFront = (props) => {
         setIsInstantLoading(true);
 
         if (props.item.deviceIp) {
-            const host = import.meta.env.VITE_API_WS_URL || `${protocol === "http" ? "ws" : "wss"}://${window.location.host}`;
+            const host = import.meta.env.VITE_API_WS_URL || `ws://${window.location.host}`;
 
             const ws = new WebSocket(`${host}?token=${loginData?.token}`);
 
@@ -71,18 +59,6 @@ const SingleDeviceItemFront = (props) => {
         }
     }
 
-
-    const decideTheIcon = useCallback(() => {
-        const iconObject = props.item?.listingIconItem;
-
-        if (themeType === "dark" && iconObject?.iconUrlLight) {
-            return iconObject?.iconUrlLight;
-        } else {
-            return iconObject?.iconUrl;
-        }
-
-    }, [props.item?.listingIconItem, themeType]);
-
     return (
         <div
             role='button'
@@ -92,7 +68,7 @@ const SingleDeviceItemFront = (props) => {
             <motion.div whileHover={{ scale: 1.03 }} className={`${props.item.supportsWol && 'cursor-pointer'} relative border-2 border-itemCardBorder bg-itemCardBg text-itemCardText hover:border-itemCardHoverBorder hover:bg-itemCardHoverBg hover:text-itemCardHoverText pt-10 pb-10 rounded-xl shadow-md h-80 transition-all duration-300`} style={{ overflow: 'hidden' }} >
                 <>
                     <div className='flex items-center justify-center p-8'>
-                        <ImageView alt="Link" src={decideTheIcon()} defaultSrc="/computer.png" errorSrc="/computer.png" width="80px" />
+                        <ImageView alt="Link" src={props.item.deviceIcon ? props.item.deviceIcon : "/computer.png"} defaultSrc="/computer.png" errorSrc="/computer.png" width="80px" />
                     </div>
                     <div className='flex items-center justify-center text-center overflow-hidden !min-h-10 !max-h-10 mb-4'>{props.item.deviceName}</div>
                     <div className='flex items-center justify-center text-center overflow-hidden text-xs'>

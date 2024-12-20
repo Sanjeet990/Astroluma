@@ -54,9 +54,7 @@ const EditDevice = () => {
                     setVirtualDevice(data?.message?.virtualDevice);
 
                     if (data?.message?.deviceIcon) {
-                        setSelectedImage(data?.message?.deviceIcon);
-                    }else{
-                        setSelectedImage(null);
+                        setSelectedImage({ iconPath: data?.message?.deviceIcon });
                     }
 
                 } else {
@@ -77,12 +75,13 @@ const EditDevice = () => {
         const ipv4Regex = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
         const macAddressRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
 
-        if (!deviceName || !selectedImage) {
+        if (!deviceName || !selectedImage?.iconPath) {
             makeToast("warning", "Please fill all the fields");
             return;
         }
 
         //Call the API to store the data
+        const iconPath = selectedImage ? selectedImage.iconPath : "folder";
 
         if (deviceIp) {
             if (!ipv4Regex.test(deviceIp)) {
@@ -118,7 +117,7 @@ const EditDevice = () => {
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/networkdevices/save/device', { deviceId, deviceMac, deviceName, broadcastAddress, broadcastPort, deviceIcon: selectedImage, deviceIp, supportsWol, virtualDevice }, loginData?.token)
+        ApiService.post('/api/v1/networkdevices/save/device', { deviceId, deviceMac, deviceName, broadcastAddress, broadcastPort, deviceIcon: iconPath, deviceIp, supportsWol, virtualDevice }, loginData?.token)
             .then(() => {
                 setDeviceMac("");
                 setDeviceName("");
@@ -144,10 +143,10 @@ const EditDevice = () => {
     return (
         <>
             <Helmet>
-                <title>{!deviceId ? "Add Network Device" : "Edit Network Device"}</title>
+                <title>{!deviceId ? "Add network device" : "Edit network Device"}</title>
             </Helmet>
 
-            <Breadcrumb type="custom" pageTitle={!deviceId ? "Add Network Device" : "Edit Network Device"} breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }, { "id": "2", "linkName": "Network Devices", "linkUrl": "/manage/networkdevices" }]} />
+            <Breadcrumb type="custom" pageTitle={!deviceId ? "Add network device" : "Edit network Device"} breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }, { "id": "2", "linkName": "Network Devices", "linkUrl": "/manage/networkdevices" }]} />
 
             <div className="max-w-4xl mx-auto w-full mt-4">
                 <div className="card border bg-cardBg text-cardText border-cardBorder shadow-md rounded-xl px-8 pt-6 pb-8 mb-4">

@@ -51,7 +51,7 @@ const EditTodo = () => {
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
                     if (data?.message?.listing?.listingIcon) {
-                        setSelectedImage(data?.message?.listing?.listingIcon);
+                        setSelectedImage({ iconPath: data?.message?.listing?.listingIcon });
                     }
 
                     if (data?.message?.listing?.listingType !== "todo") {
@@ -74,13 +74,16 @@ const EditTodo = () => {
 
     const handleFormSubmit = () => {
 
-        if (!todoName || !selectedImage) {
+        if (!todoName || !selectedImage?.iconPath) {
             makeToast("warning", "Please fill all the fields");
             return;
         }
 
+        //Call the API to store the data
+        const iconPath = selectedImage ? selectedImage.iconPath : "todo";
+
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/todo', { listingId, parentId, todoName, todoIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/todo', { listingId, parentId, todoName, todoIcon: iconPath, showInSidebar, showOnFeatured }, loginData?.token)
             .then(() => {
                 setSelectedImage(null);
                 setTodoName("");

@@ -79,7 +79,6 @@ const appRoute = require('./routes/app.js');
 const accountsRoute = require('./routes/accounts.js');
 const pageRoute = require('./routes/page.js');
 const totpRoute = require('./routes/totp.js');
-const iconpackRoute = require('./routes/iconpack.js');
 
 app.use('/api/v1/', home);
 app.use('/api/v1/', authRoute);
@@ -93,7 +92,6 @@ app.use('/api/v1/', appRoute);
 app.use('/api/v1/', accountsRoute);
 app.use('/api/v1/', pageRoute);
 app.use('/api/v1/', totpRoute);
-app.use('/api/v1/', iconpackRoute);
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));

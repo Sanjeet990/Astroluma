@@ -10,7 +10,7 @@ const formatCount = (count) => {
     }
 }
 
-const initialize = async (application) => {
+exports.initialize = async (application) => {
     const youtubeLink = application?.payload?.listingUrl || application?.payload?.localUrl;
     const apiKey = application?.config?.apiKey;
 
@@ -40,5 +40,3 @@ const initialize = async (application) => {
         await application.sendError(400, 'Error in fetching data from YouTube.');
     }
 }
-
-global.initialize = initialize;

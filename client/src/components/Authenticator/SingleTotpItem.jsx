@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import ImageView from '../Misc/ImageView';
 import { FiEdit, FiMove, FiTrash } from 'react-icons/fi';
 import { useSortable } from "@dnd-kit/sortable";
@@ -7,20 +7,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import NiceButton from '../NiceViews/NiceButton';
 import PropTypes from 'prop-types';
-import { useRecoilValue } from 'recoil';
-import { colorThemeState } from '../../atoms';
-import SystemThemes from '../../utils/SystemThemes';
 
 const SingleTotpItem = (props) => {
     const navigate = useNavigate();
-
-    const colorTheme = useRecoilValue(colorThemeState);
-    const [themeType, setThemeType] = useState("light");
-
-    useEffect(() => {
-        const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
-        setThemeType(newThemeType);
-    }, [colorTheme]);
 
     const {
         attributes,
@@ -65,17 +54,6 @@ const SingleTotpItem = (props) => {
         navigate(`/manage/totp/save/${props.item._id}`)
     }
 
-    const decideTheIcon = useCallback(() => {
-        const iconObject = props.item?.listingIconItem;
-
-        if (themeType === "dark" && iconObject?.iconUrlLight) {
-            return iconObject?.iconUrlLight;
-        } else {
-            return iconObject?.iconUrl;
-        }
-
-    }, [props.item?.listingIconItem, themeType]);
-
     return (
         <motion.div
             style={style}
@@ -102,7 +80,7 @@ const SingleTotpItem = (props) => {
             ) : (
                 <>
                     <div className='flex items-center justify-center p-8'>
-                        <ImageView alt="Link" src={decideTheIcon()} defaultSrc="/computer.png" errorSrc="/computer.png" width="80px" />
+                        <ImageView alt="Link" src={props.item.serviceIcon ? props.item.serviceIcon : "/computer.png"} defaultSrc="/computer.png" errorSrc="/computer.png" width="80px" />
                     </div>
                     <div className='flex items-center justify-center text-center overflow-hidden !min-h-20 !max-h-20'>{props.item.serviceName}<br />{props.item.accountName}</div>
                     <div

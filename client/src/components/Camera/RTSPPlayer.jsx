@@ -6,7 +6,6 @@ import { loginState } from '../../atoms';
 import { GoMute, GoUnmute } from "react-icons/go";
 import NiceLoader from '../NiceViews/NiceLoader';
 import PropTypes from 'prop-types';
-import useDetectProtocol from '../../hooks/useDetectProtocol';
 
 mpegts.LoggingControl.enableAll = false;
 
@@ -19,8 +18,6 @@ const RTSPPlayer = ({ videoId }) => {
   const [isMuted, setIsMuted] = useState(true);
   const [isEverFullscreen, setIsEverFullscreen] = useState(false);
   const [fullscreenState, setFullscreenState] = useState(false);
-
-  const protocol = useDetectProtocol();
 
   if (!videoId) {
     videoId = params?.videoId;
@@ -56,7 +53,7 @@ const RTSPPlayer = ({ videoId }) => {
 
   useEffect(() => {
     let player;
-    const host = import.meta.env.VITE_API_WS_URL || `${protocol === "http" ? "ws" : "wss"}://${window.location.host}`;
+    const host = import.meta.env.VITE_API_WS_URL || `ws://${window.location.host}`;
     const videoElement = videoRef.current;
     let keepAliveInterval;
     let pendingFrames = [];
@@ -139,7 +136,7 @@ const RTSPPlayer = ({ videoId }) => {
       }
       setIsLoading(false);
     };
-  }, [videoId, loginData, isComponentVisible, protocol]);
+  }, [videoId, loginData, isComponentVisible]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {

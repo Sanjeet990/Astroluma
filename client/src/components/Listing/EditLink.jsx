@@ -51,16 +51,16 @@ const EditLink = () => {
             .then(data => {
                 setIntegrationList(data?.message?.integrations);
                 if (data?.message?.listing) {
-                    setLinkName(data?.message?.listing?.listingName || "");
-                    setLinkURL(data?.message?.listing?.listingUrl || "");
-                    setLocalUrl(data?.message?.listing?.localUrl || "");
+                    setLinkName(data?.message?.listing?.listingName);
+                    setLinkURL(data?.message?.listing?.listingUrl);
+                    setLocalUrl(data?.message?.listing?.localUrl);
                     setShowInSidebar(data?.message?.listing?.inSidebar);
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
                     setSelectedIntegration(data?.message?.listing?.integration || "");
 
-                    if (data?.message?.listing?.listingIconItem) {
-                        setSelectedImage(data?.message?.listing?.listingIconItem);
+                    if (data?.message?.listing?.listingIcon) {
+                        setSelectedImage({ iconPath: data?.message?.listing?.listingIcon });
                     }
 
                     if (data?.message?.listing?.listingType !== "link") {
@@ -112,10 +112,13 @@ const EditLink = () => {
             return;
         }
 
+        //Call the API to store the data
+        const iconPath = selectedImage ? selectedImage.iconPath : "link";
+
         const tempLink = selectedPage ? `/p/${selectedPage}` : (haveRemoteUrl ? remoteUrl : "");
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/link', { listingId, parentId, linkName, linkIcon: selectedImage, linkURL: tempLink, localUrl, showInSidebar, showOnFeatured, integration: selectedIntegration }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/link', { listingId, parentId, linkName, linkIcon: iconPath, linkURL: tempLink, localUrl, showInSidebar, showOnFeatured, integration: selectedIntegration }, loginData?.token)
             .then(() => {
                 setSelectedImage(null);
                 setLinkName("");

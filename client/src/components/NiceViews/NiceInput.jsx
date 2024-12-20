@@ -31,7 +31,7 @@ const NiceInput = ({
                 </label>
             }
             <input
-                className={`${disabled ? "cursor-not-allowed" : ""} appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline placeholder-opacity-50 ${className}`}
+                className={`${disabled ? "cursor-not-allowed" : ""} appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline ${className}`}
                 id={id}
                 type={type}
                 value={value}
