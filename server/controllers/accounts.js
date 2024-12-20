@@ -46,7 +46,7 @@ exports.saveAccount = async (req, res) => {
                 username: username.toLowerCase(),
                 password: md5(password),
                 siteName,
-                colorTheme: "light",
+                colorTheme: "dark",
                 authenticator: false,
                 camerafeed: false,
                 networkdevices: false,

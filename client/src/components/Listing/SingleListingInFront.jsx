@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ImageView from '../Misc/ImageView';
 import { FiCopy } from 'react-icons/fi';
 import { isLocal } from '../../utils/Helper';
@@ -7,12 +7,13 @@ import { ImNewTab } from "react-icons/im";
 import { Link } from 'react-router-dom';
 import ApiService from '../../utils/ApiService';
 import { useRecoilValue } from 'recoil';
-import { loginState } from '../../atoms';
+import { colorThemeState, loginState } from '../../atoms';
 import { motion, AnimatePresence } from 'framer-motion';
 import NiceButton from '../NiceViews/NiceButton';
 import { GrAppsRounded, GrClose } from "react-icons/gr";
 import makeToast from '../../utils/ToastUtils';
 import PropTypes from 'prop-types';
+import SystemThemes from '../../utils/SystemThemes';
 
 const SingleListingInFront = (props) => {
 
@@ -30,6 +31,15 @@ const SingleListingInFront = (props) => {
     const [showAppsDataForSmallerScreen, setShowAppsDataForSmallerScreen] = useState(false);
 
     const loginData = useRecoilValue(loginState);
+
+
+    const colorTheme = useRecoilValue(colorThemeState);
+    const [themeType, setThemeType] = useState("light");
+
+    useEffect(() => {
+        const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
+        setThemeType(newThemeType);
+    }, [colorTheme]);
 
     const decideTheLink = () => {
         // Check the hostname
@@ -52,6 +62,15 @@ const SingleListingInFront = (props) => {
         }
         return url;
     }
+
+    const decideTheIcon = useCallback(() => {
+        const iconObject = props.item?.listingIconItem;
+        if (themeType === "dark" && iconObject?.iconUrlLight) {
+            return iconObject?.iconUrlLight;
+        } else {
+            return iconObject?.iconUrl;
+        }
+    }, [props.item?.listingIconItem, themeType]);
 
     const copyLinkTextToClipboard = (e) => {
         e.preventDefault();
@@ -255,7 +274,7 @@ const SingleListingInFront = (props) => {
                             ) :
                                 <Link to={decideTheLink()} className='absolute inset-0 flex flex-col items-center justify-center'>
                                     <div className='p-8'>
-                                        <ImageView alt="Link" src={props.item.listingIcon ? props.item.listingIcon : "/default.png"} defaultSrc="/default.png" errorSrc="/default.png" width="80px" height="80px" />
+                                        <ImageView alt="Link" src={decideTheIcon()} defaultSrc="/default.png" errorSrc="/default.png" width="80px" height="80px" />
                                     </div>
                                     <div className='text-center overflow-hidden !min-h-20 !max-h-20 mt-2'>{props.item.listingName}</div>
                                 </Link>

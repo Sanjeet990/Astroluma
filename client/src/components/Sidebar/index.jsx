@@ -4,7 +4,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { motion } from 'framer-motion';
 import { BsAppIndicator } from "react-icons/bs";
 import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdDashboardCustomize } from "react-icons/md";
-import { FaGlobeAsia, FaRegListAlt, FaHome, FaCloudSunRain, FaTshirt } from "react-icons/fa";
+import { FaGlobeAsia, FaRegListAlt, FaHome, FaCloudSunRain, FaTshirt, FaIcons  } from "react-icons/fa";
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import SidebarButtonItem from './SidebarButtonItem';
 import SidebarLinkItem from './SidebarLinkItem';
@@ -188,6 +188,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                       text="Themes"
                       active={activeRoute === '/manage/theme'}
                       to="/manage/theme" />
+
+                    <SidebarLinkItem
+                      icon={<FaIcons  />}
+                      text="Icon Packs"
+                      active={activeRoute === '/manage/iconpack'}
+                      to="/manage/iconpack" />
 
                     {
                       userData?.camerafeed && <SidebarLinkItem

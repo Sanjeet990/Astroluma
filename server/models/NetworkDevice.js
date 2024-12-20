@@ -1,4 +1,21 @@
 const mongoose = require('mongoose');
+const { Schema } = mongoose;
+
+
+// Helper function to process listingIcon
+function addListingIconItem(doc) {
+  if (!doc) return;
+  
+  if (typeof doc.deviceIcon === 'string') {
+    doc.listingIconItem = {
+      iconUrl: doc.deviceIcon,
+      iconUrlLight: null,
+      iconProvider: 'com.astroluma.self',
+    };
+  } else {
+    doc.listingIconItem = doc.deviceIcon;
+  }
+}
 
 const networkSchema = new mongoose.Schema({
   deviceMac: {
@@ -11,8 +28,9 @@ const networkSchema = new mongoose.Schema({
     required: true,
   },
   deviceIcon: {
-    type: String,
+    type: Schema.Types.Mixed,
     required: false,
+    default: null,
   },
   broadcastAddress: {
     type: String,
@@ -54,8 +72,39 @@ const networkSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
-const Integration = mongoose.model('NetworkDevice', networkSchema);
+// Virtual for listingIconItem
+networkSchema.virtual('listingIconItem').get(function() {
+  if (typeof this.deviceIcon === 'string') {
+    return {
+      iconId: this.deviceIcon,
+      iconUrl: this.deviceIcon,
+      iconUrlLight: null,
+      iconProvider: 'com.astroluma.self',
+    };
+  }
+  return this.deviceIcon;
+});
 
-module.exports = Integration;
+// Post-find middleware
+networkSchema.post(['find', 'findOne', 'findById'], function(docs, next) {
+  // Handle single document
+  if (!Array.isArray(docs)) {
+    addListingIconItem(docs);
+    return next();
+  }
+  
+  // Handle array of documents
+  docs.forEach(doc => {
+    addListingIconItem(doc);
+  });
+  
+  next();
+});
+
+const NetworkDevice = mongoose.model('NetworkDevice', networkSchema);
+
+module.exports = NetworkDevice;

@@ -12,11 +12,15 @@ const extractRepoInfo = (url) => {
     };
 }
 
-exports.initialize = async (application) => {
+const initialize = async (application) => {
 
-    const username = application?.config?.username;
-    const password = application?.config?.password;
+    const {username, password} = application.config;
+    
     const listingUrl = application?.payload?.listingUrl || application?.payload?.localUrl;
+
+    if(!username || !password || !listingUrl) {
+        return await application.sendError(400, 'Please provide all the required configuration parameters');
+    }
 
     try {
         const { owner, repo } = extractRepoInfo(listingUrl);
@@ -63,3 +67,5 @@ exports.initialize = async (application) => {
         await application.sendError(400, 'Error in fetching data from GitHub.');
     }
 }
+
+global.initialize = initialize;

@@ -2,8 +2,6 @@ import { toast } from 'react-toastify';
 
 const makeToast = (type, message) => {
 
-    console.log(message);
-
     if (!message || message === "undefined" || message === "null" || message === "") return;
 
     const customId = `t: ${type}, m: ${message}`;
