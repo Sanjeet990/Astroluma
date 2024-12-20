@@ -26,7 +26,7 @@
     "react": "^18.3.1",
     "react-bottom-scroll-listener": "^5.1.0",
     "react-dom": "^18.3.1",
-    "react-drag-drop-files": "^2.4.0",
+    "react-drag-drop-files": "^2.3.10",
     "react-helmet": "^6.1.0",
     "react-icons": "^5.1.0",
     "react-router-dom": "^6.23.0",

@@ -49,7 +49,7 @@ const UpdatePasswordModal = () => {
   return (
     <NiceModal
       show={modalState.isOpen}
-      title="Reset Password"
+      title="Change Password"
       body={
         <>
           <NiceInput

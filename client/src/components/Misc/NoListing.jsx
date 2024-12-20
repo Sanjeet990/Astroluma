@@ -2,11 +2,10 @@ import React from 'react';
 import { useRecoilValue } from 'recoil';
 import PropTypes from 'prop-types';
 import NiceLink from '../NiceViews/NiceLink';
-import NiceButton from '../NiceViews/NiceButton';
 
 import { contentLoadingState, loadingState } from '../../atoms';
 
-const NoListing = ({ mainText, subText, buttonText, buttonLink, displayIcon: DisplayIcon, buttonOnClick }) => {
+const NoListing = ({ mainText, subText, buttonText, buttonLink, displayIcon: DisplayIcon }) => {
     const contentLoading = useRecoilValue(contentLoadingState);
     const loading = useRecoilValue(loadingState);
 
@@ -34,13 +33,6 @@ const NoListing = ({ mainText, subText, buttonText, buttonLink, displayIcon: Dis
                             className="bg-buttonGeneric text-buttonText"
                         />
                     }
-                    {
-                        buttonOnClick && <NiceButton
-                            label={buttonText}
-                            onClick={buttonOnClick}
-                            className="bg-buttonGeneric text-buttonText"
-                        />
-                    }
 
                 </div>
             </div>
@@ -53,8 +45,7 @@ NoListing.propTypes = {
     subText: PropTypes.string.isRequired,
     buttonText: PropTypes.string.isRequired,
     buttonLink: PropTypes.string,
-    displayIcon: PropTypes.element,
-    buttonOnClick: PropTypes.func
+    displayIcon: PropTypes.element
 };
 
 const MemoizedComponent = React.memo(NoListing);

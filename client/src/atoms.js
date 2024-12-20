@@ -104,12 +104,6 @@ export const homepageItemState = atom({
   default: [],
 });
 
-export const iconPackState = atom({
-  key: 'iconPackState',
-  default: [],
-  effects_UNSTABLE: [persistAtom]
-});
-
 export const reloadFolderListingState = atom({
   key: 'reloadFolderListingState',
   default: true,

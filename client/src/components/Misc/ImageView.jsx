@@ -1,121 +1,35 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-const ImageView = ({
-  alt,
-  src,
-  defaultSrc,
-  errorSrc,
-  height = '100%',
-  width = '100%',
-  parent = 'images'
-}) => {
-
+const ImageView = ({ alt, src, defaultSrc, errorSrc, height, width, parent = "images" }) => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-
-  // Enhanced image source resolution logic with fallbacks
-  const imageSrc = useMemo(() => {
-    // Determine which source to use based on fallback logic
-    const sourceToUse = src || defaultSrc || errorSrc;
-
-    // If no valid source is available, return null
-    if (!sourceToUse) {
-      return null;
-    }
-
-    // External URLs pass through directly
-    if (sourceToUse.startsWith('http://') || sourceToUse.startsWith('https://')) {
-      return sourceToUse;
-    }
-
-    // Special case mappings
-    const specialCases = {
-      'authenticator': '/otp.png',
-      'astroluma': '/astroluma.svg',
-      '/default.png': '/default.png',
-      '/astroluma.svg': '/astroluma.svg'
-    };
-
-    if (specialCases[sourceToUse]) {
-      return specialCases[sourceToUse];
-    }
-
-    // Default local image path construction
-    return `${baseUrl}/${parent}/${sourceToUse}`;
-  }, [src, defaultSrc, errorSrc, baseUrl, parent]);
-
-  // Initialize with the primary source
-  const [currentSrc, setCurrentSrc] = useState(imageSrc);
+  const imageSrc = src === 'authenticator' ? '/otp.png' : src === 'astroluma' ? '/astroluma.svg' : `${baseUrl}/${parent}/${src}`;
+  const [currentSrc, setCurrentSrc] = useState(defaultSrc);
 
   useEffect(() => {
-    let isMounted = true;
+    setCurrentSrc(defaultSrc);
+  }, [imageSrc, defaultSrc]);
 
-    const loadImage = async () => {
-      if (!imageSrc) {
-        return;
-      }
-
-      const tryLoadImage = async (source) => {
-        if (!source) return false;
-
-        try {
-          const img = new Image();
-          img.src = source;
-          await img.decode();
-          return true;
-        } catch {
-          return false;
-        }
-      };
-
-      // Try loading the primary source first
-      const primarySuccess = await tryLoadImage(imageSrc);
-      if (primarySuccess && isMounted) {
-        setCurrentSrc(imageSrc);
-        return;
-      }
-
-      // If primary fails and we have an error source, try that
-      if (errorSrc && isMounted && !primarySuccess) {
-        const errorSuccess = await tryLoadImage(errorSrc);
-        if (errorSuccess) {
-          setCurrentSrc(errorSrc);
-        } else {
-          setCurrentSrc(null);
-        }
-      }
+  useEffect(() => {
+    const handleLoad = () => {
+      const img = new Image();
+      img.src = imageSrc;
+      img.decode()
+        .then(() => setCurrentSrc(imageSrc))
+        .catch(() => setCurrentSrc(errorSrc));
     };
 
-    loadImage();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [imageSrc, errorSrc]);
-
-  // If no valid source is available, render nothing
-  if (!currentSrc) {
-    return null;
-  }
+    handleLoad();
+  }, [imageSrc, errorSrc]); // Added errorSrc to dependencies since it's used in handleLoad
 
   return (
     <div style={{ position: 'relative', height, width }}>
+      {/* deepsource-ignore JS-0760 */}
       <img
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover'
-        }}
+        style={{ width: '100%', height: '100%' }}
         src={currentSrc}
         alt={alt}
-        onError={() => {
-          // Only fall back to error source if we're not already using it
-          if (errorSrc && currentSrc !== errorSrc) {
-            setCurrentSrc(errorSrc);
-          } else {
-            setCurrentSrc(null);
-          }
-        }}
+        onError={() => setCurrentSrc(errorSrc)}
       />
     </div>
   );
@@ -123,12 +37,13 @@ const ImageView = ({
 
 ImageView.propTypes = {
   alt: PropTypes.string.isRequired,
-  src: PropTypes.string,
-  defaultSrc: PropTypes.string,
-  errorSrc: PropTypes.string,
+  src: PropTypes.string.isRequired,
+  defaultSrc: PropTypes.string.isRequired,
+  errorSrc: PropTypes.string.isRequired,
   height: PropTypes.string,
   width: PropTypes.string,
   parent: PropTypes.string
 };
 
-export default React.memo(ImageView);
+const MemoizedComponent = React.memo(ImageView);
+export default MemoizedComponent;

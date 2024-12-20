@@ -1,14 +1,10 @@
 const axios = require('axios');
 
-const initialize = async (application) => {
-
-    const {email, password} = application.config;
+exports.initialize = async (application) => {
+    const email = application?.config?.email;
+    const password = application?.config?.password;
     
     const listingUrl = application?.payload?.listingUrl || application?.payload?.localUrl;
-
-    if(!email || !password || !listingUrl) {
-        return await application.sendError(400, 'Please provide all the required configuration parameters');
-    }
 
     const apiUrl = listingUrl.endsWith('/') ? listingUrl.slice(0, -1) : listingUrl;
 
@@ -53,5 +49,3 @@ const initialize = async (application) => {
         await application.sendError(400, 'Error in fetching data from Nginx Proxy Manager.');
     }
 }
-
-global.initialize = initialize;

@@ -41,8 +41,6 @@ import EditSnippetList from './components/Snippet/EditSnippetList';
 import ThemeList from './components/Theme/ThemeList';
 import WeatherSettings from './components/Settings/WeatherSettings';
 import GeneralSettings from './components/Settings/GeneralSettings';
-import IconPacks from './components/IconPacks/index';
-import AddIconPack from './components/IconPacks/AddIconPack';
 
 import SystemThemes from './utils/SystemThemes';
 
@@ -50,7 +48,7 @@ const App = () => {
   const [themeType, setThemeType] = useState("dark");
   const [accentColor, setAccentColor] = useState("#f5f5f5");
 
-  const colorTheme = useRecoilValue(colorThemeState);
+  const colorTheme = useRecoilValue(colorThemeState)
 
   useEffect(() => {
 
@@ -78,15 +76,10 @@ const App = () => {
   return (
     <Loader>
       <ToastContainer style={{ zIndex: 100000 }} theme={themeType} />
-
+      
       <ImageSelectorModal title="Select icon" />
 
-      <BrowserRouter
-        future={{
-          v7_relativeSplatPath: true,
-          v7_startTransition: true,
-        }}
-      >
+      <BrowserRouter>
         <Helmet>
           <title>Dashboard : Astroluma</title>
           <meta name="theme-color" content={accentColor} />
@@ -146,9 +139,7 @@ const App = () => {
                             <Route key={Math.random()} path="/manage/page" element={<PageList />} />
                             <Route key={Math.random()} path="/manage/general" element={<GeneralSettings />} />
                             <Route key={Math.random()} path="/manage/theme" element={<ThemeList />} />
-                            <Route key={Math.random()} path="/manage/iconpack" element={<IconPacks />} />
-                            <Route key={Math.random()} path="/manage/iconpack/add" element={<AddIconPack />} />
-                            <Route key={Math.random()} path="/manage/weather" element={<WeatherSettings />} /> 
+                            <Route key={Math.random()} path="/manage/weather" element={<WeatherSettings />} />
                             <Route key={Math.random()} path="/manage/page/add" element={<EditPage />} />
                             <Route key={Math.random()} path="/manage/page/:pageId" element={<EditPage />} />
                             <Route key={Math.random()} path="/manage/totp" element={<AuthenticatorListing />} />
