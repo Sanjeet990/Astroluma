@@ -54,24 +54,14 @@ const ImageSelectorModal = ({ title }) => {
 
           <div className="mt-4">
             {
-              allIconPacks.length === 0 ?
-                <>
-                  <div className="text-center">
-                    <p className="text-gray-500">Loading...</p>
-                  </div>
-                </> :
-                <>
-                  {
-                    activeTab === "com.astroluma.self" && <MyIconsSection onSelectImage={handleSelectImage} />
-                  }
-                  {
-                    allIconPacks.map(iconPack => (
-                      iconPack.iconProvider === activeTab && (
-                        <CustomIconPack key={iconPack.iconProvider} iconPack={iconPack} onSelectImage={handleSelectImage} />
-                      )
-                    ))
-                  }
-                </>
+              activeTab === "com.astroluma.self" && <MyIconsSection onSelectImage={handleSelectImage} />
+            }
+            {
+              allIconPacks.map(iconPack => (
+                iconPack.iconProvider === activeTab && (
+                  <CustomIconPack key={iconPack.iconProvider} iconPack={iconPack} onSelectImage={handleSelectImage} />
+                )
+              ))
             }
           </div>
         </>
