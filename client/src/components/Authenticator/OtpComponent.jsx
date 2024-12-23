@@ -8,6 +8,7 @@ import NiceButton from '../NiceViews/NiceButton';
 import NiceLoader from '../NiceViews/NiceLoader';
 import SystemThemes from '../../utils/SystemThemes';
 import makeToast from '../../utils/ToastUtils';
+import useSecurityCheck from '../../hooks/useSecurityCheck';
 
 const OtpComponent = () => {
     const [selectedService, setSelectedService] = useRecoilState(selectedAuthState);
@@ -16,18 +17,35 @@ const OtpComponent = () => {
     const [totalTime, setTotalTime] = useState(30);
     const [otpGenerated, setOtpGenerated] = useState(false);
 
+    
+    const isSecure = useSecurityCheck();
+
     const colorTheme = useRecoilValue(colorThemeState);
     const [themeType, setThemeType] = useState("light");
 
     const handleCopyToClipboard = useCallback(async () => {
         if (!otp || !otpGenerated) return;
         
-        try {
-            await navigator.clipboard.writeText(otp);
-            makeToast('success', 'OTP copied to clipboard.');
-        } catch (err) {
-            makeToast('error', `Failed to copy: ${err}`);
+        if (isSecure && navigator.clipboard) {
+            navigator.clipboard.writeText(otp).then(() => {
+                makeToast("success", "OTP copied to clipboard.");
+            }).catch(err => {
+                makeToast("error", 'Failed to copy: ', err);
+            });
+        } else {
+            const textArea = document.createElement("textarea");
+            textArea.value = otp;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                makeToast("success", "OTP copied to clipboard.");
+            } catch (err) {
+                makeToast("error", 'Failed to copy: ', err);
+            }
+            document.body.removeChild(textArea);
         }
+
     }, [otp, otpGenerated]);
 
     useEffect(() => {
