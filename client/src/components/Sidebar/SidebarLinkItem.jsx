@@ -9,13 +9,27 @@ const SidebarLinkItem = React.memo(({ icon, text, to, active }) => {
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
     >
-      <NavLink
-        to={to}
-        className={`text-sm group relative flex items-center gap-2.5 py-2 px-4 font-medium duration-300 ease-in-out rounded-full ${active ? 'text-sidebarItemSelectedText bg-sidebarItemSelectedBg hover:text-sidebarItemSelectedHoverText hover:bg-sidebarItemSelectedHoverBg' : 'bg-sidebarItemUnSelectedBg hover:bg-sidebarItemHoverBg text-sidebarItemUnSelectedText hover:text-sidebarItemHoverText'
-          }`}>
-        {icon}
-        {text}
-      </NavLink>
+      {to.startsWith("http") ? (
+        <a
+          href={to}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`text-sm group relative flex items-center gap-2.5 py-2 px-4 font-medium duration-300 ease-in-out rounded-full ${active ? 'text-sidebarItemSelectedText bg-sidebarItemSelectedBg hover:text-sidebarItemSelectedHoverText hover:bg-sidebarItemSelectedHoverBg' : 'bg-sidebarItemUnSelectedBg hover:bg-sidebarItemHoverBg text-sidebarItemUnSelectedText hover:text-sidebarItemHoverText'
+            }`}
+        >
+          {icon}
+          {text}
+        </a>
+      ) : (
+        <NavLink
+          to={to}
+          className={`text-sm group relative flex items-center gap-2.5 py-2 px-4 font-medium duration-300 ease-in-out rounded-full ${active ? 'text-sidebarItemSelectedText bg-sidebarItemSelectedBg hover:text-sidebarItemSelectedHoverText hover:bg-sidebarItemSelectedHoverBg' : 'bg-sidebarItemUnSelectedBg hover:bg-sidebarItemHoverBg text-sidebarItemUnSelectedText hover:text-sidebarItemHoverText'
+            }`}
+        >
+          {icon}
+          {text}
+        </NavLink>
+      )}
     </motion.li>
   );
 });

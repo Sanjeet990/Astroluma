@@ -3,8 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { motion } from 'framer-motion';
 import { BsAppIndicator } from "react-icons/bs";
-import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdDashboardCustomize } from "react-icons/md";
-import { FaGlobeAsia, FaRegListAlt, FaHome, FaCloudSunRain, FaTshirt, FaIcons  } from "react-icons/fa";
+import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdDashboardCustomize, MdContactSupport } from "react-icons/md";
+import { FaGlobeAsia, FaRegListAlt, FaHome, FaCloudSunRain, FaTshirt, FaIcons } from "react-icons/fa";
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import SidebarButtonItem from './SidebarButtonItem';
 import SidebarLinkItem from './SidebarLinkItem';
@@ -190,7 +190,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                       to="/manage/theme" />
 
                     <SidebarLinkItem
-                      icon={<FaIcons  />}
+                      icon={<FaIcons />}
                       text="Icon Packs"
                       active={activeRoute === '/manage/iconpack'}
                       to="/manage/iconpack" />
@@ -230,6 +230,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                       text="User Accounts"
                       active={activeRoute === '/manage/accounts'}
                       to="/manage/accounts" />
+
+                    <SidebarLinkItem
+                      icon={<MdContactSupport />}
+                      text="Support"
+                      active={false}
+                      to="https://getastroluma.com/contact" />
 
                   </>
               }

@@ -46,10 +46,10 @@ const AppListing = () => {
         <>
             <IntegrationInstallModal />
             <Helmet>
-                <title>All Integrations</title>
+                <title>Add Integrations</title>
             </Helmet>
 
-            <Breadcrumb type="custom" pageTitle={"All Integrations"} breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }, { "id": "2", "linkName": "Integrations", "linkUrl": "/manage/apps" }]} />
+            <Breadcrumb type="custom" pageTitle={"Add Integrations"} breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }, { "id": "2", "linkName": "Integrations", "linkUrl": "/manage/apps" }]} />
 
             <div className="flex flex-col justify-between">
                 <div className="text-left w-full md:w-auto" />

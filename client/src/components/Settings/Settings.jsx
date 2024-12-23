@@ -6,7 +6,7 @@ import { Helmet } from 'react-helmet';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import SingleSettingsItem from './SingleSettingsItem';
-import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt } from "react-icons/md";
+import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdContactSupport } from "react-icons/md";
 import { FaCloudSunRain, FaTshirt, FaHome, FaIcons } from "react-icons/fa";
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import { BsAppIndicator } from "react-icons/bs";
@@ -122,10 +122,22 @@ const Settings = () => {
             show: true,
             route: '/manage/accounts'
         },
+        {
+            id: 13,
+            title: 'Support',
+            description: 'Get help and support related to Astroluma',
+            icon: <MdContactSupport />,
+            show: true,
+            route: 'https://getastroluma.com/contact'
+        },
     ]
 
     const manageSelection = useCallback((Setting) => {
-        navigate(Setting?.route);
+        if (Setting?.route.startsWith('http')) {
+            window.open(Setting?.route, '_blank');
+        } else {
+            navigate(Setting?.route);
+        }
     }, [navigate]);
 
     return (
