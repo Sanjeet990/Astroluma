@@ -21,7 +21,7 @@ const CustomIconPack = ({ onSelectImage, iconPack }) => {
     const [baseUrlLight, setBaseUrlLight] = useState('');
     const [iconProvider, setIconProvider] = useState('com.astroluma.self');
 
-    const ITEMS_PER_PAGE = 32;
+    const ITEMS_PER_PAGE = 48;
 
     const colorTheme = useRecoilValue(colorThemeState);
     const [themeType, setThemeType] = useState("light");
@@ -76,8 +76,10 @@ const CustomIconPack = ({ onSelectImage, iconPack }) => {
         }
 
         const filteredIcons = icons.filter(icon =>
-            icon.iconName.toLowerCase().includes(searchTerm.toLowerCase())
+            (icon.iconName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            icon.iconId?.toLowerCase().includes(searchTerm.toLowerCase()))
         );
+
         setDisplayedIcons(filteredIcons);
         setPage(1);
     }, [searchTerm, icons]);
@@ -172,15 +174,25 @@ const CustomIconPack = ({ onSelectImage, iconPack }) => {
             {renderIconGrid()}
 
             {!searchTerm && displayedIcons.length > 0 && displayedIcons.length < icons.length && (
-                <div className="flex justify-center mt-4">
-                    <NiceButton
-                        label='Load More'
-                        onClick={handleLoadMore}
-                        parentClassname='w-full'
-                        className='w-full bg-buttonGeneric text-buttonText'
-                    />
-                </div>
+                <>
+                    <div className="flex justify-center mt-4">
+                        <NiceButton
+                            label='Load More'
+                            onClick={handleLoadMore}
+                            parentClassname='w-full'
+                            className='w-full bg-buttonGeneric text-buttonText'
+                        />
+                    </div>
+                </>
             )}
+            <div className="mt-1 text-center text-xxs text-modalBodyText/50 flex justify-between">
+                <div>
+                    {displayedIcons.length} / {icons.length} icons
+                </div>
+                <div>
+                    Powered by <a target="_blank" href={iconPack.credit?.url} className="text-modalBodyText/50">{iconPack.credit?.name}</a>
+                </div>
+            </div>
         </div>
     );
 };

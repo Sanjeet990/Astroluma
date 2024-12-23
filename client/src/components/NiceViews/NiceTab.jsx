@@ -43,13 +43,12 @@ const NiceTab = ({ tabConfig, activeTab, setActiveTab }) => {
                 className="flex p-1 space-x-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
                 onScroll={handleScroll}
             >
-                {/* Add padding to prevent tabs from being hidden under buttons */}
                 <div className="flex-none w-8" />
                 <AnimatePresence>
                     {tabConfig.map((tab) => (
                         <motion.button
                             key={tab.name}
-                            className={`text-xs px-4 py-2 rounded-full min-w-[100px] ${activeTab === tab.name
+                            className={`text-xs px-4 py-2 rounded-full min-w-[140px] ${activeTab === tab.name
                                     ? 'bg-buttonGeneric text-buttonText'
                                     : 'bg-modalBg text-modalBodyText hover:bg-buttonGeneric/[0.12]'
                                 }`}
