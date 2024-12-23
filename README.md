@@ -1,18 +1,29 @@
 # Astroluma
 
-![Astroluma Logo](https://getastroluma.com/img/logo.svg)
-
+<p align="center">
+        <img src="https://getastroluma.com/img/logo.svg" alt="Astroluma" width="100" />
+        <br /><br />
+        <img src="https://img.shields.io/badge/version-1.0.1-blue" />
+        <a href="">
+          <img src="https://img.shields.io/docker/pulls/sanjeet990/astroluma" />
+        </a>
+        <a href="">
+          <img src="https://img.shields.io/github/stars/Sanjeet990/Astroluma" />
+        </a>
+        <br /><br />
 A powerful, self-hosted home lab dashboard built with the MERN stack.
+
+</p>
 
 ## Overview
 
-Astroluma is a feature-rich, user-friendly dashboard designed to help you manage multiple aspects of your daily tasks and services. Built with flexibility in mind, it allows you to control various features like task management, device monitoring, app integration, and real-time weather updates, all from a single platform. With its responsive design and dynamic configuration options, Astroluma offers a unique blend of customization, usability, and productivity.
+Astroluma is a feature-rich, productivity oriented, user-friendly dashboard designed to help you manage multiple aspects of your daily tasks and services. Built with flexibility in mind, it allows you to control various features like task management, device monitoring, app integration, and real-time weather updates, all from a single platform. With its responsive design and dynamic configuration options, Astroluma offers a unique blend of customization, usability, and productivity.
 
-> [!IMPORTANT]  
-> Astroluma doe not work with ARM devices for the time being. Please follow this issue for update: https://github.com/Sanjeet990/Astroluma/issues/5
+![Listing View](https://getastroluma.com/ss/01-home-featured.png)
 
+## Updates
 
-![Listing View](https://getastroluma.com/assets/images/1-d3f32aa2f73f3fbba0ad15bc58bfa2b4.png)
+Astroluma v1.0.1 is released. Check the full changelog [here](https://github.com/Sanjeet990/Astroluma/releases/tag/v1.0.1)
 
 ## Features
 
@@ -46,13 +57,18 @@ Astroluma is a feature-rich, user-friendly dashboard designed to help you manage
 
 ### Customization
 - **Themes**: 12 built-in themes with more in development
+- **Icon Pack Support**: User configurable icon pack support. Find icons [here](https://getastroluma.com/icons)
 - **Flexible Layout**: Customizable sidebar and category placement
 
 ## Installation
 
 ### On Docker:
 
-1. Create a docker-compose.yml file similar to this:
+1. Create a docker-compose.yml file. Best way to do this is to use the [Astroluma Compose](https://getastroluma.com/compose)
+
+Open Astroluma Compose and chose your preffered settings to generate your docker-compose.yml file.
+
+Alternatively, create a docker-compose.yml similar to this:
 
 ```yml title="docker-compose.yml"
 version: '3.8'
@@ -93,6 +109,8 @@ volumes:
 
 ```
 
+If you're still unsure about creating your own config, please contact [here](https://getastroluma.com/contact).
+
 2. Bring up your stack by running:
 
 ```bash 
@@ -114,11 +132,11 @@ Detailed installation doc: [Installation Guide](https://getastroluma.com/docs/ge
 
 ## FAQs
 
-Coming soon!!
+FAQ list is continuously being updated [here](https://getastroluma.com/faqs).
 
 ## Credits
 
-Coming soon!!
+A big shoutout to the people/projects who made this project possible. Check the credits [here](https://getastroluma.com/credits).
 
 ## License
 
