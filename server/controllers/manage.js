@@ -2,6 +2,7 @@ const Authenticator = require('../models/Authenticator');
 const User = require('../models/User');
 const Listing = require('../models/Listing');
 const axios = require('axios');
+const IconPack = require('../models/IconPack');
 
 // Method to fetch and return dashboard data for the authenticated user
 /**
@@ -16,14 +17,17 @@ const axios = require('axios');
 exports.dashboard = async (req, res) => {
     const userData = req.user; // Extract the authenticated user's data
     const userId = userData?._id; // Extract the user ID from the user data
-    
+
     try {
         // Fetch authenticators, sidebar items, and homepage items concurrently
-        const [authenticators, sidebarItems, homepageItems] = await Promise.all([
+        const [authenticators, sidebarItems, homepageItems, iconPacks] = await Promise.all([
             Authenticator.find({ userId }).sort({ sortOrder: 1 }), // Fetch authenticators sorted by sortOrder
             Listing.find({ userId, inSidebar: true }).sort({ listingName: 1 }), // Sidebar items sorted by listingName
-            Listing.find({ userId, parentId: null }).sort({ listingName: 1 }) // Homepage items sorted by listingName
+            Listing.find({ userId, parentId: null }).sort({ listingName: 1 }), // Homepage items sorted by listingName
+            IconPack.find({ $or: [{ userId: userId }, { userId: null }] }) // Icon packs of the user
         ]);
+
+        userData.password = undefined; // Remove the password from the user data
 
         // Add a default "Home" item to the sidebar
         sidebarItems.unshift({
@@ -39,7 +43,8 @@ exports.dashboard = async (req, res) => {
             authenticators,
             userData,
             sidebarItems,
-            homepageItems
+            homepageItems,
+            iconPacks
         };
 
         // Send the response with status 200
@@ -281,11 +286,11 @@ exports.saveWeatherSettings = async (req, res) => {
         // Update the user's weather settings in the database
         const updateResult = await User.updateOne(
             { _id: userId },
-            { 
-                location: location?.location, 
-                longitude: location?.longitude, 
-                latitude: location?.latitude, 
-                unit 
+            {
+                location: location?.location,
+                longitude: location?.longitude,
+                latitude: location?.latitude,
+                unit
             }
         );
 

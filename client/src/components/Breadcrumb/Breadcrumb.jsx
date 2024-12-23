@@ -11,7 +11,7 @@ const Breadcrumb = ({ type, pageTitle, breadcrumbList, showTitle = true }) => {
             </h2>
 
             <nav>
-                <ol className="flex items-center gap-2">
+                <ol className="flex flex-wrap items-center gap-2">
                     {
                         type === "custom" && (
                             breadcrumbList?.map((item) => (

@@ -215,7 +215,7 @@ exports.completeTodo = async (req, res) => {
         const todo = await Todo.findOne({
             _id: todoId,
             userId
-        });
+        }).populate('parent');
 
         if (!todo) {
             return res.status(404).json({
