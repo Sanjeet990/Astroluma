@@ -59,7 +59,7 @@ const InstalledApps = () => {
                 <div className="flex flex-wrap justify-end space-x-2 mt-4 md:mt-0">
                     <NiceLink
                         to="/manage/apps/all"
-                        label="All Integration"
+                        label="Add Integration"
                         className="bg-buttonGeneric text-buttonText"
                     />
                 </div>
