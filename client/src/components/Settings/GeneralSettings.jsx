@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { loadingState, loginState, reloadDashboardDataState } from '../../atoms';
+import { isHostModeState, loadingState, loginState, reloadDashboardDataState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
 import NiceButton from '../NiceViews/NiceButton';
@@ -19,6 +19,7 @@ const GeneralSettings = () => {
     const setLoading = useSetRecoilState(loadingState);
     const loginData = useRecoilValue(loginState);
     const setReloadData = useSetRecoilState(reloadDashboardDataState);
+    const isHostMode = useRecoilValue(isHostModeState);
 
     const [siteName, setSiteName] = useState('');
     const [authenticator, setAuthenticator] = useState(false);
@@ -113,6 +114,7 @@ const GeneralSettings = () => {
                         <NiceCheckbox
                             label='Enable Network Device Scanning'
                             checked={networkdevices}
+                            disabled={!isHostMode}
                             onChange={(e) => setNetworkdevices(e.target.checked)}
                         />
 

@@ -10,7 +10,7 @@ import SidebarButtonItem from './SidebarButtonItem';
 import SidebarLinkItem from './SidebarLinkItem';
 import { isLocal } from '../../utils/Helper';
 import PropTypes from 'prop-types';
-import { activeRouteState, authenticatorPanelState, sidebarItemState, userDataState, sidebarExpandedState } from '../../atoms';
+import { activeRouteState, authenticatorPanelState, sidebarItemState, userDataState, sidebarExpandedState, isHostModeState } from '../../atoms';
 import packageJson from '../../../package.json';
 import BuyMeACoffee from '../BuyMeACoffee';
 
@@ -19,6 +19,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const userData = useRecoilValue(userDataState);
   const activeRoute = useRecoilValue(activeRouteState);
   const [showAuthenticator, setShowAuthenticator] = useRecoilState(authenticatorPanelState);
+
+  const isHostMode = useRecoilValue(isHostModeState);
 
   const location = useLocation();
   const { pathname } = location;
@@ -204,7 +206,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     }
 
                     {
-                      userData?.networkdevices && <SidebarLinkItem
+                      (userData?.networkdevices && isHostMode) && <SidebarLinkItem
                         icon={<MdOutlineImportantDevices />}
                         text="Network Devices"
                         active={activeRoute === '/manage/networkdevices'}
@@ -262,7 +264,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   }
 
                   {
-                    userData?.networkdevices && <SidebarLinkItem
+                    (userData?.networkdevices && isHostMode) && <SidebarLinkItem
                       icon={<IoQrCode />}
                       active={pathname === '/networkdevices'}
                       text="Network Devices"

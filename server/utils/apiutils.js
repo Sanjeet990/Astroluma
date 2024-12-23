@@ -1,4 +1,5 @@
 const { spawn } = require('child_process');
+const os = require('os');
 
 exports.isValidStream  = (url) => {
     return new Promise((resolve, reject) => {
@@ -40,4 +41,12 @@ exports.isValidStream  = (url) => {
             reject(err);
         });
     });
+}
+
+exports.isHostMode = () => {
+    const interfaces = os.networkInterfaces();
+    const isHostMode = !Object.keys(interfaces).some((name) =>
+      name.startsWith('docker') || name.startsWith('br-')
+    );
+    return isHostMode ? true : false;
 }

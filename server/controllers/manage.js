@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Listing = require('../models/Listing');
 const axios = require('axios');
 const IconPack = require('../models/IconPack');
+const { isHostMode } = require('../utils/apiutils');
 
 // Method to fetch and return dashboard data for the authenticated user
 /**
@@ -44,7 +45,8 @@ exports.dashboard = async (req, res) => {
             userData,
             sidebarItems,
             homepageItems,
-            iconPacks
+            iconPacks,
+            isHostMode: isHostMode()
         };
 
         // Send the response with status 200
@@ -179,7 +181,7 @@ exports.saveSettings = async (req, res) => {
         // Update user settings in the database.
         await User.updateOne(
             { _id: userId },
-            { siteName, authenticator, camerafeed, networkdevices, todolist, snippetmanager }
+            { siteName, authenticator, camerafeed, networkdevices: networkdevices && isHostMode(), todolist, snippetmanager }
         );
 
         // Return a success response.

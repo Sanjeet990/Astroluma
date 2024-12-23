@@ -6,6 +6,7 @@ import {
   colorThemeState,
   homepageItemState,
   iconPackState,
+  isHostModeState,
   loadingState,
   loginState,
   reloadDashboardDataState,
@@ -29,6 +30,7 @@ const PrivateRoute = () => {
   const setHomepageItems = useSetRecoilState(homepageItemState);
   const setColorTheme = useSetRecoilState(colorThemeState);
   const setIconPacks = useSetRecoilState(iconPackState);
+  const setHostMode = useSetRecoilState(isHostModeState);
 
   useEffect(() => {
     if (reloadData && loginData?.token) {
@@ -41,6 +43,7 @@ const PrivateRoute = () => {
           setSidebarItems(data?.message?.sidebarItems);
           setHomepageItems(data?.message?.homepageItems);
           setIconPacks(data?.message?.iconPacks);
+          setHostMode(data?.message?.isHostMode);
 
           const theme = data?.message?.userData?.colorTheme;
 
@@ -58,7 +61,7 @@ const PrivateRoute = () => {
         });
     }
   }, [loginData, reloadData, navigate, setLoading, setAuthListState, setUserData, setSidebarItems,
-    setHomepageItems, setColorTheme, setReloadData, setIconPacks]);
+    setHomepageItems, setColorTheme, setReloadData, setIconPacks, setHostMode]);
 
   return loginData?.token ? <Outlet /> : <Navigate to="/login" />;
 };
