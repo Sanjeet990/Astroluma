@@ -272,6 +272,7 @@ exports.listItems = async (req, res) => {
         }),
         getBreadcrumb(listingId, userId)
     ]);
+    
 
     //return details
     return res.status(200).json({
