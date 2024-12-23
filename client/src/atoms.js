@@ -315,3 +315,9 @@ export const quickPreviewStreamState = atom({
     },
   ],
 });
+
+export const isHostModeState = atom({
+  key: 'isHostModeState',
+  default: false,
+  effects_UNSTABLE: [persistAtom]
+});

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
-import { userDataState } from '../../atoms';
+import { isHostModeState, userDataState } from '../../atoms';
 import WelcomeUser from '../Misc/WelcomeUser';
 import { Helmet } from 'react-helmet';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
@@ -18,6 +18,8 @@ const Settings = () => {
 
     const userData = useRecoilValue(userDataState);
     const setActiveRoute = useCurrentRoute();
+
+    const isHostMode = useRecoilValue(isHostModeState);
 
     useDynamicFilter(false);
 
@@ -95,7 +97,7 @@ const Settings = () => {
             title: 'Network Devices',
             description: 'Manage network devices and their settings',
             icon: <MdOutlineImportantDevices />,
-            show: userData?.networkdevices,
+            show: (userData?.networkdevices && isHostMode),
             route: '/manage/networkdevices'
         },
         {
