@@ -3,12 +3,17 @@
 <p align="center">
         <img src="https://getastroluma.com/img/logo.svg" alt="Astroluma" width="100" />
         <br /><br />
-        <img src="https://img.shields.io/badge/version-1.0.1-blue" />
-        <a href="">
-          <img src="https://img.shields.io/docker/pulls/sanjeet990/astroluma" />
+        <a href="https://github.com/Sanjeet990/Astroluma/releases">
+          <img src="https://img.shields.io/badge/version-1.0.1-blue?style=for-the-badge" />
         </a>
-        <a href="">
-          <img src="https://img.shields.io/github/stars/Sanjeet990/Astroluma" />
+        <a href="https://hub.docker.com/r/sanjeet990/astroluma">
+          <img src="https://img.shields.io/docker/pulls/sanjeet990/astroluma?style=for-the-badge&logo=docker" />
+        </a>
+        <a href="https://github.com/Sanjeet990">
+          <img src="https://img.shields.io/github/stars/Sanjeet990/Astroluma?style=for-the-badge&logo=github" />
+        </a>
+        <a href="https://github.com/Sanjeet990/Astroluma/blob/main/LICENSE">
+          <img src="https://img.shields.io/github/license/Sanjeet990/Astroluma?style=for-the-badge" />
         </a>
         <br /><br />
 A powerful, self-hosted home lab dashboard built with the MERN stack.
