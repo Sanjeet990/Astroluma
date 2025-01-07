@@ -6,6 +6,7 @@ import NiceTab from '../NiceViews/NiceTab';
 import PropTypes from 'prop-types';
 import MyIconsSection from '../Icons/MyIconsSection';
 import CustomIconPack from '../Icons/CustomIconPack';
+import { BrowserRouter } from 'react-router-dom';
 
 const ImageSelectorModal = ({ title }) => {
   const [modalState, setModalState] = useRecoilState(imageModalState);
@@ -54,7 +55,7 @@ const ImageSelectorModal = ({ title }) => {
 
           <div className="mt-4">
             {
-              activeTab === "com.astroluma.self" && <MyIconsSection onSelectImage={handleSelectImage} />
+              activeTab === "com.astroluma.self" && <BrowserRouter><MyIconsSection onSelectImage={handleSelectImage} /></BrowserRouter>
             }
             {
               allIconPacks?.map(iconPack => (
