@@ -26,6 +26,7 @@ import WakeListings from './components/Networkdevice/WakeListings';
 import EditDevice from './components/Networkdevice/EditDevice';
 import WakeFrontListing from './components/Networkdevice/WakeFrontListing';
 import NetworkError from './components/Misc/NetworkError';
+import DatabaseError from './components/Misc/DatabaseError';
 import ContentLoader from './components/Layout/ContentLoader';
 import AccountList from './components/Accounts/AccountList';
 import EditUser from './components/Accounts/EditUser';
@@ -165,6 +166,7 @@ const App = () => {
               <Route path="/client-error" element={<ClientError />} />
               <Route path="/server-error" element={<NotFound />} />
               <Route path="/network-error" element={<NetworkError />} />
+              <Route path="/database-error" element={<DatabaseError />} />
             </Routes>
           </div>
         </div>

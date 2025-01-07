@@ -6,8 +6,11 @@ import NiceButton from '../NiceViews/NiceButton';
 import NiceModal from '../NiceViews/NiceModal';
 import NiceLoader from '../NiceViews/NiceLoader';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const ConfirmPacketSendModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(sendmagicPacketState);
   const loginData = useRecoilValue(loginState);
   const [isSending, setIsSending] = useState(false);
@@ -19,12 +22,12 @@ const ConfirmPacketSendModal = () => {
   const sendPacketNow = () => {
     setIsSending(true);
 
-    ApiService.get(`/api/v1/networkdevices/wake/${modalState.data._id}`, loginData?.token)
+    ApiService.get(`/api/v1/networkdevices/wake/${modalState.data._id}`, loginData?.token, navigate)
       .then(data => {
         makeToast("success", String(data?.message));
       })
-      .catch(() => {
-        makeToast("error", "Failed to send packet");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Failed to send packet");
       }).finally(() => {
         setIsSending(false);
         setModalState({ data: null, isOpen: false });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { loadingState, loginState, moveItemState, reloadFolderListingState, userDataState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
@@ -33,6 +33,8 @@ import NiceDrag from '../NiceViews/NiceDrag';
 import makeToast from '../../utils/ToastUtils';
 
 const Listings = ({ type }) => {
+    const navigate = useNavigate();
+
     const params = useParams();
     const listingId = params?.listingid;
 
@@ -74,19 +76,16 @@ const Listings = ({ type }) => {
 
     const updateReorderStatusOnServer = useCallback(async (reorderedArray) => {
         setLoading(true);
-        try {
-            const data = await ApiService.post(
-                `/api/v1/listing/folder/${listingId}/reorder`,
-                { items: reorderedArray.map(item => item._id) },
-                loginData?.token
-            );
-            makeToast("success", String(data?.message));
-        } catch {
-            makeToast("error", "Reordering failed.");
-        } finally {
-            setLoading(false);
-        }
-    }, [listingId, loginData?.token, setLoading]);
+        ApiService.post(`/api/v1/listing/folder/${listingId}/reorder`, { items: reorderedArray.map(item => item._id) }, loginData?.token, navigate)
+            .then(data => {
+                makeToast("success", String(data?.message));
+            })
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Reordering failed.");
+            }).finally(() => {
+                setLoading(false);
+            });
+    }, [listingId, loginData?.token, setLoading, navigate]);
 
     const handleDragEnd = useCallback((event) => {
         setActiveId(null);
@@ -105,20 +104,19 @@ const Listings = ({ type }) => {
         if (!moveItem) return;
 
         setLoading(true);
-        try {
-            await ApiService.get(
-                `/api/v1/listing/move/${moveItem?._id}/to/${listingId}`,
-                loginData?.token
-            );
-            setMoveItem(null);
-            setReloadData(true);
-            makeToast("success", "Item moved successfully.");
-        } catch {
-            makeToast("error", "Item cannot be moved.");
-        } finally {
-            setLoading(false);
-        }
-    }, [moveItem, listingId, loginData?.token, setMoveItem, setReloadData, setLoading]);
+        ApiService.get(`/api/v1/listing/move/${moveItem?._id}/to/${listingId}`, loginData?.token, navigate)
+            .then(() => {
+                setMoveItem(null);
+                setReloadData(true);
+                makeToast("success", "Item moved successfully.");
+            })
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Item cannot be moved.");
+            }).finally(() => {
+                setLoading(false);
+            });
+
+    }, [moveItem, listingId, loginData?.token, setMoveItem, setReloadData, setLoading, navigate]);
 
     const cancelMove = useCallback(() => {
         setMoveItem(null);
@@ -126,38 +124,40 @@ const Listings = ({ type }) => {
 
     const deleteListing = useCallback(async (id) => {
         setLoading(true);
-        try {
-            await ApiService.get(`/api/v1/listing/delete/${id}`, loginData?.token);
-            setItemList(prev => prev.filter(item => item._id !== id));
-            makeToast("success", "Selected Item deleted successfully.");
-        } catch {
-            makeToast("error", "Item cannot be deleted.");
-        } finally {
-            setLoading(false);
-        }
-    }, [loginData?.token, setLoading]);
+        ApiService.get(`/api/v1/listing/delete/${id}`, loginData?.token, navigate)
+            .then(() => {
+                setItemList(prev => prev.filter(item => item._id !== id));
+                makeToast("success", "Selected Item deleted successfully.");
+            })
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Item cannot be deleted.");
+            }).finally(() => {
+                setLoading(false);
+            });
+
+    }, [loginData?.token, setLoading, navigate]);
 
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            try {
-                const data = await ApiService.get(
-                    `/api/v1/listing/folder/${listingId}/list/manage/${type}`,
-                    loginData?.token
-                );
-                setItemList(data?.message?.items);
-                setParentFolder(data?.message?.parentFolder);
-                setBreadcrumbList(data?.message?.breadcrumb);
-            } catch {
-                makeToast("error", "Can not fetch the folder details.");
-            } finally {
-                setLoading(false);
-                setReloadData(false);
-            }
+
+            ApiService.get(`/api/v1/listing/folder/${listingId}/list/manage/${type}`, loginData?.token, navigate)
+                .then((data) => {
+                    setItemList(data?.message?.items);
+                    setParentFolder(data?.message?.parentFolder);
+                    setBreadcrumbList(data?.message?.breadcrumb);
+                })
+                .catch((error) => {
+                    if (!error.handled) makeToast("error", "Can not fetch the folder details.");
+                }).finally(() => {
+                    setLoading(false);
+                    setReloadData(false);
+                });
+
         };
 
         fetchData();
-    }, [listingId, reloadData, loginData?.token, setReloadData, setLoading, type]);
+    }, [listingId, reloadData, loginData?.token, setReloadData, setLoading, type, navigate]);
 
     const renderActionButtons = useMemo(() => (
         <div className="flex flex-wrap justify-between items-center mt-4 md:mt-0">

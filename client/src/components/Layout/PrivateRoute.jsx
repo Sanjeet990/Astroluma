@@ -53,7 +53,7 @@ const PrivateRoute = () => {
         })
         .catch(error => {
           console.log(error);
-          makeToast("error", "Error loading data...");
+          if (!error.handled) makeToast("error", "Error loading data...");
         })
         .finally(() => {
           setLoading(false);

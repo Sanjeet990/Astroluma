@@ -12,8 +12,11 @@ import { motion } from 'framer-motion';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import NoListing from '../Misc/NoListing';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const WakeFrontListing = () => {
+
+    const navigate = useNavigate();
 
     const [reloadData, setReloadData] = useRecoilState(reloadFolderListingState);
     const [itemList, setItemList] = useState([]);
@@ -47,18 +50,18 @@ const WakeFrontListing = () => {
 
     useEffect(() => {
         setLoading(true);
-        ApiService.get("/api/v1/networkdevices/devices", loginData?.token)
+        ApiService.get("/api/v1/networkdevices/devices", loginData?.token, navigate)
             .then(data => {
                 setItemList(data?.message?.items);
                 setTempItemList(data?.message?.items);
             })
-            .catch(() => {
-                makeToast("error", "Something went wrong!");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Something went wrong!");
             }).finally(() => {
                 setLoading(false);
                 setReloadData(false);
             });
-    }, [reloadData, loginData, setLoading, setReloadData]);
+    }, [reloadData, loginData, setLoading, setReloadData, navigate]);
 
 
     return (

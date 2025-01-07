@@ -7,8 +7,11 @@ import NiceInput from '../NiceViews/NiceInput';
 import NiceModal from '../NiceViews/NiceModal';
 import NiceLoader from '../NiceViews/NiceLoader';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const LocationSelectorModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(weatherLocationSearchModalState);
   const setSelectedLocation = useSetRecoilState(weatherLocationSelectedState);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,12 +40,12 @@ const LocationSelectorModal = () => {
     setIsLoading(true);
 
     //search for location
-    ApiService.get(`https://nominatim.openstreetmap.org/search?q=${inputLocation}&format=json&limit=5`)
+    ApiService.get(`https://nominatim.openstreetmap.org/search?q=${inputLocation}&format=json&limit=5`, null, navigate)
       .then(data => {
         setLocationList(data);
       })
-      .catch(() => {
-        makeToast("error", "Can not load locations.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Can not load locations.");
       })
       .finally(() => {
         setIsLoading(false);

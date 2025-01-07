@@ -5,8 +5,11 @@ import ApiService from '../../utils/ApiService';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const DeletePageModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(deletePageModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
@@ -19,14 +22,14 @@ const DeletePageModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/page/delete/${modalState.data?.pageId}`, loginData?.token)
+    ApiService.get(`/api/v1/page/delete/${modalState.data?.pageId}`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Page deleted.");
         setDeletedPage(modalState.data?.pageId);
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", "Page cannot be deleted.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Page cannot be deleted.");
       })
       .finally(() => {
         setLoading(false);

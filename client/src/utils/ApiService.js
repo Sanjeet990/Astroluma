@@ -34,7 +34,10 @@ class ApiService {
     } catch (error) {
       console.error('GET Request Error:', error);
       handleApiError(error, navigate);
-      throw error;
+      throw {
+        ...error,
+        handled: isDatabaseError(error) ? true : false,
+      }
     }
   }
 
@@ -55,9 +58,12 @@ class ApiService {
       const response = await axiosInstance.post(url, data, { headers });
       return response.data;
     } catch (error) {
-      console.error('POST Request Error:', error);
+      console.error('POST Request Error:', error, navigate);
       handleApiError(error, navigate);
-      throw error;
+      throw {
+        ...error,
+        handled: isDatabaseError(error) ? true : false,
+      }
     }
   }
 
@@ -83,7 +89,10 @@ class ApiService {
     } catch (error) {
       console.error('POST FormData Request Error:', error);
       handleApiError(error, navigate);
-      throw error;
+      throw {
+        ...error,
+        handled: isDatabaseError(error) ? true : false,
+      }
     }
   }
 
@@ -108,10 +117,18 @@ class ApiService {
     } catch (error) {
       console.error('GET Request Error:', error);
       handleApiError(error, navigate);
-      throw error;
+      throw {
+        ...error,
+        handled: isDatabaseError(error) ? true : false,
+      }
     }
   }
 }
+
+const isDatabaseError = (error) => {
+  const dbStatus = error.response?.headers['x-database-status'];
+  return error.response?.status === 500 && dbStatus === 'NOT_CONNECTED';
+};
 
 // Helper function to handle API errors and navigate
 const handleApiError = (error, navigate) => {
@@ -122,7 +139,10 @@ const handleApiError = (error, navigate) => {
       if (!navigate) makeToast("error", 'Server is unavailable. Please try again later.');
       else navigate('/network-error');
     }
-    throw error;
+    throw {
+      ...error,
+      handled: false,
+    };
   } else {
 
     const statusCode = error.response?.status;
@@ -135,8 +155,12 @@ const handleApiError = (error, navigate) => {
         navigate('/client-error');
       }
     } else if (statusCode >= 500 && statusCode < 600 && navigate) {
-      // Server error (5xx)
-      navigate('/server-error');
+      if (isDatabaseError(error)) {
+        navigate('/database-error');
+      } else {
+        // Server error (5xx)
+        navigate('/server-error');
+      }
     } else {
       if (navigate) navigate('/network-error');
     }

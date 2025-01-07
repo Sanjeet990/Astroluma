@@ -90,13 +90,13 @@ const IntegrationInstallModal = () => {
       config: configData,
     };
 
-    ApiService.post("/api/v1/app/install", requestData, loginData?.token)
+    ApiService.post("/api/v1/app/install", requestData, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Integration activated.");
         closeModal(true);
       })
-      .catch(() => {
-        makeToast("error", "Integration cannot be activated.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Integration cannot be activated.");
       })
       .finally(() => {
         setLoading(false);

@@ -47,7 +47,7 @@ const EditLink = () => {
 
     useEffect(() => {
         setLoading(true);
-        ApiService.get(`/api/v1/listing/link/${listingId}`, loginData?.token)
+        ApiService.get(`/api/v1/listing/link/${listingId}`, loginData?.token, navigate)
             .then(data => {
                 setIntegrationList(data?.message?.integrations);
                 if (data?.message?.listing) {
@@ -94,8 +94,8 @@ const EditLink = () => {
 
                 setPageList(data?.message?.pages);
             })
-            .catch(() => {
-                makeToast("error", "Failed to fetch link details.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to fetch link details.");
             }).finally(() => {
                 setLoading(false);
             });
@@ -115,7 +115,7 @@ const EditLink = () => {
         const tempLink = selectedPage ? `/p/${selectedPage}` : (haveRemoteUrl ? remoteUrl : "");
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/link', { listingId, parentId, linkName, linkIcon: selectedImage, linkURL: tempLink, localUrl, showInSidebar, showOnFeatured, integration: selectedIntegration }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/link', { listingId, parentId, linkName, linkIcon: selectedImage, linkURL: tempLink, localUrl, showInSidebar, showOnFeatured, integration: selectedIntegration }, loginData?.token, navigate)
             .then(() => {
                 setSelectedImage(null);
                 setLinkName("");
@@ -129,8 +129,8 @@ const EditLink = () => {
                 makeToast("success", "Link saved.");
                 navigate(-1);
             })
-            .catch(() => {
-                makeToast("error", "Error saving link.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Error saving link.");
             }).finally(() => {
                 setLoading(false);
             });

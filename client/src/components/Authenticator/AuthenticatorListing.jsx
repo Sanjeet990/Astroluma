@@ -28,10 +28,12 @@ import SingleTotpItem from './SingleTotpItem';
 import NiceLink from '../NiceViews/NiceLink';
 import NiceDrag from '../NiceViews/NiceDrag';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 
 const AuthenticatorListing = () => {
 
+    const navigate = useNavigate();
     const [reloadData, setReloadData] = useRecoilState(reloadFolderListingState);
 
     const [itemList, setItemList] = useState([]);
@@ -76,13 +78,13 @@ const AuthenticatorListing = () => {
 
     const updateReorderStatusOnServer = (reorderedArray) => {
         setLoading(true);
-        ApiService.post("/api/v1/totp/reorder", { items: reorderedArray.map(item => item._id) }, loginData?.token)
+        ApiService.post("/api/v1/totp/reorder", { items: reorderedArray.map(item => item._id) }, loginData?.token, navigate)
             .then(data => {
                 //setReloadData(true);
                 makeToast("success", String(data?.message));
             })
-            .catch(() => {
-                makeToast("error", "Error updating the order of items.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Error updating the order of items.");
             }).finally(() => {
                 setLoading(false);
             });
@@ -90,28 +92,28 @@ const AuthenticatorListing = () => {
 
     useEffect(() => {
         setLoading(true);
-        ApiService.get("/api/v1/totp/list", loginData?.token)
+        ApiService.get("/api/v1/totp/list", loginData?.token, navigate)
             .then(data => {
                 setItemList(data?.message?.items);
             })
-            .catch(() => {
-                makeToast("error", "Error fetching the list of items.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Error fetching the list of items.");
             }).finally(() => {
                 setLoading(false);
                 setReloadData(false);
             });
-    }, [reloadData, loginData, setLoading, setReloadData]);
+    }, [reloadData, loginData, setLoading, setReloadData, navigate]);
 
     const deleteTotpItem = (id) => {
         setLoading(true);
 
-        ApiService.get(`/api/v1/totp/delete/${id}`, loginData?.token)
+        ApiService.get(`/api/v1/totp/delete/${id}`, loginData?.token, navigate)
             .then(() => {
                 setItemList(itemList.filter(item => item._id !== id));
                 makeToast("success", "Selected item deleted successfully.");
             })
-            .catch(() => {
-                makeToast("error", "Error deleting the selected item.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Error deleting the selected item.");
             }).finally(() => {
                 setLoading(false);
             });

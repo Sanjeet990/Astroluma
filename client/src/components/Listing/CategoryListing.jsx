@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { contentLoadingState, filterQueryState, loginState, reloadFolderListingState, userDataState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
@@ -16,6 +16,7 @@ import makeToast from '../../utils/ToastUtils';
 
 const CategoryListing = () => {
     const params = useParams();
+    const navigate = useNavigate();
 
     const listingId = params?.listingid;
 
@@ -73,20 +74,20 @@ const CategoryListing = () => {
 
     useEffect(() => {
         setLoading(true);
-        ApiService.get(`/api/v1/listing/folder/${listingId}/list`, loginData?.token)
+        ApiService.get(`/api/v1/listing/folder/${listingId}/list`, loginData?.token, navigate)
             .then(data => {
                 setItemList(data?.message?.items);
                 setTempItemList(data?.message?.items);
                 setParentFolder(data?.message?.parentFolder);
                 setBreadcrumbList(data?.message?.breadcrumb);
             })
-            .catch(() => {
-                makeToast("error", "Failed to fetch folder listing.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to fetch folder listing.");
             }).finally(() => {
                 setLoading(false);
                 setReloadData(false);
             });
-    }, [listingId, reloadData, loginData?.token, setReloadData, setLoading]);
+    }, [listingId, reloadData, loginData?.token, setReloadData, setLoading, navigate]);
 
 
     return (

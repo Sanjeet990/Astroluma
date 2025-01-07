@@ -12,8 +12,11 @@ import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import NiceBack from '../NiceViews/NiceBack';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
+import { useNavigate } from 'react-router-dom';
 
 const WeatherSettings = () => {
+
+    const navigate = useNavigate();
 
     const setActiveRoute = useCurrentRoute();
 
@@ -64,13 +67,13 @@ const WeatherSettings = () => {
 
         setLoading(true);
 
-        ApiService.post("/api/v1/settings/weather", { location: selectedLocation, unit: selectedUnit }, loginData?.token)
+        ApiService.post("/api/v1/settings/weather", { location: selectedLocation, unit: selectedUnit }, loginData?.token, navigate)
             .then(() => {
                 makeToast("success", "Weather settings saved successfully.");
                 setReloadData(true);
             })
-            .catch(() => {
-                makeToast("error", "Weather settings could not be saved.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Weather settings could not be saved.");
             }).finally(() => {
                 setLoading(false);
             });

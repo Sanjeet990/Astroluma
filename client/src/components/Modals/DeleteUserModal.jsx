@@ -5,8 +5,11 @@ import ApiService from '../../utils/ApiService';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const DeleteUserModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(deleteUserModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
@@ -19,14 +22,14 @@ const DeleteUserModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/accounts/delete/${modalState.data?.userId}`, loginData?.token)
+    ApiService.get(`/api/v1/accounts/delete/${modalState.data?.userId}`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "User deleted.");
         setDeletedUser(modalState.data?.userId);
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", "User cannot be deleted.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "User cannot be deleted.");
       })
       .finally(() => {
         setLoading(false);

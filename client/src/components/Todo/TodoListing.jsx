@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import NewTodoItemModal from '../Modals/NewTodoItemModal';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { addedTodoState, contentLoadingState, loginState, newTodoModalState } from '../../atoms';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { LuListTodo } from "react-icons/lu";
 import ApiService from '../../utils/ApiService';
 import SingleTodoItem from './SingleTodoItem';
@@ -20,6 +20,8 @@ import emitter, { PAGE_BOTTOM_EVENT } from '../../events';
 
 const TodoListing = () => {
     const params = useParams();
+    const navigate = useNavigate();
+
     const listingId = params?.listingid;
 
     const setModalState = useSetRecoilState(newTodoModalState);
@@ -97,35 +99,36 @@ const TodoListing = () => {
     }, [loading, page, totalPages]);
 
     const fetchTodoItems = useCallback(async (pageNum) => {
-        try {
-            if (pageNum === 1) setLoading(true);
-            else setLocalLoading(true);
+        if (pageNum === 1) setLoading(true);
+        else setLocalLoading(true);
 
-            const data = await ApiService.get(
-                `/api/v1/todo/${listingId || "all"}/items/${selectedCompletedOption}/${selectedFilterOption}/${pageNum}`,
-                loginData?.token
-            );
+        ApiService.get(`/api/v1/todo/${listingId || "all"}/items/${selectedCompletedOption}/${selectedFilterOption}/${pageNum}`, loginData?.token, navigate)
+            .then(data => {
 
-            if (pageNum === 1) {
-                setTodoItems(data?.message?.todoItems || []);
-            } else {
-                setTodoItems(prev => [...prev, ...(data?.message?.todoItems || [])]);
-            }
+                if (pageNum === 1) {
+                    setTodoItems(data?.message?.todoItems || []);
+                } else {
+                    setTodoItems(prev => [...prev, ...(data?.message?.todoItems || [])]);
+                }
 
-            setTotalPages(data?.message?.totalPages);
+                setTotalPages(data?.message?.totalPages);
 
-            if (data?.message?.todo) {
-                setListingName(data?.message?.todo?.listingName);
-            }
-            setBreadcrumbList(data?.message?.breadcrumb);
-        } catch (error) {
-            makeToast("error", "Cannot load data.");
-        } finally {
-            setLoading(false);
-            setLocalLoading(false);
-            setAddedTodo(null);
-        }
-    }, [listingId, selectedCompletedOption, selectedFilterOption, loginData?.token, setLoading, setAddedTodo]);
+                if (data?.message?.todo) {
+                    setListingName(data?.message?.todo?.listingName);
+                }
+                setBreadcrumbList(data?.message?.breadcrumb);
+
+            })
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Cannot load data.");
+            })
+            .finally(() => {
+                setLoading(false);
+                setLocalLoading(false);
+                setAddedTodo(null);
+            });
+
+    }, [listingId, selectedCompletedOption, selectedFilterOption, loginData?.token, setLoading, setAddedTodo, navigate]);
 
     useEffect(() => {
         emitter.on(PAGE_BOTTOM_EVENT, handlePageBottomScroll);

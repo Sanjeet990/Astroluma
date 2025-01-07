@@ -28,9 +28,12 @@ import useCurrentRoute from '../../hooks/useCurrentRoute';
 import NiceLink from '../NiceViews/NiceLink';
 import NiceDrag from '../NiceViews/NiceDrag';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 
 const WakeListings = () => {
+
+    const navigate = useNavigate();
 
     const [reloadData, setReloadData] = useRecoilState(reloadFolderListingState);
 
@@ -76,13 +79,13 @@ const WakeListings = () => {
 
     const updateReorderStatusOnServer = (reorderedArray) => {
         setLoading(true);
-        ApiService.post("/api/v1/networkdevices/device/reorder", { items: reorderedArray.map(item => item._id) }, loginData?.token)
+        ApiService.post("/api/v1/networkdevices/device/reorder", { items: reorderedArray.map(item => item._id) }, loginData?.token, navigate)
             .then(data => {
                 //setReloadData(true);
                 makeToast("success", String(data?.message));
             })
-            .catch(() => {
-                makeToast("error", "Error updating the reorder status.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Error updating the reorder status.");
             }).finally(() => {
                 setLoading(false);
             });
@@ -90,28 +93,28 @@ const WakeListings = () => {
 
     useEffect(() => {
         setLoading(true);
-        ApiService.get("/api/v1/networkdevices/db/devices", loginData?.token)
+        ApiService.get("/api/v1/networkdevices/db/devices", loginData?.token, navigate)
             .then(data => {
                 setItemList(data?.message?.items);
             })
-            .catch(() => {
-                makeToast("error", "Error fetching the network devices.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Error fetching the network devices.");
             }).finally(() => {
                 setLoading(false);
                 setReloadData(false);
             });
-    }, [reloadData, loginData, setLoading, setReloadData]);
+    }, [reloadData, loginData, setLoading, setReloadData, navigate]);
 
     const deleteNetworkDevice = (id) => {
         setLoading(true);
 
-        ApiService.get(`/api/v1/networkdevices/delete/${id}`, loginData?.token)
+        ApiService.get(`/api/v1/networkdevices/delete/${id}`, loginData?.token, navigate)
             .then(() => {
                 setItemList(itemList.filter(item => item._id !== id));
                 makeToast("success", "Selected Item deleted successfully.");
             })
-            .catch(() => {
-                makeToast("error", "Error deleting the selected item.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Error deleting the selected item.");
             }).finally(() => {
                 setLoading(false);
             });

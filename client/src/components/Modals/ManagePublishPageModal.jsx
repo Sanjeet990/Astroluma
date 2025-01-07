@@ -5,8 +5,11 @@ import ApiService from '../../utils/ApiService';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const ManagePublishPageModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(publishPageModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
@@ -19,14 +22,14 @@ const ManagePublishPageModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/page/action/${modalState.data?.pageId}/${modalState.data?.isPublished ? "unpublish" : "publish"}`, loginData?.token)
+    ApiService.get(`/api/v1/page/action/${modalState.data?.pageId}/${modalState.data?.isPublished ? "unpublish" : "publish"}`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", modalState.data?.isPublished ? "Page unpublished." : "Page published.");
         setDeletedPage(modalState.data?.pageId);
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", modalState.data?.isPublished ? "Page can't be unpublished." : "Page can't be published.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", modalState.data?.isPublished ? "Page can't be unpublished." : "Page can't be published.");
       })
       .finally(() => {
         setLoading(false);

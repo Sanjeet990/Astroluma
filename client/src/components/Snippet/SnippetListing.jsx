@@ -6,7 +6,7 @@ import useCurrentRoute from '../../hooks/useCurrentRoute';
 import NewSnippetItemModal from '../Modals/NewSnippetItemModal';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { contentLoadingState, deletedSnippetState, filterQueryState, loginState, newSnippetModalState, savedSnippetState } from '../../atoms';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import ApiService from '../../utils/ApiService';
 import SingleSnippetItem from './SingleSnippetItem';
 import SingleSnippetHeaderItem from './SingleSnippetHeaderItem';
@@ -17,6 +17,8 @@ import makeToast from '../../utils/ToastUtils';
 import PropTypes from 'prop-types';
 
 const SnippetListing = () => {
+    const navigate = useNavigate();
+
     const params = useParams();
     const parentId = params?.listingid;
     const contentRef = useRef(null);
@@ -46,34 +48,36 @@ const SnippetListing = () => {
     useEffect(() => {
         const fetchSnippets = async () => {
             setLoading(true);
-            try {
-                const tempPage = globalFilterQuery !== lastSearchTerm ? 1 : page;
-                let path = `/api/v1/snippet/${parentId}/items/${tempPage}`;
 
-                if (globalFilterQuery) {
-                    path += `/search/${globalFilterQuery}`;
-                }
+            const tempPage = globalFilterQuery !== lastSearchTerm ? 1 : page;
+            let path = `/api/v1/snippet/${parentId}/items/${tempPage}`;
 
-                const data = await ApiService.get(path, loginData?.token);
-                setPage(data.message.currentPage);
-                setTotalPages(data.message.totalPages);
-
-                if ((globalFilterQuery && tempPage === 1) || (!globalFilterQuery && page === 1)) {
-                    setSnippets(data.message.snippets);
-                } else {
-                    setSnippets(prevSnippets => [...prevSnippets, ...data.message.snippets]);
-                }
-
-                setLastSearchTerm(globalFilterQuery || "");
-            } catch (error) {
-                makeToast("error", "Can not load data.");
-            } finally {
-                setLoading(false);
+            if (globalFilterQuery) {
+                path += `/search/${globalFilterQuery}`;
             }
+
+            ApiService.get(path, loginData?.token, navigate)
+                .then((data) => {
+                    setPage(data.message.currentPage);
+                    setTotalPages(data.message.totalPages);
+
+                    if ((globalFilterQuery && tempPage === 1) || (!globalFilterQuery && page === 1)) {
+                        setSnippets(data.message.snippets);
+                    } else {
+                        setSnippets(prevSnippets => [...prevSnippets, ...data.message.snippets]);
+                    }
+
+                    setLastSearchTerm(globalFilterQuery || "");
+                })
+                .catch((error) => {
+                    if (!error.handled) makeToast("error", "Can not load data.");
+                }).finally(() => {
+                    setLoading(false);
+                });
         };
 
         fetchSnippets();
-    }, [page, globalFilterQuery, parentId, loginData?.token, lastSearchTerm, setLoading]);
+    }, [page, globalFilterQuery, parentId, loginData?.token, lastSearchTerm, setLoading, navigate]);
 
     // Handle deleted snippets
     useEffect(() => {
