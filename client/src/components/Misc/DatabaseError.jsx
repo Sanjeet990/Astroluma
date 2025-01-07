@@ -16,7 +16,7 @@ const DatabaseError = () => {
         setLoading(true);
         ApiService.get("/api/v1/home", null, navigate)
             .then(() => {
-                //navigate("/");
+                navigate("/");
             })
             .catch((error) => {
                 if (!error.handled) makeToast("error", "Can not connect to the API.");
