@@ -265,7 +265,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
                   {
                     (userData?.networkdevices && isHostMode) && <SidebarLinkItem
-                      icon={<IoQrCode />}
+                      icon={<MdOutlineImportantDevices />}
                       active={pathname === '/networkdevices'}
                       text="Network Devices"
                       to="/networkdevices" />

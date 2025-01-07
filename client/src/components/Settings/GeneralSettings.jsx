@@ -8,6 +8,7 @@ import NiceInput from '../NiceViews/NiceInput';
 import NiceCheckbox from '../NiceViews/NiceCheckbox';
 import makeToast from '../../utils/ToastUtils';
 import NiceBack from '../NiceViews/NiceBack';
+import NicePreferenceHeader from '../NiceViews/NicePreferenceHeader';
 import { Helmet } from 'react-helmet';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
@@ -32,7 +33,7 @@ const GeneralSettings = () => {
     const [networkdevices, setNetworkdevices] = useState(false);
 
     useDynamicFilter(false);
-    
+
     useEffect(() => {
         setActiveRoute("/manage/general");
     }, [setActiveRoute]);
@@ -76,7 +77,6 @@ const GeneralSettings = () => {
             });
     }, [loginData, setLoading, navigate]);
 
-
     return (
         <>
             <Helmet>
@@ -88,6 +88,10 @@ const GeneralSettings = () => {
             <div className="max-w-4xl mx-auto w-full">
                 <div className="card border bg-cardBg text-cardText border-cardBorder shadow-md rounded-xl px-8 pt-6 pb-8 mb-4">
                     <div className="mt-4">
+
+                        <NicePreferenceHeader
+                            title="Appearance" />
+
                         <NiceInput
                             label="Site Name"
                             value={siteName}
@@ -95,6 +99,9 @@ const GeneralSettings = () => {
                             onChange={(e) => setSiteName(e.target.value)}
                             placeholder="Enter site name"
                         />
+
+                        <NicePreferenceHeader
+                            title="Features" />
 
                         <NiceCheckbox
                             label="Enable Todo List"
@@ -126,6 +133,7 @@ const GeneralSettings = () => {
                             checked={authenticator}
                             onChange={(e) => setAuthenticator(e.target.checked)}
                         />
+
                     </div>
                     <div className="flex justify-end mt-4">
                         <NiceBack />
