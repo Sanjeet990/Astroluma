@@ -4,6 +4,8 @@ const SystemThemes = [
     { value: 'aurora', label: 'Aurora', type: 'light', accentColor: '#ffffff' },
     { value: 'iceberg', label: 'Iceberg', type: 'light', accentColor: '#ffffff' },
     { value: 'solarflare', label: 'Solar Flare', type: 'light', accentColor: '#ff7043' },
+    { value: 'europa', label: 'Europa', type: 'light', accentColor: '#ffffff' },
+    { value: 'titan', label: 'Titan', type: 'light', accentColor: '#ffffff' },
     { value: 'dark', label: 'Dark', type: 'dark', accentColor: '#4a4a4a' },
     { value: 'deepspace', label: 'Deep Space', type: 'dark', accentColor: '#12181f' },
     { value: 'themars', label: 'The Mars', type: 'dark', accentColor: '#3d1a1a' },
@@ -11,6 +13,7 @@ const SystemThemes = [
     { value: 'neptune', label: 'Neptune', type: 'dark', accentColor: '#2a2d42' },
     { value: 'midnightRain', label: 'Midnight Rain', type: 'dark', accentColor: '#23262d' },
     { value: 'galacticDream', label: 'Galactic Dream', type: 'dark', accentColor: '#1e2228' },
+    { value: 'nebula', label: 'Nebula', type: 'dark', accentColor: '#13131f' },
 ];
 
 export default SystemThemes;
