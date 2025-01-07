@@ -42,7 +42,7 @@ const EditFolder = () => {
     //fetch details of the folder by listingId
     useEffect(() => {
         setLoading(true);
-        ApiService.get(`/api/v1/listing/folder/${listingId}`, loginData?.token)
+        ApiService.get(`/api/v1/listing/folder/${listingId}`, loginData?.token, navigate)
             .then(data => {
                 if (data?.message?.listing) {
                     setFolderName(data?.message?.listing?.listingName);
@@ -64,8 +64,8 @@ const EditFolder = () => {
                     setFolderReloadStatus(true);
                 }
             })
-            .catch(() => {
-                makeToast("error", "Failed to fetch folder details.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to fetch folder details.");
             }).finally(() => {
                 setLoading(false);
             });
@@ -82,7 +82,7 @@ const EditFolder = () => {
         //Call the API to store the data
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/folder', { listingId, parentId, folderName, folderIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/folder', { listingId, parentId, folderName, folderIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token, navigate)
             .then(() => {
                 setSelectedImage(null);
                 setFolderName("");
@@ -93,8 +93,8 @@ const EditFolder = () => {
                 makeToast("success", "Folder saved.");
                 navigate(-1);
             })
-            .catch(() => {
-                makeToast("error", "Failed to save folder.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to save folder.");
             }).finally(() => {
                 setLoading(false);
             });

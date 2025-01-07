@@ -42,7 +42,7 @@ const EditSnippetList = () => {
     //fetch details of the folder by listingId
     useEffect(() => {
         setLoading(true);
-        ApiService.get(`/api/v1/listing/snippet/${listingId}`, loginData?.token)
+        ApiService.get(`/api/v1/listing/snippet/${listingId}`, loginData?.token, navigate)
             .then(data => {
                 if (data?.message?.listing) {
                     setSnippetName(data?.message?.listing?.listingName);
@@ -64,8 +64,8 @@ const EditSnippetList = () => {
                     setFolderReloadStatus(true);
                 }
             })
-            .catch(() => {
-                makeToast("error", "Can not fetch the snippet details.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Can not fetch the snippet details.");
             }).finally(() => {
                 setLoading(false);
             });
@@ -80,7 +80,7 @@ const EditSnippetList = () => {
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/snippet', { listingId, parentId, snippetName, snippetIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/snippet', { listingId, parentId, snippetName, snippetIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token, navigate)
             .then(() => {
                 setSelectedImage(null);
                 setSnippetName("");
@@ -91,8 +91,8 @@ const EditSnippetList = () => {
                 makeToast("success", "Snippet saved.");
                 navigate(-1);
             })
-            .catch(() => {
-                makeToast("error", "Can not save the snippet.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Can not save the snippet.");
             }).finally(() => {
                 setLoading(false);
             });

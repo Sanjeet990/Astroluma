@@ -61,7 +61,7 @@ const EditPage = () => {
     useEffect(() => {
         if (pageId) {
             setLoading(true);
-            ApiService.get(`/api/v1/page/info/${pageId}`, loginData?.token)
+            ApiService.get(`/api/v1/page/info/${pageId}`, loginData?.token, navigate)
                 .then(data => {
                     if (data?.message) {
                         setPageTitle(data?.message?.pageTitle);
@@ -73,8 +73,8 @@ const EditPage = () => {
                         setIsPublished(true);
                     }
                 })
-                .catch(() => {
-                    makeToast("error", "Can not fetch the page details.");
+                .catch((error) => {
+                    if (!error.handled) makeToast("error", "Can not fetch the page details.");
                 }).finally(() => {
                     setLoading(false);
                 });
@@ -93,7 +93,7 @@ const EditPage = () => {
 
         setLoading(true);
 
-        ApiService.post('/api/v1/page/save', { pageId, pageTitle, pageContent, publish: isPublished }, loginData?.token)
+        ApiService.post('/api/v1/page/save', { pageId, pageTitle, pageContent, publish: isPublished }, loginData?.token, navigate)
             .then(() => {
                 setPageTitle("");
                 setPageContent("");
@@ -102,8 +102,8 @@ const EditPage = () => {
                 setIsPublished(true);
                 navigate(-1);
             })
-            .catch(() => {
-                makeToast("error", "Can not save the page.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Can not save the page.");
             }).finally(() => {
                 setLoading(false);
             });

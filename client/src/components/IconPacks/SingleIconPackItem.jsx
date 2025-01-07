@@ -10,8 +10,11 @@ import { colorThemeState, loginState } from '../../atoms';
 import SystemThemes from '../../utils/SystemThemes';
 import NiceButton from '../NiceViews/NiceButton';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const SingleIconPackItem = ({ iconPack, deleteListener }) => {
+
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [icons, setIcons] = useState([]);
@@ -72,18 +75,18 @@ const SingleIconPackItem = ({ iconPack, deleteListener }) => {
     e.preventDefault();
     e.stopPropagation();
     setLoading(true);
-    ApiService.get(`/api/v1/iconpack/delete/${iconPack?._id}`, loginData?.token)
+    ApiService.get(`/api/v1/iconpack/delete/${iconPack?._id}`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Icon pack deleted successfully.");
         deleteListener(iconPack);
       })
-      .catch(() => {
-        makeToast("error", "Icon pack could not be deleted.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Icon pack could not be deleted.");
       }).finally(() => {
         setLoading(false);
         setShowDeleteConfirmation(false);
       });
-  }, [iconPack, deleteListener, loginData]);
+  }, [iconPack, deleteListener, loginData, navigate]);
 
   const handleCancelDelete = useCallback((e) => {
     e.preventDefault();

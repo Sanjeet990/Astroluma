@@ -37,7 +37,7 @@ const EditUser = () => {
     useEffect(() => {
         if (userId) {
             setLoading(true);
-            ApiService.get(`/api/v1/accounts/info/${userId}`, loginData?.token)
+            ApiService.get(`/api/v1/accounts/info/${userId}`, loginData?.token, navigate)
                 .then(data => {
                     if (data?.message) {
                         setFullName(data?.message?.fullName);
@@ -51,8 +51,8 @@ const EditUser = () => {
                         setSiteName("");
                     }
                 })
-                .catch(() => {
-                    makeToast("error", "Failed to fetch account details.");
+                .catch((error) => {
+                    if (!error.handled) makeToast("error", "Failed to fetch account details.");
                 }).finally(() => {
                     setLoading(false);
                 });
@@ -85,7 +85,7 @@ const EditUser = () => {
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/accounts/save', { userId, username, fullName, password, siteName }, loginData?.token)
+        ApiService.post('/api/v1/accounts/save', { userId, username, fullName, password, siteName }, loginData?.token, navigate)
             .then(() => {
                 setFullName("");
                 setUserName("");
@@ -96,8 +96,8 @@ const EditUser = () => {
                 setReloadData(true);
                 navigate(-1);
             })
-            .catch(() => {
-                makeToast("error", "Failed to save account.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to save account.");
             }).finally(() => {
                 setLoading(false);
             });

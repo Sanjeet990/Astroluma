@@ -22,11 +22,11 @@ const ImageSelectorModal = ({ title }) => {
   }, [modalState.isOpen]);
 
   useEffect(() => {
-    const tempItemArray = allIconPacks.map(pack => ({
+    const tempItemArray = allIconPacks?.map(pack => ({
       name: pack.iconProvider,
       label: pack.iconName
     }));
-    tempItemArray.unshift({ name: 'com.astroluma.self', label: 'My Icons' });
+    tempItemArray?.unshift({ name: 'com.astroluma.self', label: 'My Icons' });
     setTabConfig(tempItemArray);
   }, [allIconPacks]);
 
@@ -57,7 +57,7 @@ const ImageSelectorModal = ({ title }) => {
               activeTab === "com.astroluma.self" && <MyIconsSection onSelectImage={handleSelectImage} />
             }
             {
-              allIconPacks.map(iconPack => (
+              allIconPacks?.map(iconPack => (
                 iconPack.iconProvider === activeTab && (
                   <CustomIconPack key={iconPack.iconProvider} iconPack={iconPack} onSelectImage={handleSelectImage} />
                 )

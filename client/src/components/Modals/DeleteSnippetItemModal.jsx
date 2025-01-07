@@ -5,8 +5,11 @@ import ApiService from '../../utils/ApiService';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const DeleteSnippetItemModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(deleteSnippetModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
@@ -19,14 +22,14 @@ const DeleteSnippetItemModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/snippet/${modalState.data?.snippetItem._id}/delete`, loginData?.token)
+    ApiService.get(`/api/v1/snippet/${modalState.data?.snippetItem._id}/delete`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Snippet deleted.");
         setDeletedSnippet(modalState.data?.snippetItem);
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", "Snippet cannot be deleted.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Snippet cannot be deleted.");
       })
       .finally(() => {
         setLoading(false);

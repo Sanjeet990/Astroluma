@@ -12,9 +12,12 @@ import useCurrentRoute from '../../hooks/useCurrentRoute';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceLink from '../NiceViews/NiceLink';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 
 const AccountList = () => {
+
+  const navigate = useNavigate();
 
   const [userList, setUserList] = useState([]);
 
@@ -31,16 +34,16 @@ const AccountList = () => {
   //fetch details of the folder by userId
   useEffect(() => {
     setLoading(true);
-    ApiService.get("/api/v1/accounts/list", loginData?.token)
+    ApiService.get("/api/v1/accounts/list", loginData?.token, navigate)
       .then(data => {
         setUserList(data?.message);
       })
-      .catch(() => {
-        makeToast("error", "Error loading data...");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Error loading data...");
       }).finally(() => {
         setLoading(false);
       });
-  }, [loginData?.token, setLoading, deletedUser]);
+  }, [loginData?.token, setLoading, deletedUser, navigate]);
 
 
   const deleteUser = (userId) => {

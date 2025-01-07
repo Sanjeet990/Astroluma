@@ -42,7 +42,7 @@ const EditDevice = () => {
     //fetch details of the folder by listingId
     useEffect(() => {
         setLoading(true);
-        ApiService.get(`/api/v1/networkdevices/device/${deviceId}`, loginData?.token)
+        ApiService.get(`/api/v1/networkdevices/device/${deviceId}`, loginData?.token, navigate)
             .then(data => {
                 if (data?.message) {
                     setDeviceMac(data?.message?.deviceMac);
@@ -65,12 +65,12 @@ const EditDevice = () => {
                     setSelectedImage(null);
                 }
             })
-            .catch(() => {
-                makeToast("error", "Can not fetch device details. ");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Can not fetch device details. ");
             }).finally(() => {
                 setLoading(false);
             });
-    }, [deviceId, loginData?.token, setFolderReloadStatus, setSelectedImage, setLoading]);
+    }, [deviceId, loginData?.token, setFolderReloadStatus, setSelectedImage, setLoading, navigate]);
 
     const handleFormSubmit = () => {
 
@@ -118,7 +118,7 @@ const EditDevice = () => {
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/networkdevices/save/device', { deviceId, deviceMac, deviceName, broadcastAddress, broadcastPort, deviceIcon: selectedImage, deviceIp, supportsWol, virtualDevice }, loginData?.token)
+        ApiService.post('/api/v1/networkdevices/save/device', { deviceId, deviceMac, deviceName, broadcastAddress, broadcastPort, deviceIcon: selectedImage, deviceIp, supportsWol, virtualDevice }, loginData?.token, navigate)
             .then(() => {
                 setDeviceMac("");
                 setDeviceName("");
@@ -132,8 +132,8 @@ const EditDevice = () => {
                 makeToast("success", "Device saved.");
                 navigate(-1);
             })
-            .catch(() => {
-                makeToast("error", "Can not save device. ");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Can not save device. ");
             }).finally(() => {
                 setLoading(false);
             });

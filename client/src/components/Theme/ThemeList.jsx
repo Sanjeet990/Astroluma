@@ -14,10 +14,13 @@ import SingleThemeItem from './SingleThemeItem';
 import NoListing from '../Misc/NoListing';
 import SystemThemes from '../../utils/SystemThemes';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const PageList = () => {
   useDynamicFilter(false);
   useCurrentRoute("/manage/theme");
+
+  const navigate = useNavigate();
 
   const [colorTheme, setColorTheme] = useRecoilState(colorThemeState);
   const setLoading = useSetRecoilState(loadingState);
@@ -34,16 +37,16 @@ const PageList = () => {
     setColorTheme(theme);
 
     setLoading(true);
-    ApiService.post("/api/v1/settings/theme", { colorTheme: theme }, loginData?.token)
+    ApiService.post("/api/v1/settings/theme", { colorTheme: theme }, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Theme saved successfully.");
       })
-      .catch(() => {
-        makeToast("error", "Theme could not be saved.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Theme could not be saved.");
       }).finally(() => {
         setLoading(false);
       });
-  }, [colorTheme, loginData, setColorTheme, setLoading]);
+  }, [colorTheme, loginData, setColorTheme, setLoading, navigate]);
 
   return (
     <>

@@ -19,16 +19,30 @@ const PORT = process.env.PORT || 8000;
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
+// Variable to track MongoDB connection status
+let isDbConnected = false;
+
 //CONNECT TO MONGODB
 mongoose.connect(MONGODB_URI, {})
-.then(() => {
-    console.log('Connected to MongoDB');
-    checkAndSeedData();
-})
-.catch(err => {
-    console.error('Error connecting to MongoDB:', err);
+    .then(() => {
+        isDbConnected = true;
+        checkAndSeedData();
+    })
+    .catch(err => {
+        isDbConnected = false;
+    });
+
+// Listen for MongoDB connection errors after initial connection
+mongoose.connection.on('error', err => {
+    console.error('MongoDB connection error:', err);
+    isDbConnected = false;
 });
 
+// Listen for MongoDB reconnection
+mongoose.connection.on('connected', () => {
+    console.log('Connected to MongoDB');
+    isDbConnected = true;
+});
 
 server.on('upgrade', handleUpgrade);
 
@@ -36,7 +50,8 @@ server.on('upgrade', handleUpgrade);
 //app.use(cors());
 
 app.use(cors({
-    origin: '*'
+    origin: '*',
+    exposedHeaders: ['X-Database-Status'],
 }));
 
 //app.use(cors({
@@ -46,6 +61,20 @@ app.use(cors({
 //USE JSON
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Middleware to check MongoDB connection status
+app.use((req, res, next) => {
+    if (!isDbConnected) {
+        res.setHeader('X-Database-Status', 'NOT_CONNECTED');
+        return res.status(500).json({
+            error: true,
+            message: 'Unable to connect to the database. Verify the connection string and restart the server.'
+        });
+    } else {
+        res.setHeader('X-Database-Status', 'CONNECTED');
+    }
+    next();
+});
 
 //PUBLIC STATIC FOLDER
 app.use(express.static('dist'));

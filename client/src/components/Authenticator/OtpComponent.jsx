@@ -46,7 +46,7 @@ const OtpComponent = () => {
             document.body.removeChild(textArea);
         }
 
-    }, [otp, otpGenerated]);
+    }, [otp, otpGenerated, isSecure]);
 
     useEffect(() => {
         const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";

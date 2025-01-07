@@ -41,7 +41,7 @@ const EditAuthenticator = () => {
     useEffect(() => {
         if (authId) {
             setLoading(true);
-            ApiService.get(`/api/v1/totp/${authId}`, loginData?.token)
+            ApiService.get(`/api/v1/totp/${authId}`, loginData?.token, navigate)
                 .then(data => {
                     setSelectedImage(data?.message?.listingIconItem);
                     setServiceName(data?.message?.serviceName);
@@ -49,8 +49,8 @@ const EditAuthenticator = () => {
                     setSecretKey(data?.message?.secretKey);
                     setReloadData(true);
                 })
-                .catch(() => {
-                    makeToast("error", "Failed to fetch authenticator details.");
+                .catch((error) => {
+                    if (!error.handled) makeToast("error", "Failed to fetch authenticator details.");
                 }).finally(() => {
                     setLoading(false);
                 });
@@ -97,7 +97,7 @@ const EditAuthenticator = () => {
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/totp/save', { authId, serviceIcon: selectedImage, serviceName, secret, accountName }, loginData?.token)
+        ApiService.post('/api/v1/totp/save', { authId, serviceIcon: selectedImage, serviceName, secret, accountName }, loginData?.token, navigate)
             .then(() => {
                 makeToast("success", "Service saved.");
                 setServiceIcon("authenticator");
@@ -108,8 +108,8 @@ const EditAuthenticator = () => {
                 setSelectedImage(null);
                 navigate("/manage/totp")
             })
-            .catch(() => {
-                makeToast("error", "Failed to save service.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to save service.");
             }).finally(() => {
                 setLoading(false);
             });

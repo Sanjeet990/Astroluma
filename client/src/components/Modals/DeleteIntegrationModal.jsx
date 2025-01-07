@@ -5,8 +5,11 @@ import ApiService from '../../utils/ApiService';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const DeleteIntegrationModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(deleteIntegrationModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
@@ -19,14 +22,14 @@ const DeleteIntegrationModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/app/remove/${modalState.data?._id}`, loginData?.token)
+    ApiService.get(`/api/v1/app/remove/${modalState.data?._id}`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Integration removed successfully.");
         setDeletedIntegration(modalState.data);
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", "Cannot remove integration. Please try later.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Cannot remove integration. Please try later.");
       })
       .finally(() => {
         setLoading(false);

@@ -5,8 +5,11 @@ import ApiService from '../../utils/ApiService';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const DeleteTodoModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(newDeleteModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
@@ -19,14 +22,14 @@ const DeleteTodoModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/todo/${modalState.data?.listingId}/delete/${modalState.data?.todoItem?._id}`, loginData?.token)
+    ApiService.get(`/api/v1/todo/${modalState.data?.listingId}/delete/${modalState.data?.todoItem?._id}`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Todo item deleted.");
         setDeletedTodo(modalState.data?.todoItem);
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", "Todo item cannot be deleted.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Todo item cannot be deleted.");
       })
       .finally(() => {
         setLoading(false);

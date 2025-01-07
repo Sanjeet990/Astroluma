@@ -43,7 +43,7 @@ const EditTodo = () => {
     //fetch details of the folder by listingId
     useEffect(() => {
         setLoading(true);
-        ApiService.get(`/api/v1/listing/todo/${listingId}`, loginData?.token)
+        ApiService.get(`/api/v1/listing/todo/${listingId}`, loginData?.token, navigate)
             .then(data => {
                 if (data?.message?.listing) {
                     setTodoName(data?.message?.listing?.listingName);
@@ -65,8 +65,8 @@ const EditTodo = () => {
                     setFolderReloadStatus(true);
                 }
             })
-            .catch(() => {
-                makeToast("error", "Can not fetch todo details. ");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Can not fetch todo details. ");
             }).finally(() => {
                 setLoading(false);
             });
@@ -80,7 +80,7 @@ const EditTodo = () => {
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/todo', { listingId, parentId, todoName, todoIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/todo', { listingId, parentId, todoName, todoIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token, navigate)
             .then(() => {
                 setSelectedImage(null);
                 setTodoName("");
@@ -91,8 +91,8 @@ const EditTodo = () => {
                 makeToast("success", "Todo saved.");
                 navigate(-1);
             })
-            .catch(() => {
-                makeToast("error", "Can not save todo. ");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Can not save todo. ");
             }).finally(() => {
                 setLoading(false);
             });

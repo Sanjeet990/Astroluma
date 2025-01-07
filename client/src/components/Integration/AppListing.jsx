@@ -12,8 +12,11 @@ import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import NiceLink from '../NiceViews/NiceLink';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const AppListing = () => {
+
+    const navigate = useNavigate();
 
     const setLoading = useSetRecoilState(loadingState);
     const [appList, setAppList] = useState([]);
@@ -27,16 +30,16 @@ const AppListing = () => {
 
     useEffect(() => {
         setLoading(true);
-        ApiService.get("/api/v1/app/all", loginData?.token)
+        ApiService.get("/api/v1/app/all", loginData?.token, navigate)
             .then(data => {
                 setAppList(data?.message);
             })
-            .catch(() => {
-                makeToast("error", "Failed to fetch apps.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to fetch apps.");
             }).finally(() => {
                 setLoading(false);
             });
-    }, [loginData?.token, setLoading]);
+    }, [loginData?.token, setLoading, navigate]);
 
     const handleAppInstall = (app) => {
         setAppInstallModal({ isOpen: true, data: app })

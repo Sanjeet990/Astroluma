@@ -6,8 +6,11 @@ import NiceButton from '../NiceViews/NiceButton';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
 import emitter, { RELOAD_CODE_SNIPPET } from '../../events';
+import { useNavigate } from 'react-router-dom';
 
 const DeleteCodeItemModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(newDeleteCodeModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
@@ -19,14 +22,14 @@ const DeleteCodeItemModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/snippet/${modalState.data?.snippetId}/delete/${modalState.data?.snippetItem?._id}`, loginData?.token)
+    ApiService.get(`/api/v1/snippet/${modalState.data?.snippetId}/delete/${modalState.data?.snippetItem?._id}`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Code item deleted.");
         emitter.emit(RELOAD_CODE_SNIPPET);
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", "Code item cannot be deleted.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Code item cannot be deleted.");
       })
       .finally(() => {
         setLoading(false);

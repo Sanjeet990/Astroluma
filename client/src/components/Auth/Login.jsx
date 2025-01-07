@@ -28,7 +28,7 @@ const Login = () => {
 
         setLoading(true);
 
-        ApiService.post('/api/v1/login', { username: username, password: md5(password) }, null, null)
+        ApiService.post('/api/v1/login', { username: username, password: md5(password) }, null, navigate)
             .then(data => {
                 makeToast("success", "Login success.");
                 const token = data?.message?.token;
@@ -42,8 +42,8 @@ const Login = () => {
                 //if (data?.message?.role === 'admin') navigate("/admin/dashboard");
                 navigate("/");
             })
-            .catch(() => {
-                makeToast("error", "Login failed. Please check the credentials.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Login failed. Please check the credentials.");
             }).finally(() => {
                 setLoading(false);
                 setUsername("");

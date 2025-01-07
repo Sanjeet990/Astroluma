@@ -14,8 +14,11 @@ import SinglePageItem from './SinglePageItem';
 import NoListing from '../Misc/NoListing';
 import makeToast from '../../utils/ToastUtils';
 import NiceLink from '../NiceViews/NiceLink';
+import { useNavigate } from 'react-router-dom';
 
 const PageList = () => {
+
+  const navigate = useNavigate();
 
   const [pageList, setPageList] = useState([]);
 
@@ -31,16 +34,16 @@ const PageList = () => {
 
   useEffect(() => {
     setLoading(true);
-    ApiService.get("/api/v1/page/list", loginData?.token)
+    ApiService.get("/api/v1/page/list", loginData?.token, navigate)
       .then(data => {
         setPageList(data?.message);
       })
-      .catch(() => {
-        makeToast("error", "Error loading data...");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Error loading data...");
       }).finally(() => {
         setLoading(false);
       });
-  }, [loginData?.token, setLoading, changedPage]);
+  }, [loginData?.token, setLoading, changedPage, navigate]);
 
   useEffect(() => {
     setChangedPage(null);

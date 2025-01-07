@@ -8,8 +8,11 @@ import NiceInput from '../NiceViews/NiceInput';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
 import emitter, { RELOAD_CODE_SNIPPET } from '../../events';
+import { useNavigate } from 'react-router-dom';
 
 const NewSnippetCodeItemModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(newSnippetCodeModalState);
   const loginData = useRecoilValue(loginState);
   const [filename, setFileName] = useState('');
@@ -51,7 +54,7 @@ const NewSnippetCodeItemModal = () => {
       language
     };
 
-    ApiService.post(`/api/v1/snippet/save/${modalState.data?.snippetId}`, newSnippetItem, loginData?.token)
+    ApiService.post(`/api/v1/snippet/save/${modalState.data?.snippetId}`, newSnippetItem, loginData?.token, navigate)
       .then(() => {
         makeToast("success", 'Code snippet added.');
         setSnippetCode('');
@@ -60,8 +63,8 @@ const NewSnippetCodeItemModal = () => {
         emitter.emit(RELOAD_CODE_SNIPPET);
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", 'Can not add code snippet.');
+      .catch((error) => {
+        if (!error.handled) makeToast("error", 'Can not add code snippet.');
       })
       .finally(() => {
         setLoading(false);
