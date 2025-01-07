@@ -23,22 +23,29 @@ const PrivateRoute = () => {
 
   const loginData = useRecoilValue(loginState);
 
-  const setAuthListState = useSetRecoilState(authListState);
   const [reloadData, setReloadData] = useRecoilState(reloadDashboardDataState);
-  const setUserData = useSetRecoilState(userDataState);
-  const setSidebarItems = useSetRecoilState(sidebarItemState);
-  const setHomepageItems = useSetRecoilState(homepageItemState);
+
+  const [authList, setAuthList] = useRecoilState(authListState);
+  const [userData, setUserData] = useRecoilState(userDataState);
+  const [sidebarItems, setSidebarItems] = useRecoilState(sidebarItemState);
+  const [homepageItems, setHomepageItems] = useRecoilState(homepageItemState);
+  const [iconPacks, setIconPacks] = useRecoilState(iconPackState);
   const setColorTheme = useSetRecoilState(colorThemeState);
-  const setIconPacks = useSetRecoilState(iconPackState);
   const setHostMode = useSetRecoilState(isHostModeState);
 
+  const isDataMissing = !authList?.length ||
+    !userData ||
+    !sidebarItems?.length ||
+    !homepageItems?.length ||
+    !iconPacks?.length;
+
   useEffect(() => {
-    if (reloadData && loginData?.token) {
+    if ((reloadData || isDataMissing) && loginData?.token) {
       setLoading(true);
 
       ApiService.get("/api/v1/dashboard", loginData ? loginData?.token : null, navigate)
         .then(data => {
-          setAuthListState(data?.message?.authenticators);
+          setAuthList(data?.message?.authenticators);
           setUserData(data?.message?.userData);
           setSidebarItems(data?.message?.sidebarItems);
           setHomepageItems(data?.message?.homepageItems);
@@ -60,8 +67,8 @@ const PrivateRoute = () => {
           setReloadData(false);
         });
     }
-  }, [loginData, reloadData, navigate, setLoading, setAuthListState, setUserData, setSidebarItems,
-    setHomepageItems, setColorTheme, setReloadData, setIconPacks, setHostMode]);
+  }, [loginData, reloadData, navigate, setLoading, setAuthList, setUserData, setSidebarItems,
+    setHomepageItems, setColorTheme, setReloadData, setIconPacks, setHostMode, isDataMissing]);
 
   return loginData?.token ? <Outlet /> : <Navigate to="/login" />;
 };
