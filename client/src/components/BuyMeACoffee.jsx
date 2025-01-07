@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { CONSTANTS } from "../utils/Constants";
 
 const BuyMeACoffee = () => {
 
@@ -20,7 +21,7 @@ const BuyMeACoffee = () => {
       <a
         className="buyButton w-full bg-itemCardHoverBg text-itemCardHoverText border-itemCardHoverText"
         target="_blank"
-        href="https://www.buymeacoffee.com/sanjeet990"
+        href={CONSTANTS.BuyMeACoffee}
       >
         <img
           className="coffeeImage"

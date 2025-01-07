@@ -321,3 +321,10 @@ export const isHostModeState = atom({
   default: false,
   effects_UNSTABLE: [persistAtom]
 });
+
+export const removeBrandingModalState = atom({
+  key: 'removeBrandingModalState',
+  default: {
+    isOpen: false
+  },
+});

@@ -126,7 +126,7 @@ const OtpComponent = () => {
 
             {otpGenerated && (
                 <div className="absolute bottom-0 left-0 w-full">
-                    <div className="text-xs text-center mb-2 text-authpanelOtpColor/50">
+                    <div className="text-xs text-center mb-2 text-authPanelSingleItemSubText/50">
                         Pro Tip : Double-click to copy OTP
                     </div>
                     <div 

@@ -3,6 +3,7 @@ import { useRecoilValue } from 'recoil';
 import { colorThemeState } from './atoms';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import "react-toastify/dist/ReactToastify.css";
+import 'react-modern-drawer/dist/index.css'
 import { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { Helmet } from "react-helmet"
