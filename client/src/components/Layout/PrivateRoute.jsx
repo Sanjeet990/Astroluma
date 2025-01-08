@@ -40,6 +40,7 @@ const PrivateRoute = () => {
     !iconPacks?.length;
 
   useEffect(() => {
+    console.log("PrivateRoute useEffect");
     if ((reloadData || isDataMissing) && loginData?.token) {
       setLoading(true);
 
@@ -55,8 +56,6 @@ const PrivateRoute = () => {
           const theme = data?.message?.userData?.colorTheme;
 
           setColorTheme(theme);
-
-          setReloadData(false); // Set reloadData back to false after data is fetched
         })
         .catch(error => {
           console.log(error);

@@ -2,21 +2,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// Helper function to process listingIcon
-function addListingIconItem(doc) {
-  if (!doc) return;
-  
-  if (typeof doc.listingIcon === 'string') {
-    doc.listingIconItem = {
-      iconUrl: doc.listingIcon,
-      iconUrlLight: null,
-      iconProvider: 'com.astroluma.self',
-    };
-  } else {
-    doc.listingIconItem = doc.listingIcon;
-  }
-}
-
 const listingSchema = new Schema({
   listingName: {
     type: String,
@@ -73,38 +58,7 @@ const listingSchema = new Schema({
     required: false,
   }
 }, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
-
-// Virtual for listingIconItem
-listingSchema.virtual('listingIconItem').get(function() {
-  if (typeof this.listingIcon === 'string') {
-    return {
-      iconId: this.listingIcon,
-      iconUrl: this.listingIcon,
-      iconUrlLight: null,
-      iconProvider: 'com.astroluma.self',
-    };
-  }
-  return this.listingIcon;
-});
-
-// Post-find middleware
-listingSchema.post(['find', 'findOne', 'findById'], function(docs, next) {
-  // Handle single document
-  if (!Array.isArray(docs)) {
-    addListingIconItem(docs);
-    return next();
-  }
-  
-  // Handle array of documents
-  docs.forEach(doc => {
-    addListingIconItem(doc);
-  });
-  
-  next();
+  timestamps: true
 });
 
 const Listing = mongoose.model('Listing', listingSchema);

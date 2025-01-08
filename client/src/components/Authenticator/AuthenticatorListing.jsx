@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { TbAuth2Fa } from "react-icons/tb";
-import { loadingState, loginState, reloadFolderListingState } from '../../atoms';
+import { loadingState, loginState, reloadDashboardDataState, reloadFolderListingState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
 
 import {
@@ -35,6 +35,7 @@ const AuthenticatorListing = () => {
 
     const navigate = useNavigate();
     const [reloadData, setReloadData] = useRecoilState(reloadFolderListingState);
+    const setReloadDashboardData = useSetRecoilState(reloadDashboardDataState);
 
     const [itemList, setItemList] = useState([]);
 
@@ -80,7 +81,8 @@ const AuthenticatorListing = () => {
         setLoading(true);
         ApiService.post("/api/v1/totp/reorder", { items: reorderedArray.map(item => item._id) }, loginData?.token, navigate)
             .then(data => {
-                //setReloadData(true);
+                setReloadData(true);
+                setReloadDashboardData(true);
                 makeToast("success", String(data?.message));
             })
             .catch((error) => {
@@ -111,6 +113,8 @@ const AuthenticatorListing = () => {
             .then(() => {
                 setItemList(itemList.filter(item => item._id !== id));
                 makeToast("success", "Selected item deleted successfully.");
+                setReloadData(true);
+                setReloadDashboardData(true);
             })
             .catch((error) => {
                 if (!error.handled) makeToast("error", "Error deleting the selected item.");

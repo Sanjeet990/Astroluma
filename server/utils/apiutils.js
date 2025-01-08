@@ -44,9 +44,37 @@ exports.isValidStream  = (url) => {
 }
 
 exports.isHostMode = () => {
-    const interfaces = os.networkInterfaces();
-    const isHostMode = !Object.keys(interfaces).some((name) =>
-      name.startsWith('docker') || name.startsWith('br-')
-    );
-    return isHostMode ? true : false;
+    const inHostMode = process.env.HOST_MODE === 'true';
+    return inHostMode;
+}
+
+exports.getSecretKey = () => {
+    let secret = process.env.SECRET_KEY;
+
+    //If secret is empty, generate a secret that doesn't change on this server. Probably use MAC address or something
+    if (!secret) {
+        const networkInterfaces = os.networkInterfaces();
+        let macAddress = '';
+        for (const key in networkInterfaces) {
+            const networkInterface = networkInterfaces[key];
+            for (const ni of networkInterface) {
+                if (ni.mac && ni.mac !== '00:00:00:00:00:00') {
+                    macAddress = ni.mac;
+                    break;
+                }
+            }
+            if (macAddress) {
+                break;
+            }
+        }
+
+        if (!macAddress) {
+            macAddress = '00:00:00:00:00:00';
+        }
+        
+        //Encrypt this string and make it 32 characters long
+        secret = CryptoJS.AES.encrypt(macAddress, 'astroluma').toString().substring(0, 32);
+    }
+
+    return secret;
 }

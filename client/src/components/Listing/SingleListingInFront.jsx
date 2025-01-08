@@ -64,13 +64,13 @@ const SingleListingInFront = (props) => {
     }
 
     const decideTheIcon = useCallback(() => {
-        const iconObject = props.item?.listingIconItem;
+        const iconObject = props.item?.listingIcon;
         if (themeType === "dark" && iconObject?.iconUrlLight) {
             return iconObject?.iconUrlLight;
         } else {
             return iconObject?.iconUrl;
         }
-    }, [props.item?.listingIconItem, themeType]);
+    }, [props.item?.listingIcon, themeType]);
 
     const copyLinkTextToClipboard = (e) => {
         e.preventDefault();

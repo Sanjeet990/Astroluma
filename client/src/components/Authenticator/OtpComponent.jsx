@@ -69,7 +69,7 @@ const OtpComponent = () => {
     }, [selectedService]);
 
     const decideTheIcon = useCallback((service) => {
-        const iconObject = service?.listingIconItem;
+        const iconObject = service?.serviceIcon;
 
         if (themeType === "dark" && iconObject?.iconUrlLight) {
             return iconObject?.iconUrlLight;

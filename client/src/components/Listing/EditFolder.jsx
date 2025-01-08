@@ -49,8 +49,8 @@ const EditFolder = () => {
                     setShowInSidebar(data?.message?.listing?.inSidebar);
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
-                    if (data?.message?.listing?.listingIconItem) {
-                        setSelectedImage(data?.message?.listing?.listingIconItem );
+                    if (data?.message?.listing?.listingIcon) {
+                        setSelectedImage(data?.message?.listing?.listingIcon );
                     }
 
                     if (data?.message?.listing?.listingType !== "category") {

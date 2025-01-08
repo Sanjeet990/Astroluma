@@ -4,7 +4,6 @@ const express = require("express");
 const cors = require("cors");
 const path = require('path');
 const mongoose = require('mongoose');
-const { checkAndSeedData } = require('./seed.js');
 const { handleUpgrade } = require('./websocket.js');
 
 //INIT APP
@@ -26,7 +25,6 @@ let isDbConnected = false;
 mongoose.connect(MONGODB_URI, {})
     .then(() => {
         isDbConnected = true;
-        checkAndSeedData();
     })
     .catch(err => {
         isDbConnected = false;
