@@ -62,14 +62,16 @@ app.use(express.urlencoded({ extended: false }));
 
 // Middleware to check MongoDB connection status
 app.use((req, res, next) => {
-    if (!isDbConnected) {
-        res.setHeader('X-Database-Status', 'NOT_CONNECTED');
-        return res.status(500).json({
-            error: true,
-            message: 'Unable to connect to the database. Verify the connection string and restart the server.'
-        });
-    } else {
-        res.setHeader('X-Database-Status', 'CONNECTED');
+    if (req.path.startsWith('/api/v1/')) {
+        if (!isDbConnected) {
+            res.setHeader('X-Database-Status', 'NOT_CONNECTED');
+            return res.status(500).json({
+                error: true,
+                message: 'Unable to connect to the database. Verify the connection string and restart the server.'
+            });
+        } else {
+            res.setHeader('X-Database-Status', 'CONNECTED');
+        }
     }
     next();
 });
