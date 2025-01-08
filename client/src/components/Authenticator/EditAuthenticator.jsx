@@ -43,17 +43,21 @@ const EditAuthenticator = () => {
             setLoading(true);
             ApiService.get(`/api/v1/totp/${authId}`, loginData?.token, navigate)
                 .then(data => {
-                    setSelectedImage(data?.message?.listingIconItem);
+                    setSelectedImage(data?.message?.serviceIcon);
                     setServiceName(data?.message?.serviceName);
                     setAccountName(data?.message?.accountName);
                     setSecretKey(data?.message?.secretKey);
-                    setReloadData(true);
                 })
                 .catch((error) => {
                     if (!error.handled) makeToast("error", "Failed to fetch authenticator details.");
                 }).finally(() => {
                     setLoading(false);
                 });
+        } else {
+            setSelectedImage(null);
+            setServiceName('');
+            setAccountName('');
+            setSecretKey('');
         }
     }, [authId, loginData?.token, navigate, setLoading, setSelectedImage, setReloadData]);
 
@@ -78,7 +82,7 @@ const EditAuthenticator = () => {
             }
         }
 
-        if (!isValidSecretKey(secret)) {
+        if (!authId && !isValidSecretKey(secret)) {
             makeToast("warning", "The secret key is invalid.");
             return;
         }
@@ -204,15 +208,17 @@ const EditAuthenticator = () => {
 
             <div className="max-w-4xl mx-auto w-full mt-4">
                 <div className="card border bg-cardBg text-cardText border-cardBorder shadow-md rounded-xl px-8 pt-6 pb-8 mb-4">
-                    <div role='button' className="flex flex-col justify-center items-center mb-4 cursor-pointer" onClick={selectQrCode}>
-                        <input type="file" ref={fileInput} onChange={handleFileChange} style={{ display: 'none' }} accept="image/*" />
-                        <div className="w-12 h-12 bg-taskCardBg rounded-full flex justify-center items-center mb-4">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
+                    {
+                        !authId && <div role='button' className="flex flex-col justify-center items-center mb-4 cursor-pointer" onClick={selectQrCode}>
+                            <input type="file" ref={fileInput} onChange={handleFileChange} style={{ display: 'none' }} accept="image/*" />
+                            <div className="w-12 h-12 bg-taskCardBg rounded-full flex justify-center items-center mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                            </div>
+                            <p className="text-center">Upload QR</p>
                         </div>
-                        <p className="text-center">Upload QR</p>
-                    </div>
+                    }
 
                     <NiceUploader
                         label="Service Icon"

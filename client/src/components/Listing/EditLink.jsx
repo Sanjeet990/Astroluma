@@ -59,8 +59,8 @@ const EditLink = () => {
 
                     setSelectedIntegration(data?.message?.listing?.integration || "");
 
-                    if (data?.message?.listing?.listingIconItem) {
-                        setSelectedImage(data?.message?.listing?.listingIconItem);
+                    if (data?.message?.listing?.listingIcon) {
+                        setSelectedImage(data?.message?.listing?.listingIcon);
                     }
 
                     if (data?.message?.listing?.listingType !== "link") {

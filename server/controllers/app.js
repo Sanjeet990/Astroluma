@@ -6,6 +6,7 @@ const Listing = require('../models/Listing');
 const CryptoJS = require('crypto-js');
 const allowedModules = require('../utils/allowedModules');
 const AppSetting = require('../models/AppSetting');
+const { getSecretKey } = require('../utils/apiutils');
 
 exports.listInstalledApps = (req, res) => {
     const userId = req.user?._id;
@@ -93,7 +94,7 @@ exports.activateIntegration = async (req, res) => {
 
     try {
 
-        const encryptedConfig = CryptoJS.AES.encrypt(JSON.stringify(config), process.env.SECRET_KEY).toString();
+        const encryptedConfig = CryptoJS.AES.encrypt(JSON.stringify(config), getSecretKey()).toString();
 
         const integration = await new Integration({
             integrationName,
@@ -194,7 +195,7 @@ exports.runIntegratedApp = async (req, res) => {
         const modulePath = path.join(__dirname, `../apps/${integration.appId}/app.js`);
         const moduleCode = fs.readFileSync(modulePath, 'utf8');
 
-        const decryptedBytes = CryptoJS.AES.decrypt(integration.config, process.env.SECRET_KEY);
+        const decryptedBytes = CryptoJS.AES.decrypt(integration.config, getSecretKey());
         const decryptedConfig = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
 
         req.config = decryptedConfig;

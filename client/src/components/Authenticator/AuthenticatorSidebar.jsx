@@ -26,7 +26,7 @@ const AuthenticatorSidebar = () => {
     }
 
     const decideTheIcon = useCallback((service) => {
-        const iconObject = service?.listingIconItem;
+        const iconObject = service?.serviceIcon;
         return themeType === "dark" && iconObject?.iconUrlLight
             ? iconObject?.iconUrlLight
             : iconObject?.iconUrl;

@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const CryptoJS = require('crypto-js');
+const { getSecretKey } = require('../utils/apiutils');
 
-const SECRET_KEY = process.env.SECRET_KEY;
+const SECRET_KEY = getSecretKey();
 
 const integrationSchema = new mongoose.Schema({
   integrationName: {
@@ -46,8 +47,6 @@ const integrationSchema = new mongoose.Schema({
 }, {
   timestamps: true,
 });
-
-integrationSchema.set('toJSON', { getters: true, virtuals: false });
 
 const Integration = mongoose.model('Integration', integrationSchema);
 
