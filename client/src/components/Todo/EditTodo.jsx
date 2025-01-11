@@ -42,6 +42,12 @@ const EditTodo = () => {
 
     //fetch details of the folder by listingId
     useEffect(() => {
+        setSelectedImage({
+            iconUrl: "todo",
+            iconUrlLight: null,
+            iconProvider: 'com.astroluma.self'
+        });
+        
         setLoading(true);
         ApiService.get(`/api/v1/listing/todo/${listingId}`, loginData?.token, navigate)
             .then(data => {
@@ -58,7 +64,11 @@ const EditTodo = () => {
                         navigate("/manage/listing");
                     }
                 } else {
-                    setSelectedImage(null);
+                    setSelectedImage({
+                        iconUrl: "todo",
+                        iconUrlLight: null,
+                        iconProvider: 'com.astroluma.self'
+                    });
                     setTodoName("");
                     setShowInSidebar(false);
                     setShowOnFeatured(false);
@@ -74,8 +84,13 @@ const EditTodo = () => {
 
     const handleFormSubmit = () => {
 
-        if (!todoName || !selectedImage) {
+        if (!todoName) {
             makeToast("warning", "Please fill all the fields");
+            return;
+        }
+
+        if (!selectedImage) {
+            makeToast("warning", "You must have to select an icon");
             return;
         }
 

@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 
-const NiceCheckbox = ({ label = "", checked = false, onChange = null, disabled = false }) => {
+const NiceCheckbox = ({ name="", label = "", checked = false, onChange = null, disabled = false }) => {
 
     const timestamp = Date.now();
     let id = Math.random().toString(36).substring(7);
@@ -22,6 +22,7 @@ const NiceCheckbox = ({ label = "", checked = false, onChange = null, disabled =
                     id={id}
                     disabled={disabled}
                     checked={checked}
+                    name={name || id}
                     onChange={onChange}
                     type="checkbox"
                 />

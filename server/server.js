@@ -129,8 +129,7 @@ app.get('*', (req, res) => {
 });
 
 //use custom exception handler
-app.use((err, res) => {
-    console.error(err);
+app.use((req, res) => {
     res.send("Error");
 });
 

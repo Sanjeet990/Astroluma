@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import ApiService from '../../utils/ApiService';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { deleteIntegrationModalState, deletedIntegrationState, loadingState, loginState } from '../../atoms';
+import { loadingState, loginState } from '../../atoms';
 import { Helmet } from 'react-helmet';
 import { GrAppsRounded } from "react-icons/gr";
 import SingleInstalledApp from './SingleInstalledApp';
-import DeleteIntegrationModal from '../Modals/DeleteIntegrationModal';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
 import NoListing from '../Misc/NoListing';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
@@ -23,9 +22,6 @@ const InstalledApps = () => {
 
     const loginData = useRecoilValue(loginState);
 
-    const setAppRemoveModal = useSetRecoilState(deleteIntegrationModalState);
-
-    const deletedIntegration = useRecoilValue(deletedIntegrationState);
 
     useDynamicFilter(false);
     useCurrentRoute("/manage/apps");
@@ -42,15 +38,14 @@ const InstalledApps = () => {
             }).finally(() => {
                 setLoading(false);
             });
-    }, [deletedIntegration, loginData?.token, setLoading, navigate]);
+    }, [loginData?.token, setLoading, navigate]);
 
     const handleAppRemove = (app) => {
-        setAppRemoveModal({ isOpen: true, data: app })
+        
     }
 
     return (
         <>
-            <DeleteIntegrationModal />
             <Helmet>
                 <title>Installed Integrations</title>
             </Helmet>

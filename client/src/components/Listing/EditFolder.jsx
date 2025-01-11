@@ -41,6 +41,11 @@ const EditFolder = () => {
 
     //fetch details of the folder by listingId
     useEffect(() => {
+        setSelectedImage({
+            iconUrl: "folder",
+            iconUrlLight: null,
+            iconProvider: 'com.astroluma.self'
+        });
         setLoading(true);
         ApiService.get(`/api/v1/listing/folder/${listingId}`, loginData?.token, navigate)
             .then(data => {
@@ -57,7 +62,11 @@ const EditFolder = () => {
                         navigate("/manage/listing");
                     }
                 } else {
-                    setSelectedImage(null);
+                    setSelectedImage({
+                        iconUrl: "folder",
+                        iconUrlLight: null,
+                        iconProvider: 'com.astroluma.self'
+                    });
                     setFolderName("");
                     setShowInSidebar(false);
                     setShowOnFeatured(false);
@@ -74,8 +83,14 @@ const EditFolder = () => {
     const handleFormSubmit = () => {
 
 
-        if (!folderName || !selectedImage) {
+        if (!folderName) {
             makeToast("warning", "Please fill all the fields");
+            return;
+        }
+
+        
+        if (!selectedImage) {
+            makeToast("warning", "You must have to select an icon");
             return;
         }
 

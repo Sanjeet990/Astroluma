@@ -41,6 +41,11 @@ const EditDevice = () => {
 
     //fetch details of the folder by listingId
     useEffect(() => {
+        setSelectedImage({
+            iconUrl: "device",
+            iconUrlLight: null,
+            iconProvider: 'com.astroluma.self'
+        });
         setLoading(true);
         ApiService.get(`/api/v1/networkdevices/device/${deviceId}`, loginData?.token, navigate)
             .then(data => {
@@ -62,7 +67,11 @@ const EditDevice = () => {
                 } else {
                     setDeviceMac("");
                     setFolderReloadStatus(true);
-                    setSelectedImage(null);
+                    setSelectedImage({
+                        iconUrl: "device",
+                        iconUrlLight: null,
+                        iconProvider: 'com.astroluma.self'
+                    });
                 }
             })
             .catch((error) => {
@@ -77,8 +86,14 @@ const EditDevice = () => {
         const ipv4Regex = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
         const macAddressRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
 
-        if (!deviceName || !selectedImage) {
+        if (!deviceName) {
             makeToast("warning", "Please fill all the fields");
+            return;
+        }
+
+        
+        if (!selectedImage) {
+            makeToast("warning", "You must have to select an icon");
             return;
         }
 

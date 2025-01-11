@@ -79,6 +79,7 @@ module.exports = {
 
             await iconPacksCollection.insertOne(selfhstIconPack);
         }
+
     },
 
     async down(db, client) {

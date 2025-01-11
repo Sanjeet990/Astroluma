@@ -10,12 +10,34 @@ const formatCount = (count) => {
     }
 }
 
+const connectionTest = async (testerInstance) => {
+    //implementa a connection tester logic
+    try {
+        const connectionUrl = testerInstance?.appUrl;
+        const apiKey = testerInstance?.config?.apiKey;    
+
+        if (!connectionUrl || !apiKey) {
+            return testerInstance.connectionFailed("YouTube link or API key is missing.");
+        }
+
+        const videoId = connectionUrl.split('v=')[1];
+        const apiUrl = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${apiKey}&part=snippet,statistics`;
+
+        await axios.get(apiUrl);
+
+        await testerInstance.connectionSuccess();
+        
+    } catch (error) {
+        await testerInstance.connectionFailed(error);
+    }
+}
+
 const initialize = async (application) => {
-    const youtubeLink = application?.payload?.listingUrl || application?.payload?.localUrl;
+    const youtubeLink = application?.appUrl;
     const apiKey = application?.config?.apiKey;
 
     if (!youtubeLink || !apiKey) {
-        return application.sendError(400, 'YouTube link or API key is missing.');
+        return application.sendError('YouTube link or API key is missing.');
     }
 
     const videoId = youtubeLink.split('v=')[1];
@@ -37,8 +59,10 @@ const initialize = async (application) => {
         await application.sendResponse('response.tpl', 200, variables, thumb);
 
     } catch (error) {
-        await application.sendError(400, 'Error in fetching data from YouTube.');
+        //console.log(error);
+        await application.sendError(error);
     }
 }
 
 global.initialize = initialize;
+global.connectionTest = connectionTest;

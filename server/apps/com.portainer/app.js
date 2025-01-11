@@ -1,16 +1,44 @@
 const axios = require('axios');
 
+const connectionTest = async (testerInstance) => {
+    try {
+        const connectionUrl = testerInstance?.appUrl;
+        const { username, password } = testerInstance.config;
+
+        if (!username || !password || !connectionUrl) {
+            await testerInstance.connectionFailed("Please provide all the required configuration parameters");
+            return;
+        }
+
+        const authUrl = `${connectionUrl}/api/auth`;
+
+        const response = await axios.post(authUrl, {
+            username,
+            password
+        });
+
+        const data = response.data;
+
+        if (data?.jwt) {
+            await testerInstance.connectionSuccess();
+        } else {
+            await testerInstance.connectionFailed('Invalid response from Portainer API');
+        }
+
+    } catch (error) {
+        await testerInstance.connectionFailed(error);
+    }
+}
+
 const initialize = async (application) => {
 
-    const {username, password} = application.config;
+    const { username, password } = application.config;
 
-    const listingUrl = application?.payload?.listingUrl || application?.payload?.localUrl;
+    const sanitizedListingUrl = application?.appUrl;
 
-    if(!username || !password || !listingUrl) {
-        return await application.sendError(400, 'Please provide all the required configuration parameters');
+    if (!username || !password || !sanitizedListingUrl) {
+        return await application.sendError('Please provide all the required configuration parameters');
     }
-
-    const sanitizedListingUrl = listingUrl.endsWith('/') ? listingUrl.slice(0, -1) : listingUrl;
 
     const authUrl = `${sanitizedListingUrl}/api/auth`;
     const endpointsUrl = `${sanitizedListingUrl}/api/endpoints`;
@@ -19,7 +47,7 @@ const initialize = async (application) => {
         // Step 1: Authenticate using the access token to get a JWT token
         const authResponse = await axios.post(authUrl, {
             username,
-            password 
+            password
         });
 
         const jwtToken = authResponse.data.jwt;
@@ -36,7 +64,7 @@ const initialize = async (application) => {
         const endpointId = endpoints[0].Id;
 
         // Step 3: Use the endpoint ID to fetch data from Portainer
-        const apiUrl = `${listingUrl}/api/endpoints/${endpointId}/docker/info`;
+        const apiUrl = `${sanitizedListingUrl}/api/endpoints/${endpointId}/docker/info`;
         const response = await axios.get(apiUrl, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`
@@ -52,14 +80,15 @@ const initialize = async (application) => {
             { key: '{{containersPaused}}', value: data.ContainersPaused },
             { key: '{{containersStopped}}', value: data.ContainersStopped },
             { key: '{{version}}', value: data.ServerVersion },
-            { key: '{{portainerLink}}', value: listingUrl }
+            { key: '{{portainerLink}}', value: sanitizedListingUrl }
         ];
 
         await application.sendResponse('response.tpl', 200, variables);
 
     } catch (error) {
-        await application.sendError(400, 'Error in fetching data from Portainer.');
+        await application.sendError(error);
     }
 }
 
 global.initialize = initialize;
+global.connectionTest = connectionTest;

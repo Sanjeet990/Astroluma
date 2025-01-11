@@ -1,23 +1,57 @@
 const axios = require('axios');
 const https = require('https');
 
+const connectionTest = async (testerInstance) => {
+    //implementa a connection tester logic
+    try {
+        const connectionUrl = testerInstance?.appUrl;
+
+        const proxmoxURL = `${connectionUrl}/api2/json`;
+
+        const axiosInstance = axios.create({
+            httpsAgent: new https.Agent({
+                rejectUnauthorized: !testerInstance?.config?.skipTlsValidation
+            })
+        });
+
+        const response = await axiosInstance.post(`${proxmoxURL}/access/ticket`, {
+            username: `${testerInstance?.config?.username}@${testerInstance?.config?.realm}`,
+            password: testerInstance?.config?.password
+        });
+
+        if (response.status === 401) {
+            await testerInstance.connectionFailed("Invalid credentials");
+        } else {
+
+            const data = response.data;
+
+            if (data?.data?.ticket && data?.data?.CSRFPreventionToken) {
+                await testerInstance.connectionSuccess();
+            } else {
+                await testerInstance.connectionFailed('Invalid response from Proxmox API');
+            }
+        }
+    } catch (error) {
+        await testerInstance.connectionFailed(error);
+    }
+}
+
 const initialize = async (application) => {
 
-    const {username, password, realm} = application.config;
+    const { username, password, realm, skipTlsValidation } = application.config;
 
-    const listingUrl = application?.payload?.localUrl || application?.config?.listingUrl;
 
-    if(!username || !password || !realm || !listingUrl) {
-        return await application.sendError(400, 'Please provide all the required configuration parameters');
+    const sanitizedListingUrl = application?.appUrl;
+
+    if (!username || !password || !realm || !sanitizedListingUrl) {
+        return await application.sendError('Please provide all the required configuration parameters');
     }
-
-    const sanitizedListingUrl = listingUrl.endsWith('/') ? listingUrl.slice(0, -1) : listingUrl;
 
     const proxmoxURL = `${sanitizedListingUrl}/api2/json`;
 
     const axiosInstance = axios.create({
         httpsAgent: new https.Agent({
-            rejectUnauthorized: false // Disable SSL verification, usually Proxmox is behaind self signed SSL
+            rejectUnauthorized: !skipTlsValidation
         })
     });
 
@@ -65,15 +99,17 @@ const initialize = async (application) => {
             { key: '{{memory}}', value: ramUsagePercentage },
             { key: '{{disk}}', value: diskUsagePercentage },
             { key: '{{uptime}}', value: uptimeString },
-            { key: '{{proxMoxLink}}', value: listingUrl }
+            { key: '{{proxMoxLink}}', value: application?.appUrl }
         ];
 
         await application.sendResponse('response.tpl', 200, variables);
 
     } catch (error) {
-        await application.sendError(400, 'Error fetching data from Proxmox API');
+        //console.log(error);
+        await application.sendError(error);
     }
 
 }
 
 global.initialize = initialize;
+global.connectionTest = connectionTest;

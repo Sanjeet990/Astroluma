@@ -1,10 +1,12 @@
-const Integration = require("../models/Integration");
 const Listing = require("../models/Listing");
+const App = require("../models/App");
 const stream = require('stream');
 const { spawn } = require('child_process');
 const Page = require("../models/Page");
 const mongoose = require('mongoose');
 const { isValidStream } = require("../utils/apiutils");
+const fs = require('fs');
+const path = require('path');
 
 exports.saveFolder = async (req, res) => {
     const userId = req.user._id;
@@ -92,23 +94,40 @@ exports.listingDetails = async (req, res) => {
                 userId
             });
         }
-
-        // Fetch integrations associated with the user
-        const integrations = await Integration.find({
-            userId
-        }).select('integrationName _id'); // Specify attributes to fetch
-
+        
         // Find pages
         const pages = await Page.find({
             userId,
             isPublished: true
         }).select('-pageContent'); // Exclude pageContent field
 
+        //select apps from the db
+        const appList = await App.find({});
+
+        console.log(appList);
+
+        const appsDir = path.join(__dirname, '../../storage/apps'); // Path to the apps directory
+
+        const apps = [];
+
+        for (const app of appList) {
+            const manifestPath = path.join(appsDir, app.appId, 'manifest.json'); // Path to the manifest.json file
+
+            if (fs.existsSync(manifestPath)) {
+                const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')); // Read and parse the manifest.json file
+
+                // Only add the app to the list if the folder name matches the appId
+                if (app.appId === manifest.appId) {
+                    apps.push(manifest);
+                }
+            }
+        }
+
         // Return details
         return res.status(200).json({
             error: false,
             message: {
-                integrations,
+                integrations: apps,
                 pages,
                 listing
             }
@@ -263,7 +282,7 @@ exports.listItems = async (req, res) => {
 
     const [items, parentFolder, breadcrumb] = await Promise.all([
         // list all items of this listing id
-        Listing.find(query).sort({ sortOrder: 'asc' }).populate("integration", "_id autoRefreshAfter"),
+        Listing.find(query).sort({ sortOrder: 'asc' }),
 
         // find listing details
         Listing.findOne({
@@ -272,7 +291,7 @@ exports.listItems = async (req, res) => {
         }),
         getBreadcrumb(listingId, userId)
     ]);
-    
+
 
     //return details
     return res.status(200).json({
@@ -364,13 +383,35 @@ exports.saveLink = async (req, res) => {
     const { parentId, listingId, linkName, linkIcon, linkURL, localUrl, showInSidebar, showOnFeatured } = req.body;
     let integration = req.body.integration;
 
-    if (!integration || integration === 'undefined') integration = null;
+    if (!integration || integration === 'undefined' || integration === 'null') integration = null;
 
     if (!linkName || !linkIcon || (!linkURL && !localUrl)) {
+
         return res.status(400).json({
             error: true,
             message: "All fields are required"
         });
+    }
+
+    let integrationData = null;
+
+    if (integration) {
+        //try to load integration manifest
+        const appsDir = path.join(__dirname, '../../storage/apps');
+        const manifestPath = path.join(appsDir, integration.package, 'manifest.json');
+
+        if (fs.existsSync(manifestPath)) {
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+            if (manifest?.appId === integration.package) {
+                integrationData = {
+                    appId: integration?.package,
+                    alwaysShowDetailedView: manifest?.alwaysShowDetailedView || false,
+                    autoRefreshAfter: manifest?.autoRefreshAfterSeconds || 0,
+                    config: integration?.config
+                }
+            }
+        }
     }
 
     try {
@@ -384,7 +425,7 @@ exports.saveLink = async (req, res) => {
                     localUrl,
                     onFeatured: showOnFeatured,
                     inSidebar: showInSidebar,
-                    integration
+                    integration: integrationData
                 },
                 { new: true }
             );
@@ -411,7 +452,7 @@ exports.saveLink = async (req, res) => {
                 onFeatured: showOnFeatured,
                 inSidebar: showInSidebar,
                 userId,
-                integration
+                integration: integrationData
             });
 
             return res.status(200).json({
@@ -458,7 +499,7 @@ exports.deleteListing = async (req, res) => {
     const userId = req.user._id;
     const listingId = req.params.listingId;
 
-    if (!listingId) {
+    if (!listingId || listingId === 'undefined' || listingId === 'null') {
         return res.status(400).json({
             error: true,
             message: "Listing ID is required"
@@ -466,13 +507,16 @@ exports.deleteListing = async (req, res) => {
     }
 
     try {
-        await Promise.all([
-            Listing.findByIdAndDelete({ _id: listingId, userId }),
-            Listing.updateMany(
-                { parentId: listingId, userId },
-                { $set: { parentId: null } }
-            )
-        ]);
+        const listingInfo = await Listing.findOne({ _id: listingId, userId });
+
+        if (listingInfo.userId.toString() !== userId.toString()) {
+            return res.status(400).json({
+                error: true,
+                message: "You are not authorized to delete this listing."
+            });
+        }
+
+        await Listing.deleteWithChildren(listingId);
 
         return res.status(200).json({
             error: false,
@@ -698,9 +742,11 @@ exports.moveListingTo = async (req, res) => {
     const listingId = req.params.listingId;
     let parentId = req.params.parentId;
 
-    if (parentId === 'undefined') parentId = null;
+    if (parentId === 'undefined' || parentId === 'null') {
+        parentId = null;
+    }
 
-    // Return error if listingId or parentId is not provided
+    // Return error if listingId is not provided
     if (!listingId) {
         return res.status(400).json({
             error: true,
@@ -708,45 +754,78 @@ exports.moveListingTo = async (req, res) => {
         });
     }
 
-    // Check recursively if listingId is in the parent tree
-    const isListingInParentTree = async (lid, pid, uid) => {
-        if (lid == null) return false;
-        if (lid?.toString() === pid?.toString()) return true;
-
-        const listing = await Listing.findOne({ _id: pid, userId: uid });
-
-        if (listing?.pid?.toString() === lid?.toString()) {
-            return true;
-        }
-
-        return isListingInParentTree(listing?.parentId, pid, uid);
-    };
-
-    const isListingInTree = await isListingInParentTree(listingId, parentId, userId);
-
-    if (isListingInTree) {
-        return res.status(400).json({
+    // First verify that the listing exists and belongs to the user
+    const sourceListing = await Listing.findOne({ _id: listingId, userId });
+    if (!sourceListing) {
+        return res.status(404).json({
             error: true,
-            message: "Listing cannot be moved to its own child"
+            message: "Listing not found or access denied"
         });
     }
 
+    // If parentId is provided, verify it exists and belongs to the user
+    if (parentId) {
+        const parentListing = await Listing.findOne({ _id: parentId, userId });
+        if (!parentListing) {
+            return res.status(404).json({
+                error: true,
+                message: "Parent listing not found or access denied"
+            });
+        }
+    }
+
+    // Check recursively if the target parent is a descendant of the listing being moved
+    const isListingInParentTree = async (currentId, targetParentId) => {
+        // Base cases
+        if (!currentId || !targetParentId) return false;
+        if (currentId.toString() === targetParentId.toString()) return true;
+
+        // Get all direct children of the current listing
+        const children = await Listing.find({ parentId: currentId, userId });
+
+        // Recursively check each child
+        for (const child of children) {
+            if (await isListingInParentTree(child._id, targetParentId)) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
     try {
-        await Listing.findOneAndUpdate(
+        // Check if the move would create a circular reference
+        if (parentId && await isListingInParentTree(listingId, parentId)) {
+            return res.status(400).json({
+                error: true,
+                message: "Cannot move a listing to one of its descendants"
+            });
+        }
+
+        // Perform the move
+        const updatedListing = await Listing.findOneAndUpdate(
             { _id: listingId, userId },
             { parentId },
-            { new: true } // Return the updated document
+            { new: true }
         );
+
+        if (!updatedListing) {
+            return res.status(404).json({
+                error: true,
+                message: "Failed to update listing"
+            });
+        }
 
         return res.status(200).json({
             error: false,
-            message: "Listing moved"
+            message: "Listing moved successfully",
+            listing: updatedListing
         });
     } catch (error) {
         console.error('Error moving listing:', error);
-        return res.status(400).json({
+        return res.status(500).json({
             error: true,
-            message: "Error moving listing"
+            message: "Internal server error while moving listing"
         });
     }
 };
