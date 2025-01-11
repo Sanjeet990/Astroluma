@@ -32,6 +32,12 @@ const ImageView = ({
     const specialCases = {
       'authenticator': '/otp.png',
       'astroluma': '/astroluma.svg',
+      'link': '/link.png',
+      'folder': '/folder.png',
+      'todo': '/todo.png',
+      'snippet': '/snippet.png',
+      'camera': '/cctv.png',
+      'device': '/computer.png',
       '/default.png': '/default.png',
       '/astroluma.svg': '/astroluma.svg'
     };

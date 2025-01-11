@@ -41,6 +41,12 @@ const EditSnippetList = () => {
 
     //fetch details of the folder by listingId
     useEffect(() => {
+        setSelectedImage({
+            iconUrl: "snippet",
+            iconUrlLight: null,
+            iconProvider: 'com.astroluma.self'
+        });
+        
         setLoading(true);
         ApiService.get(`/api/v1/listing/snippet/${listingId}`, loginData?.token, navigate)
             .then(data => {
@@ -57,7 +63,11 @@ const EditSnippetList = () => {
                         navigate("/manage/listing");
                     }
                 } else {
-                    setSelectedImage(null);
+                    setSelectedImage({
+                        iconUrl: "snippet",
+                        iconUrlLight: null,
+                        iconProvider: 'com.astroluma.self'
+                    });
                     setSnippetName("");
                     setShowInSidebar(false);
                     setShowOnFeatured(false);
@@ -74,8 +84,14 @@ const EditSnippetList = () => {
     const handleFormSubmit = () => {
 
 
-        if (!snippetName || !selectedImage) {
+        if (!snippetName) {
             makeToast("warning", "Please fill all the fields");
+            return;
+        }
+
+        
+        if (!selectedImage) {
+            makeToast("warning", "You must have to select an icon");
             return;
         }
 

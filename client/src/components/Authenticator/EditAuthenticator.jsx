@@ -39,6 +39,11 @@ const EditAuthenticator = () => {
     useCurrentRoute("/manage/totp");
 
     useEffect(() => {
+        setSelectedImage({
+            iconUrl: "authenticator",
+            iconUrlLight: null,
+            iconProvider: 'com.astroluma.self'
+        });
         if (authId) {
             setLoading(true);
             ApiService.get(`/api/v1/totp/${authId}`, loginData?.token, navigate)
@@ -54,7 +59,11 @@ const EditAuthenticator = () => {
                     setLoading(false);
                 });
         } else {
-            setSelectedImage(null);
+            setSelectedImage({
+                iconUrl: "authenticator",
+                iconUrlLight: null,
+                iconProvider: 'com.astroluma.self'
+            });
             setServiceName('');
             setAccountName('');
             setSecretKey('');

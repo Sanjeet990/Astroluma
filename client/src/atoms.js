@@ -130,27 +130,6 @@ export const addedTodoState = atom({
   default: null,
 });
 
-export const integrationInstallModalState = atom({
-  key: 'integrationInstallModalState',
-  default: {
-    isOpen: false,
-    data: null,
-  },
-});
-
-export const deleteIntegrationModalState = atom({
-  key: 'deleteIntegrationModalState',
-  default: {
-    isOpen: false,
-    data: null,
-  },
-});
-
-export const deletedIntegrationState = atom({
-  key: 'deletedIntegrationState',
-  default: null,
-});
-
 export const activeRouteState = atom({
   key: 'activeRouteState',
   default: "/",

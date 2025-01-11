@@ -7,6 +7,13 @@
     "alwaysShowDetailedView": true,
     "config": [
         {
+            "name": "overrideurl",
+            "label": "NGINX Proxy Manager URL",
+            "type": "string",
+            "required": false,
+            "placeholder": "If different from the Link URL, enter URL"
+        },
+        {
             "name": "email",
             "label": "Email",
             "type": "string",

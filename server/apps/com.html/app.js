@@ -1,3 +1,9 @@
+const connectionTest = async (testerInstance) => {
+    //No need to connect to third party services,
+    //so just report as connected
+
+    await testerInstance.connectionSuccess();
+}
 
 const initialize = async (application) => {
 
@@ -12,8 +18,9 @@ const initialize = async (application) => {
         await application.sendResponse('response.tpl', 200, variables);
 
     } catch (error) {
-       await application.sendError(400, 'Error in fetching data from GitHub.');
+       await application.sendError(error);
     }
 }
 
 global.initialize = initialize;
+global.connectionTest = connectionTest;

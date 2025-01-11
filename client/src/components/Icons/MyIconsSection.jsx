@@ -64,11 +64,19 @@ const MyIconsSection = ({ onSelectImage }) => {
         setIsDataLoading(true);
 
         ApiService.get(`/api/v1/images?page=${page}`, loginData?.token, navigate)
-            .then((data) => {
+            .then((response) => {
+                const data = response?.data;
                 if (data.length === 0) {
                     setHasMoreItems(false);
                     return;
                 }
+    
+                setImageList(prev => {
+                    const newImages = data.filter(newImg =>
+                        !prev.some(existingImg => existingImg._id === newImg._id)
+                    );
+                    return [...prev, ...newImages];
+                });
             })
             .catch((error) => {
                 if (!error.handled) makeToast("error", "Cannot load images.");
@@ -116,6 +124,7 @@ const MyIconsSection = ({ onSelectImage }) => {
             makeToast("error", "No valid icon format available");
         }
     };
+
 
     const renderImageGrid = () => (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 overflow-auto max-h-64 place-items-center">

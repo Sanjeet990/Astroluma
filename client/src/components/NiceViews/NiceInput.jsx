@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const NiceInput = ({
     label = "",
@@ -14,6 +15,7 @@ const NiceInput = ({
     error = "",
     className = "" }) => {
 
+    const [showPassword, setShowPassword] = useState(false);
     const timestamp = Date.now();
     let id = Math.random().toString(36).substring(7);
 
@@ -23,6 +25,10 @@ const NiceInput = ({
         id = Math.random().toString(36).substring(7) + timestamp;
     }
 
+    const togglePassword = () => {
+        setShowPassword(!showPassword);
+    };
+
     return (
         <div className="mb-4">
             {
@@ -30,22 +36,38 @@ const NiceInput = ({
                     {label}
                 </label>
             }
-            <input
-                className={`${disabled ? "cursor-not-allowed" : ""} appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline placeholder-opacity-50 ${className}`}
-                id={id}
-                type={type}
-                value={value}
-                name={name || id}
-                onChange={onChange}
-                disabled={disabled}
-                min={min}
-                max={max}
-                placeholder={placeholder || `Enter ${label}`}
-            />
+            <div className="relative">
+                <input
+                    className={`${disabled ? "cursor-not-allowed" : ""} appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline placeholder-opacity-50 ${type === 'password' ? 'pr-10' : ''} ${className}`}
+                    id={id}
+                    type={type === 'password' ? (showPassword ? 'text' : 'password') : type}
+                    value={value}
+                    name={name || id}
+                    onChange={onChange}
+                    disabled={disabled}
+                    min={min}
+                    max={max}
+                    placeholder={placeholder || `Enter ${label}`}
+                />
+                {type === 'password' && (
+                    <button
+                        type="button"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                        onClick={togglePassword}
+                        tabIndex={-1}
+                    >
+                        {showPassword ? (
+                            <FaEyeSlash size={20} />
+                        ) : (
+                            <FaEye size={20} />
+                        )}
+                    </button>
+                )}
+            </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
         </div>
-    )
-}
+    );
+};
 
 NiceInput.propTypes = {
     label: PropTypes.string,
@@ -59,7 +81,7 @@ NiceInput.propTypes = {
     max: PropTypes.string,
     error: PropTypes.string,
     className: PropTypes.string
-}
+};
 
 const MemoizedComponent = React.memo(NiceInput);
 export default MemoizedComponent;

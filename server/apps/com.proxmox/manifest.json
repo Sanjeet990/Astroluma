@@ -7,6 +7,13 @@
     "alwaysShowDetailedView": true,
     "config": [
         {
+            "name": "overrideurl",
+            "label": "Proxmox URL",
+            "type": "string",
+            "required": false,
+            "placeholder": "If different from the Link URL, enter URL"
+        },
+        {
             "name": "username",
             "label": "Proxmox Username",
             "type": "string",
@@ -16,7 +23,7 @@
         {
             "name": "password",
             "label": "Proxmox Password",
-            "type": "string",
+            "type": "password",
             "required": true,
             "placeholder": "Enter password"
         },
@@ -26,6 +33,13 @@
             "type": "string",
             "required": true,
             "placeholder": "Enter realm"
+        },
+        {
+            "name": "skipTlsValidation",
+            "label": "Skip TLS Validation",
+            "type": "checkbox",
+            "default": true,
+            "placeholder": "Skip TLS Validation"
         }
     ]
 }
