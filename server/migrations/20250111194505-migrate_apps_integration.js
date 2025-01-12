@@ -20,7 +20,6 @@ module.exports = {
 
     const listingsCollection = db.collection('listings');
     const integrationCollection = db.collection('integrations');
-    const appsettingsCollection = db.collection('appsettings');
 
     //Migrate integration
     const allListings = await listingsCollection.find({ "listingType": "link" }).toArray();
@@ -54,9 +53,17 @@ module.exports = {
       }
     }
 
-    // Remove the integration collection
-    await integrationCollection.drop();
-    await appsettingsCollection.drop(); 
+    // Only drop collections if they exist
+    const existingIntegrationCollection = await db.listCollections({ name: 'integrations' }).hasNext();
+    const existingAppsettingsCollection = await db.listCollections({ name: 'appsettings' }).hasNext();
+
+    if (existingIntegrationCollection) {
+      await integrationCollection.drop();
+    }
+    if (existingAppsettingsCollection) {
+      await appsettingsCollection.drop();
+    }
+
   },
 
   async down(db, client) {
