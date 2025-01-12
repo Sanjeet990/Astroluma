@@ -4,9 +4,12 @@ const stream = require('stream');
 const { spawn } = require('child_process');
 const Page = require("../models/Page");
 const mongoose = require('mongoose');
-const { isValidStream } = require("../utils/apiutils");
+const { isValidStream, getSecretKey } = require("../utils/apiutils");
 const fs = require('fs');
 const path = require('path');
+const CryptoJS = require('crypto-js');
+
+const SECRET_KEY = getSecretKey();
 
 exports.saveFolder = async (req, res) => {
     const userId = req.user._id;
@@ -94,7 +97,7 @@ exports.listingDetails = async (req, res) => {
                 userId
             });
         }
-        
+
         // Find pages
         const pages = await Page.find({
             userId,
@@ -103,8 +106,6 @@ exports.listingDetails = async (req, res) => {
 
         //select apps from the db
         const appList = await App.find({});
-
-        console.log(appList);
 
         const appsDir = path.join(__dirname, '../../storage/apps'); // Path to the apps directory
 

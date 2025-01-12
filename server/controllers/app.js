@@ -153,20 +153,16 @@ exports.runIntegratedApp = async (req, res) => {
     if (listingId === 'undefined') listingId = null;
 
     if (!appId || !listingId) {
-        return res.status(400).send();
+        return res.status(400).send("zxc");
     }
 
     try {
         const listing = await Listing.findOne({ userId, _id: listingId });
 
         if (!listing) {
-            return res.status(400).send();
+            return res.status(400).send("vv");
         }
-
-        if (listing.integration?._id?.toString() !== appId) {
-            return res.status(400).send();
-        }
-
+        
         const modulePath = path.join(__dirname, `../../storage/apps/${listing.integration.appId}/app.js`);
         const moduleCode = fs.readFileSync(modulePath, 'utf8');
 
