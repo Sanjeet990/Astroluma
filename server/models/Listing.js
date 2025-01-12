@@ -14,93 +14,98 @@ const integrationSchema = new Schema({
   alwaysShowDetailedView: {
     type: Boolean,
     required: false,
-    default: false
+    default: false,
   },
   autoRefreshAfter: {
     type: Number,
     required: false,
-    default: 0
+    default: 0,
   },
   config: {
     type: String,
     required: false,
     default: null,
-    set: function(v) {
+    set: function (v) {
       if (v === null) return null;
       return CryptoJS.AES.encrypt(JSON.stringify(v), SECRET_KEY).toString();
     },
-    get: function(v) {
+    get: function (v) {
       if (v === null) return null;
       try {
-        const bytes = CryptoJS.AES.decrypt(v, SECRET_KEY);
-        return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+          const bytes = CryptoJS.AES.decrypt(v, SECRET_KEY);
+          const decryptedValue = bytes.toString(CryptoJS.enc.Utf8);
+          //console.log('Decrypted value:', decryptedValue); // Add this line for debugging
+          return JSON.parse(decryptedValue);
       } catch (error) {
-        console.error('Error decrypting config:', error);
-        return "pull";
+          console.error('Error decrypting config:', error);
+          return null;
       }
-    }
+  },
   },
 });
 
-const listingSchema = new Schema({
-  listingName: {
-    type: String,
-    required: true,
+const listingSchema = new Schema(
+  {
+    listingName: {
+      type: String,
+      required: true,
+    },
+    listingIcon: {
+      type: Schema.Types.Mixed,
+      required: false,
+      default: null,
+    },
+    listingType: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    listingUrl: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    localUrl: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    inSidebar: {
+      type: Boolean,
+      default: false,
+      required: true,
+    },
+    onFeatured: {
+      type: Boolean,
+      default: false,
+      required: true,
+    },
+    integration: {
+      type: integrationSchema,
+      required: false,
+    },
+    sortOrder: {
+      type: Number,
+      default: 9999,
+      required: true,
+    },
+    parentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Listing',
+      required: false,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
+    },
   },
-  listingIcon: {
-    type: Schema.Types.Mixed,
-    required: false,
-    default: null,
-  },
-  listingType: {
-    type: String,
-    required: false,
-    default: null,
-  },
-  listingUrl: {
-    type: String,
-    required: false,
-    default: null,
-  },
-  localUrl: {
-    type: String,
-    required: false,
-    default: null,
-  },
-  inSidebar: {
-    type: Boolean,
-    default: false,
-    required: true,
-  },
-  onFeatured: {
-    type: Boolean,
-    default: false,
-    required: true,
-  },
-  integration: {
-    type: integrationSchema,
-    required: false,
-  },
-  sortOrder: {
-    type: Number,
-    default: 9999,
-    required: true,
-  },
-  parentId: {
-    type: Schema.Types.ObjectId,
-    ref: 'Listing',
-    required: false,
-  },
-  userId: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: false,
+  {
+    timestamps: true,
+    toJSON: { getters: true},
+    toObject: { getters: true},
   }
-}, {
-  timestamps: true,
-  toJSON: { getters: true },
-  toObject: { getters: true }
-});
+);
 
 /**
  * Recursively deletes all children of a given listing
@@ -108,18 +113,18 @@ const listingSchema = new Schema({
  */
 async function deleteChildren(parentId) {
   const children = await Listing.find({ parentId });
-  
+
   for (const child of children) {
     await deleteChildren(child._id);
   }
-  
+
   if (children.length > 0) {
     await Listing.deleteMany({ parentId });
   }
 }
 
 // Add the static method to your schema
-listingSchema.statics.deleteWithChildren = async function(listingId) {
+listingSchema.statics.deleteWithChildren = async function (listingId) {
   const listing = await this.findById(listingId);
   if (!listing) {
     throw new Error('Listing not found');
@@ -127,7 +132,6 @@ listingSchema.statics.deleteWithChildren = async function(listingId) {
   await deleteChildren(listingId);
   await listing.deleteOne();
 };
-
 
 const Listing = mongoose.model('Listing', listingSchema);
 
