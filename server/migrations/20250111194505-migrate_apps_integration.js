@@ -20,11 +20,10 @@ module.exports = {
 
     const listingsCollection = db.collection('listings');
     const integrationCollection = db.collection('integrations');
+    const appsettingsCollection = db.collection('appsettings');
 
     //Migrate integration
     const allListings = await listingsCollection.find({ "listingType": "link" }).toArray();
-
-    console.log("Migrating integration for listings", allListings.length);
 
     // Use for...of instead of forEach for async/await
     for (const listing of allListings) {
@@ -42,30 +41,22 @@ module.exports = {
             config: singleDecryptedConfig,
           };
 
-          console.log("Integration found for listing", listing.listingName, listing._id, integrationObj);
-
           // update the listing with the integration
           try {
             const result = await listingsCollection.updateOne(
               { _id: listing._id },
               { $set: { integration: integrationObj } }
             );
-            if (result.modifiedCount === 0) {
-              console.log("No record updated for listing", listing.listingName);
-            }
           } catch (ex) {
             console.log("Error updating listing", ex);
           }
-        } else {
-          console.log("Integration not found for listing", listing.listingName);
         }
-      } else {
-        console.log("No integration found for listing", listing.listingName);
       }
     }
 
     // Remove the integration collection
     await integrationCollection.drop();
+    await appsettingsCollection.drop(); 
   },
 
   async down(db, client) {
