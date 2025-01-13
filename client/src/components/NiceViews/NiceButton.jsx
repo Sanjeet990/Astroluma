@@ -7,7 +7,7 @@ const NiceButton = ({ label = "Go Back", onClick = null, disabled = false, class
         <motion.div 
             className={`inline-flex ${parentClassname}`}
             initial={{ scale: 1 }}
-            whileHover={{ 
+            whileHover={disabled ? {} : { 
                 scale: 1.03,
                 transition: { 
                     type: "spring",
@@ -15,7 +15,7 @@ const NiceButton = ({ label = "Go Back", onClick = null, disabled = false, class
                     damping: 10
                 }
             }}
-            whileTap={{ scale: 0.97 }}
+            whileTap={disabled ? {} : { scale: 0.97 }}
         >
             <button
                 type="button"

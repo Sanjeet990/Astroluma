@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import ApiService from '../../utils/ApiService';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { loadingState, loginState, removeInstalledIntegrationModalState } from '../../atoms';
+import { integrationConfigureModalState, loadingState, loginState, removeInstalledIntegrationModalState } from '../../atoms';
 import { Helmet } from 'react-helmet';
 import { GrAppsRounded } from "react-icons/gr";
 import SingleInstalledApp from './SingleInstalledApp';
@@ -15,10 +15,13 @@ import makeToast from '../../utils/ToastUtils';
 import RemoveInstalledIntegration from '../Modals/RemoveInstalledIntegration';
 import { useNavigate } from 'react-router-dom';
 import emitter, { RELOAD_INSTALLED_APPS } from '../../events';
+import AdditionalIntegrationConfigurationModal from '../Modals/AdditionalIntegrationConfigurationModal';
 
 const InstalledApps = () => {
     const navigate = useNavigate();
     const setLoading = useSetRecoilState(loadingState);
+
+    const setConfigModalState = useSetRecoilState(integrationConfigureModalState);
     const setRemoveInstalledIntegration = useSetRecoilState(removeInstalledIntegrationModalState);
     const [appList, setAppList] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
@@ -121,6 +124,11 @@ const InstalledApps = () => {
             });
     }
 
+    const handleConfigureClick = (app) => {
+        console.log(app);
+        setConfigModalState({ isOpen: true, data: app });
+    };
+
     return (
         <>
             <Helmet>
@@ -133,6 +141,8 @@ const InstalledApps = () => {
                 breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }]}
             />
 
+
+            <AdditionalIntegrationConfigurationModal />
             <RemoveInstalledIntegration onSuccess={reloadData} />
 
             <div className="flex flex-col justify-between">
@@ -160,6 +170,7 @@ const InstalledApps = () => {
                                     <div ref={lastAppElementRef} key={`${app.appId}_${index}`}>
                                         <SingleInstalledApp
                                             app={app}
+                                            configurationHandler={handleConfigureClick}
                                             handleAppRemove={handleAppRemove}
                                         />
                                     </div>
@@ -169,6 +180,7 @@ const InstalledApps = () => {
                                 <SingleInstalledApp
                                     key={`${app.appId}_${index}`}
                                     app={app}
+                                    configurationHandler={handleConfigureClick}
                                     handleAppRemove={handleAppRemove}
                                 />
                             );

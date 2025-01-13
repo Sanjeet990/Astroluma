@@ -22,6 +22,21 @@ const appsSchema = new Schema({
   appIcon: {
     type: String,
     required: true,
+  },
+  npmInstalled:{
+    type: Number,
+    require: false,
+    default: 0,
+  },
+  coreSettings:{
+    type: Boolean,
+    require: false,
+    default: false,
+  },
+  configured:{
+    type: Boolean,
+    require: false,
+    default: true,
   }
 }, {
   timestamps: true,

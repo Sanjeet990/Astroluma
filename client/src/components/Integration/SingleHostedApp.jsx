@@ -10,7 +10,7 @@ import { loadingState, loginState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
 import makeToast from '../../utils/ToastUtils';
 
-const SingleHostedApp = ({ app }) => {
+const SingleHostedApp = ({ app, isInstalled }) => {
     const navigate = useNavigate();
 
     const [isInstalling, setIsInstalling] = useState(false);
@@ -93,8 +93,8 @@ const SingleHostedApp = ({ app }) => {
 
                         <NiceButton
                             onClick={doInstallIntegration}
-                            label={isInstalling ? 'Installing...' : 'Install'}
-                            disabled={isInstalling}
+                            label={isInstalled ? "Installed" : isInstalling ? 'Installing...' : 'Install'}
+                            disabled={isInstalled || isInstalling}
                             parentClassname="w-full"
                             className="mt-6 bg-buttonGeneric text-buttonText w-full" />
 

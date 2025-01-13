@@ -6,7 +6,7 @@ const Listing = require('../models/Listing');
 const App = require('../models/App');
 const axios = require('axios');
 const allowedModules = require('../utils/allowedModules');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 
 // Common utility functions
 const validateUser = (user) => {
@@ -50,16 +50,45 @@ const cleanupFiles = (paths) => {
 };
 
 const saveApp = async (manifest, package) => {
+    const hasCoreSettings = manifest.config?.some(setting => setting.scope === "core");
+
     const app = new App({
         appId: manifest.appId,
         appName: manifest.appName || manifest.appId,
         description: package.description || manifest.appId,
         version: package.version || "1.0.0",
+        npmInstalled: 0,
+        coreSettings: hasCoreSettings || false,
+        configured: hasCoreSettings ? false : true,
         appIcon: manifest.appIcon || "integration.png"
     });
 
     await app.save();
+
+    return app;
 };
+
+const installDependencies = (targetDir) => {
+    return new Promise((resolve, reject) => {
+        const installProcess = spawn('npm', ['install --silent'], {
+            cwd: path.resolve(targetDir), // Set the target directory as the working directory
+            stdio: 'inherit', // Pipe output to the parent process (optional)
+            shell: true, // For better cross-platform compatibility
+        });
+
+        installProcess.on('close', (code) => {
+            if (code === 0) {
+                resolve(`Dependencies installed successfully in ${targetDir}`);
+            } else {
+                reject(new Error(`npm install failed with exit code ${code}`));
+            }
+        });
+
+        installProcess.on('error', (err) => {
+            reject(err);
+        });
+    });
+}
 
 const handleAppInstallation = async (zipPath, extractPath) => {
     try {
@@ -68,7 +97,7 @@ const handleAppInstallation = async (zipPath, extractPath) => {
 
         const appExists = await App.findOne({ appId: manifest.appId });
         if (appExists) {
-            throw new Error(`${manifest.appName} is already installed.`);
+            throw new Error(`${manifest.appName} already exists`);
         }
 
         // For zip installations, move to final location
@@ -80,21 +109,29 @@ const handleAppInstallation = async (zipPath, extractPath) => {
             fs.renameSync(extractPath, finalPath);
         }
 
-        //do npm install in the finalPath
-        exec(`npm install --prefix ${finalPath}`, async (error, stdout, stderr) => {
-            if (error) {
-                cleanupFiles([zipPath, extractPath]);
-                throw error;
-            }
-            
-            await saveApp(manifest, package);
-            cleanupFiles([zipPath]);
+        const app = await saveApp(manifest, package);
 
-            return {
-                error: false,
-                message: "The integration is added."
-            };
+        // Start npm installation process
+        process.nextTick(() => {
+            installDependencies(finalPath)
+                .then(async (msg) => {
+                    console.log(msg);
+                    app.npmInstalled = 1;
+                    await app.save();
+                    cleanupFiles([zipPath]);
+                })
+                .catch(async (error) => {
+                    app.npmInstalled = -1;
+                    await app.save();
+                    cleanupFiles([zipPath, extractPath]);
+                });
         });
+
+        return {
+            error: false,
+            message: "The integration is added."
+        };
+
     } catch (error) {
         cleanupFiles([zipPath, extractPath]);
         throw error;
@@ -128,7 +165,37 @@ exports.installFromZip = async (req, res) => {
     }
 };
 
+const downloadFile = async (url, zipPath) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const writer = fs.createWriteStream(zipPath);
+            const response = await axios({
+                url,
+                method: 'GET',
+                responseType: 'stream'
+            });
+
+            response.data.pipe(writer);
+
+            writer.on('finish', () => {
+                writer.close();
+                resolve();
+            });
+
+            writer.on('error', (error) => {
+                writer.close();
+                reject(error);
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+};
+
 exports.installRemoteApp = async (req, res) => {
+    const zipPath = path.join(__dirname, '../public/uploads/integrations', `${req.params.appId}`);
+    const extractPath = path.join(__dirname, '../../storage/apps', req.params.appId);
+
     try {
         validateUser(req.user);
 
@@ -138,44 +205,19 @@ exports.installRemoteApp = async (req, res) => {
         }
 
         const appUrl = `https://cdn.jsdelivr.net/gh/Sanjeet990/AstrolumaApps/apps/${appId}.zip`;
-        const zipPath = path.join(__dirname, '../public/uploads/integrations', `${appId}`);
-        const extractPath = path.join(__dirname, '../../storage/apps', appId);
-
-        // Download the remote zip file
-        const writer = fs.createWriteStream(zipPath);
-
-        const response = await axios({
-            url: appUrl,
-            method: 'GET',
-            responseType: 'stream'
-        });
-
-        response.data.pipe(writer);
-
-        return new Promise((resolve, reject) => {
-            writer.on('finish', async () => {
-                writer.close();
-                try {
-                    const result = await handleAppInstallation(zipPath, extractPath);
-                    resolve(res.status(200).json(result));
-                } catch (error) {
-                    reject(res.status(400).json({
-                        error: true,
-                        message: error.message || "Error in installing app."
-                    }));
-                }
-            });
-
-            writer.on('error', (error) => {
-                cleanupFiles([zipPath, extractPath]);
-                reject(res.status(400).json({
-                    error: true,
-                    message: "Error downloading app file."
-                }));
-            });
-        });
+        
+        // Download file first
+        await downloadFile(appUrl, zipPath);
+        
+        // Then handle installation
+        const result = await handleAppInstallation(zipPath, extractPath);
+        
+        return res.status(200).json(result);
 
     } catch (error) {
+        // Clean up files in case of any error
+        cleanupFiles([zipPath, extractPath]);
+        
         return res.status(400).json({
             error: true,
             message: error.message || "Error in installing app."
@@ -306,6 +348,26 @@ exports.removeInstalledApp = async (req, res) => {
         });
     }
 }
+
+exports.allInstalledApps = async (req, res) => {
+    try {
+        const apps = await App.find({}).select('appId');
+
+        const onlyAppIds = apps?.map(app => app.appId);
+
+        return res.status(200).json({
+            error: false,
+            message: onlyAppIds || []
+        });
+
+    } catch (error) {
+        return res.status(400).json({
+            error: true,
+            message: "Error in retrieving installed apps."
+        });
+    }
+}
+
 exports.installedApps = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
