@@ -19,6 +19,7 @@ const InstallApps = () => {
     const observerRef = useRef(null);
     const setLoading = useSetRecoilState(loadingState);
     const [appList, setAppList] = useState([]);
+    const [installedApps, setInstalledApps] = useState(new Set());
     const [currentPage, setCurrentPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -27,27 +28,40 @@ const InstallApps = () => {
     useDynamicFilter(false);
     useCurrentRoute("/manage/apps");
 
+    const fetchInstalledApps = useCallback(() => {
+        ApiService.get('/api/v1/app/installed/all', loginData?.token, navigate)
+            .then(data => {
+                setInstalledApps(new Set(data.message));
+            })
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to fetch installed apps list.");
+            });
+    }, [loginData?.token, navigate]);
+
     const loadApps = useCallback((page = 1, append = false) => {
         setIsLoadingMore(true);
         if (page === 1) setLoading(true);
 
-        ApiService.get(`https://cdn.jsdelivr.net/gh/Sanjeet990/AstrolumaApps/apps.json`, null, navigate)
-            .then(data => {
-                if (data?.length === 0) {
+        Promise.all([
+            ApiService.get('https://cdn.jsdelivr.net/gh/Sanjeet990/AstrolumaApps/apps.json', null, navigate),
+            fetchInstalledApps()
+        ])
+            .then(([appsData]) => {
+                if (appsData?.length === 0) {
                     setHasMore(false);
                 } else {
-                    setAppList(prev => append ? [...prev, ...data] : data);
+                    setAppList(prev => append ? [...prev, ...appsData] : appsData);
                     setCurrentPage(page);
                 }
             })
             .catch((error) => {
-                if (!error.handled) makeToast("error", "Failed to fetch installed apps.");
+                if (!error.handled) makeToast("error", "Failed to fetch apps.");
             })
             .finally(() => {
                 setLoading(false);
                 setIsLoadingMore(false);
             });
-    }, [loginData?.token, setLoading, navigate]);
+    }, [loginData?.token, setLoading, navigate, fetchInstalledApps]);
 
     useEffect(() => {
         loadApps(1, false);
@@ -67,10 +81,6 @@ const InstallApps = () => {
 
         if (node) observerRef.current.observe(node);
     }, [isLoadingMore, hasMore, currentPage, loadApps]);
-
-    const handleAppRemove = (app) => {
-        // Your existing handleAppRemove logic
-    };
 
     const uploadZip = () => {
         fileInputRef.current?.click();
@@ -100,6 +110,7 @@ const InstallApps = () => {
         ApiService.postWithFormData('/api/v1/app/fromzip', formData, loginData?.token, navigate)
             .then(() => {
                 makeToast("success", "Integration from zip is installed.");
+                fetchInstalledApps(); // Refresh installed apps list after successful upload
                 navigate("/manage/apps");
             })
             .catch((error) => {
@@ -127,7 +138,6 @@ const InstallApps = () => {
             <div className="flex flex-col justify-between">
                 <div className="text-left w-full md:w-auto" />
                 <div className="flex flex-wrap justify-end space-x-2 mt-4 md:mt-0">
-
                     <NiceButton
                         onClick={uploadZip}
                         label="Upload Zip"
@@ -151,14 +161,14 @@ const InstallApps = () => {
                                 <div key={`${app.appId}_${index}`} ref={lastElementRef}>
                                     <SingleHostedApp
                                         app={app}
-                                        handleAppRemove={handleAppRemove}
+                                        isInstalled={installedApps.has(app.appId)}
                                     />
                                 </div>
                             ) : (
                                 <SingleHostedApp
                                     key={`${app.appId}_${index}`}
                                     app={app}
-                                    handleAppRemove={handleAppRemove}
+                                    isInstalled={installedApps.has(app.appId)}
                                 />
                             )
                         ))}

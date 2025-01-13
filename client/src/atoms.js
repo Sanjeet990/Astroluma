@@ -315,3 +315,11 @@ export const removeInstalledIntegrationModalState = atom({
     data: null,
   },
 });
+
+export const integrationConfigureModalState = atom({
+  key: 'integrationConfigureModalState',
+  default: {
+    isOpen: false,
+    data: null,
+  },
+});

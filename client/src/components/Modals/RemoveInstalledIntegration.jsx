@@ -25,13 +25,13 @@ const RemoveInstalledIntegration = () => {
 
     ApiService.get(`/api/v1/app/${modalState.data?.app.appId}/delete`, loginData?.token, navigate)
       .then(() => {
-        makeToast("success", "Integration deleted.");
+        makeToast("success", "Integration removed.");
         //setDeletedSnippet(modalState.data?.snippetItem);
         emitter.emit(RELOAD_INSTALLED_APPS)
         closeModal();
       })
       .catch((error) => {
-        if (!error.handled) makeToast("error", "Integration cannot be deleted.");
+        if (!error.handled) makeToast("error", "Integration cannot be remove.");
       })
       .finally(() => {
         setLoading(false);
@@ -41,8 +41,8 @@ const RemoveInstalledIntegration = () => {
   return (
     <NiceModal
       show={modalState.isOpen}
-      title="Delete confirm"
-      body={<p>Are you sure you want to delete this integration?</p>}
+      title="Remove confirm"
+      body={<p>Are you sure you want to remove this integration?</p>}
       footer={
         <>
           <NiceButton
@@ -51,7 +51,7 @@ const RemoveInstalledIntegration = () => {
             onClick={closeModal}
           />
           <NiceButton
-            label='Delete'
+            label='Remove'
             className="bg-buttonWarning text-buttonText"
             onClick={confirmDelete}
           />
