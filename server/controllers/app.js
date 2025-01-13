@@ -6,7 +6,7 @@ const Listing = require('../models/Listing');
 const App = require('../models/App');
 const axios = require('axios');
 const allowedModules = require('../utils/allowedModules');
-
+const { exec } = require('child_process');
 
 // Common utility functions
 const validateUser = (user) => {
@@ -80,13 +80,21 @@ const handleAppInstallation = async (zipPath, extractPath) => {
             fs.renameSync(extractPath, finalPath);
         }
 
-        await saveApp(manifest, package);
-        cleanupFiles([zipPath]);
+        //do npm install in the finalPath
+        exec(`npm install --prefix ${finalPath}`, async (error, stdout, stderr) => {
+            if (error) {
+                cleanupFiles([zipPath, extractPath]);
+                throw error;
+            }
+            
+            await saveApp(manifest, package);
+            cleanupFiles([zipPath]);
 
-        return {
-            error: false,
-            message: "The integration is added."
-        };
+            return {
+                error: false,
+                message: "The integration is added."
+            };
+        });
     } catch (error) {
         cleanupFiles([zipPath, extractPath]);
         throw error;
