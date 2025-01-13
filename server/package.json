@@ -20,6 +20,7 @@
     "crypto-js": "^4.2.0",
     "dotenv": "^16.3.1",
     "express": "^4.21.2",
+    "extract-zip": "^2.0.1",
     "jsonwebtoken": "^9.0.2",
     "md5": "^2.3.0",
     "migrate-mongo": "^11.0.0",

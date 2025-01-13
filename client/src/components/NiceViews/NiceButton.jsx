@@ -32,6 +32,7 @@ const NiceButton = ({ label = "Go Back", onClick = null, disabled = false, class
                     text-xs
                     transition-all
                     duration-200
+                    ${disabled ? "opacity-50" : ""}
                     ${className}
                 `}
             >
