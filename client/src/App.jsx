@@ -20,6 +20,7 @@ import CategoryListing from './components/Listing/CategoryListing';
 import TodoListing from './components/Todo/TodoListing';
 import EditTodo from './components/Todo/EditTodo';
 import InstalledApps from './components/Integration/InstalledApps';
+import InstallApps from './components/Integration/InstallApps';
 import EditStream from './components/Listing/EditStream';
 import StreamListing from './components/Listing/StreamListing';
 import WakeListings from './components/Networkdevice/WakeListings';
@@ -116,6 +117,7 @@ const App = () => {
                             <Route key={Math.random()} path="/networkdevices" element={<WakeFrontListing />} />
                             <Route key={Math.random()} path="/manage" element={<Settings />} />
                             <Route key={Math.random()} path="/manage/apps" element={<InstalledApps />} />
+                            <Route key={Math.random()} path="/manage/apps/install" element={<InstallApps />} />
                             <Route key={Math.random()} path="/manage/listing" element={<Listings type="listing" />} />
                             <Route key={Math.random()} path="/manage/streaming" element={<Listings type="streaming" />} />
                             <Route key={Math.random()} path="/manage/listing/save/folder" element={<EditFolder />} />

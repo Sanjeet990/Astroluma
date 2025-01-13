@@ -307,3 +307,11 @@ export const removeBrandingModalState = atom({
     isOpen: false
   },
 });
+
+export const removeInstalledIntegrationModalState = atom({
+  key: 'removeInstalledIntegrationModalState',
+  default: {
+    isOpen: false,
+    data: null,
+  },
+});

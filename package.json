@@ -4,7 +4,8 @@
   "description": "",
   "main": "server/server.js",
   "dependencies": {
-    "sharp": "*"
+    "sharp": "*",
+    "nodemon": "^3.1.4"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "*"
@@ -12,8 +13,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "cd server && npm install && cd ../client && npm install",
-    "dev:be": "cd server && npm run dev",
-    "dev:fe": "cd client && npm run dev",
+    "dev:be": "cd server && nodemon server.js",
+    "dev:fe": "npm run dev --prefix client",
     "setup": "cd server && npm run install-app-deps",
     "server": "cd server && npm run server"
   },

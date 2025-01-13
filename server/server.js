@@ -130,7 +130,7 @@ app.get('*', (req, res) => {
 
 //use custom exception handler
 app.use((req, res) => {
-    res.send("Error");
+    res.status(400).send("Error");
 });
 
 server.listen(PORT, () => {
