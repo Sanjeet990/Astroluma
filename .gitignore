@@ -141,3 +141,5 @@ app
 storage
 
 **/package-lock.json
+
+server/public/uploads
