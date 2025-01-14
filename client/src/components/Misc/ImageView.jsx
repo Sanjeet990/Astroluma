@@ -11,6 +11,8 @@ const ImageView = ({
   parent = 'images'
 }) => {
 
+  console.log('ImageView.jsx: parent:', src);
+
   const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
 
   // Enhanced image source resolution logic with fallbacks
@@ -46,8 +48,11 @@ const ImageView = ({
       return specialCases[sourceToUse];
     }
 
-    // Default local image path construction
-    return `${baseUrl}/${parent}/${sourceToUse}`;
+    if (parent) {
+      return `${baseUrl}/${parent}/${sourceToUse}`;
+    } else {
+      return `${baseUrl}/${sourceToUse}`;
+    }
   }, [src, defaultSrc, errorSrc, baseUrl, parent]);
 
   // Initialize with the primary source
@@ -57,6 +62,8 @@ const ImageView = ({
     let isMounted = true;
 
     const loadImage = async () => {
+      console.log(imageSrc);
+
       if (!imageSrc) {
         return;
       }

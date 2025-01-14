@@ -205,19 +205,19 @@ exports.installRemoteApp = async (req, res) => {
         }
 
         const appUrl = `https://cdn.jsdelivr.net/gh/Sanjeet990/AstrolumaApps/apps/${appId}.zip`;
-        
+
         // Download file first
         await downloadFile(appUrl, zipPath);
-        
+
         // Then handle installation
         const result = await handleAppInstallation(zipPath, extractPath);
-        
+
         return res.status(200).json(result);
 
     } catch (error) {
         // Clean up files in case of any error
         cleanupFiles([zipPath, extractPath]);
-        
+
         return res.status(400).json({
             error: true,
             message: error.message || "Error in installing app."
@@ -283,6 +283,9 @@ exports.syncFromDisk = async (req, res) => {
             appName: manifest.appName || manifest.appId,
             description: package.description || manifest.appId,
             version: package.version || "1.0.0",
+            npmInstalled: 1,
+            coreSettings: manifest.config?.some(setting => setting.scope === "core") || false,
+            configured: manifest.config?.some(setting => setting.scope === "core") ? false : true,
             appIcon: manifest.appIcon || "integration.png"
         });
 
@@ -346,6 +349,42 @@ exports.removeInstalledApp = async (req, res) => {
             error: true,
             message: "Error in removing app."
         });
+    }
+}
+
+exports.serveLogo = async (req, res) => {
+    const appId = req.params.appId;
+    const defaultLogoPath = path.join(__dirname, '../public/images/integration.png');
+
+    try {
+        if (!appId) {
+            throw new Error("No application id provided.");
+        }
+
+        const appPath = path.join(__dirname, `../../storage/apps/${appId}`);
+
+        if (!fs.existsSync(appPath)) {
+            throw new Error("App not found.");
+        }
+
+        const manifestPath = path.join(appPath, 'manifest.json');
+        if (!fs.existsSync(manifestPath)) {
+            throw new Error("Manifest not found.");
+        }
+
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        const appIcon = manifest.appIcon || "logo.png";
+
+        const appIconPath = path.join(appPath, "public", appIcon);
+
+        if (!fs.existsSync(appIconPath)) {
+            throw new Error("Icon not found.");
+        }
+
+        //serve the icon as image
+        res.sendFile(appIconPath);
+    } catch (error) {
+        res.sendFile(defaultLogoPath);
     }
 }
 
@@ -526,14 +565,14 @@ exports.runIntegratedApp = async (req, res) => {
     if (listingId === 'undefined') listingId = null;
 
     if (!appId || !listingId) {
-        return res.status(400).send("zxc");
+        return res.status(400).send("AppId or ListingId not provided.");
     }
 
     try {
         const listing = await Listing.findOne({ userId, _id: listingId });
 
         if (!listing) {
-            return res.status(400).send("vv");
+            return res.status(400).send("Listing not found.");
         }
 
         const modulePath = path.join(__dirname, `../../storage/apps/${listing.integration.appId}/app.js`);

@@ -60,8 +60,8 @@ const SingleInstalledApp = ({ app, handleAppRemove, configurationHandler }) => {
                     <div className="flex items-center justify-center bg-white/50 rounded-full" style={{ height: '120px', width: '120px' }}>
                         <ImageView
                             alt={app.appName}
-                            parent="apps"
-                            src={`${app.appIcon}`}
+                            parent={""}
+                            src={`api/v1/app/${app.appId}/logo`}
                             height="80px"
                             width="80px"
                             defaultSrc="/apps.png"
