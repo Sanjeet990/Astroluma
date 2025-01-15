@@ -113,9 +113,12 @@ const InstalledApps = () => {
         setLoading(true);
 
         ApiService.get('/api/v1/app/sync', loginData?.token, navigate)
-            .then(() => {
+            .then(async () => {
                 makeToast("success", "Sync completed successfully.");
-                fetchApps(1, false);
+                const newApps = await fetchApps(1);
+                setAppList(newApps);
+                setCurrentPage(1);
+                setHasMore(true);
             })
             .catch((error) => {
                 if (!error.handled) makeToast("error", error?.response?.data?.message || "Failed to sync.");

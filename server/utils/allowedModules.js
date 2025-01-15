@@ -26,4 +26,5 @@ module.exports = [
     'pino',          // Fast JSON logging
     'winston',       // Versatile logging library
     'sharp',         // Image processing
+    'md5',
 ];

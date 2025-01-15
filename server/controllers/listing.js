@@ -4,12 +4,9 @@ const stream = require('stream');
 const { spawn } = require('child_process');
 const Page = require("../models/Page");
 const mongoose = require('mongoose');
-const { isValidStream, getSecretKey } = require("../utils/apiutils");
+const { isValidStream } = require("../utils/apiutils");
 const fs = require('fs');
 const path = require('path');
-const CryptoJS = require('crypto-js');
-
-const SECRET_KEY = getSecretKey();
 
 exports.saveFolder = async (req, res) => {
     const userId = req.user._id;

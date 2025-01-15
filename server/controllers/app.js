@@ -19,6 +19,8 @@ const validateAppFiles = async (extractPath) => {
     const packagePath = path.join(extractPath, 'package.json');
     const manifestPath = path.join(extractPath, 'manifest.json');
 
+    console.log(packagePath, manifestPath);
+
     if (!fs.existsSync(packagePath) || !fs.existsSync(manifestPath)) {
         throw new Error("Required files (package.json or manifest.json) are missing.");
     }
@@ -133,7 +135,7 @@ const handleAppInstallation = async (zipPath, extractPath) => {
         };
 
     } catch (error) {
-        cleanupFiles([zipPath, extractPath]);
+        //cleanupFiles([zipPath, extractPath]);
         throw error;
     }
 };
@@ -414,6 +416,7 @@ exports.installedApps = async (req, res) => {
 
     try {
         const appList = await App.find({})
+            .sort({ appName: 1 })
             .skip(skip)
             .limit(limit);
 

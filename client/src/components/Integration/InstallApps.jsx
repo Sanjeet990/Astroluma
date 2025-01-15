@@ -51,7 +51,15 @@ const InstallApps = () => {
                 if (appsData?.length === 0) {
                     setHasMore(false);
                 } else {
-                    setAppList(prev => append ? [...prev, ...appsData] : appsData);
+                    setAppList(prev => {
+                        // If append is true, combine previous and new data, otherwise just use new data
+                        const combinedApps = append ? [...prev, ...appsData] : appsData;
+
+                        // Sort the combined array by appName
+                        return combinedApps.sort((a, b) =>
+                            a.appName.toLowerCase().localeCompare(b.appName.toLowerCase())
+                        );
+                    });
                     setCurrentPage(page);
                 }
             })
