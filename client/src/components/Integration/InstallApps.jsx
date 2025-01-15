@@ -29,7 +29,8 @@ const InstallApps = () => {
     useCurrentRoute("/manage/apps");
 
     const fetchInstalledApps = useCallback(() => {
-        ApiService.get('/api/v1/app/installed/all', loginData?.token, navigate)
+        const timestamp = new Date().getTime();
+        ApiService.get(`/api/v1/app/installed/all?timestamp=${timestamp}`, loginData?.token, navigate)
             .then(data => {
                 setInstalledApps(new Set(data.message));
             })
