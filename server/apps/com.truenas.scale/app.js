@@ -1,4 +1,3 @@
-const axios = require('axios');
 
 const formatUptime = (seconds) => {
     const hours = Math.floor(seconds / (60 * 60));
@@ -25,19 +24,16 @@ const connectionTest = async (testerInstance) => {
     try {
         const nasUrl = testerInstance?.appUrl;
 
-        const { apiKey, skipTlsValidation } = testerInstance?.config;
+        const { apiKey } = testerInstance?.config;
 
         if (!apiKey || !nasUrl) {
             await testerInstance.connectionFailed("Please provide all the required configuration parameters");
         }
 
-        const systemInfo = await axios.get(`${nasUrl}/api/v2.0/system/info`, {
+        const systemInfo = await testerInstance?.axios.get(`${nasUrl}/api/v2.0/system/info`, {
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
-            },
-            httpsAgent: {
-                rejectUnauthorized: !skipTlsValidation
             }
         });
 
@@ -54,7 +50,7 @@ const connectionTest = async (testerInstance) => {
 
 const initialize = async (application) => {
 
-    const { apiKey, skipTlsValidation } = application.config;
+    const { apiKey } = application.config;
 
     const nasUrl = application?.appUrl;
 
@@ -64,13 +60,10 @@ const initialize = async (application) => {
 
     try {
         //call TrueNAS Scale API
-        const systemInfo = await axios.get(`${nasUrl}/api/v2.0/system/info`, {
+        const systemInfo = await application?.axios.get(`${nasUrl}/api/v2.0/system/info`, {
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
-            },
-            httpsAgent: {
-                rejectUnauthorized: !skipTlsValidation
             }
         });
 
@@ -80,13 +73,10 @@ const initialize = async (application) => {
         const cores = data.cores;
         const memory = formatMemory(data.physmem || 0);
 
-        const systemAlert = await axios.get(`${nasUrl}/api/v2.0/alert/list`, {
+        const systemAlert = await application?.axios.get(`${nasUrl}/api/v2.0/alert/list`, {
             headers: {
                 "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json"
-            },
-            httpsAgent: {
-                rejectUnauthorized: !skipTlsValidation
             }
         });
 

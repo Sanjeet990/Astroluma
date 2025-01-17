@@ -1,6 +1,3 @@
-const axios = require('axios');
-const https = require('https');
-
 const connectionTest = async (testerInstance) => {
     //implementa a connection tester logic
     try {
@@ -8,13 +5,7 @@ const connectionTest = async (testerInstance) => {
 
         const proxmoxURL = `${connectionUrl}/api2/json`;
 
-        const axiosInstance = axios.create({
-            httpsAgent: new https.Agent({
-                rejectUnauthorized: !testerInstance?.config?.skipTlsValidation
-            })
-        });
-
-        const response = await axiosInstance.post(`${proxmoxURL}/access/ticket`, {
+        const response = await testerInstance?.axios.post(`${proxmoxURL}/access/ticket`, {
             username: `${testerInstance?.config?.username}@${testerInstance?.config?.realm}`,
             password: testerInstance?.config?.password
         });
@@ -49,23 +40,18 @@ const initialize = async (application) => {
 
     const proxmoxURL = `${sanitizedListingUrl}/api2/json`;
 
-    const axiosInstance = axios.create({
-        httpsAgent: new https.Agent({
-            rejectUnauthorized: !skipTlsValidation
-        })
-    });
 
     //get proxmox setup here
     try {
 
-        const response = await axiosInstance.post(`${proxmoxURL}/access/ticket`, {
+        const response = await application?.axios?.post(`${proxmoxURL}/access/ticket`, {
             username: `${username}@${realm}`,
             password
         });
 
         const data = response.data.data;
 
-        const response2 = await axiosInstance.get(`${proxmoxURL}/nodes`, {
+        const response2 = await application?.axios?.get(`${proxmoxURL}/nodes`, {
             headers: {
                 'Cookie': `PVEAuthCookie=${data.ticket}`,
                 'CSRFPreventionToken': data.CSRFPreventionToken
@@ -105,7 +91,7 @@ const initialize = async (application) => {
         await application.sendResponse('response.tpl', 200, variables);
 
     } catch (error) {
-        //console.log(error);
+        console.log(error);
         await application.sendError(error);
     }
 

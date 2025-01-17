@@ -5,6 +5,7 @@ const extract = require('extract-zip');
 const Listing = require('../models/Listing');
 const App = require('../models/App');
 const axios = require('axios');
+const https = require('https');
 const allowedModules = require('../utils/allowedModules');
 const { spawn } = require('child_process');
 
@@ -301,6 +302,82 @@ exports.syncFromDisk = async (req, res) => {
     });
 }
 
+exports.updateRemoteApp = async (req, res) => {
+    const zipPath = path.join(__dirname, '../public/uploads/integrations', `${req.params.appId}`);
+    const extractPath = path.join(__dirname, '../../storage/apps', req.params.appId);
+    const appPath = path.join(__dirname, '../../storage/apps', req.params.appId);
+
+    try {
+        validateUser(req.user);
+
+        const appId = req.params.appId;
+        if (!appId) {
+            throw new Error("No application id provided.");
+        }
+
+        // Check if app exists
+        const existingApp = await App.findOne({ appId });
+        if (!existingApp) {
+            throw new Error("App not found.");
+        }
+
+        // Remove existing app files
+        if (fs.existsSync(appPath)) {
+            fs.rmSync(appPath, { recursive: true });
+        }
+
+        const appUrl = `https://cdn.jsdelivr.net/gh/Sanjeet990/AstrolumaApps/apps/${appId}.zip`;
+
+        // Download new version
+        await downloadFile(appUrl, zipPath);
+
+        // Extract and validate
+        await extract(zipPath, { dir: extractPath });
+        const { package, manifest } = await validateAppFiles(extractPath);
+
+        // Update app in database
+        existingApp.version = package.version || "1.0.0";
+        existingApp.description = package.description || manifest.appId;
+        existingApp.appName = manifest.appName || manifest.appId;
+        existingApp.npmInstalled = 0;
+        existingApp.coreSettings = manifest.config?.some(setting => setting.scope === "core") || false;
+        existingApp.configured = manifest.config?.some(setting => setting.scope === "core") ? false : true;
+        existingApp.appIcon = manifest.appIcon || "integration.png";
+
+        await existingApp.save();
+
+        // Start npm installation process
+        process.nextTick(() => {
+            installDependencies(extractPath)
+                .then(async (msg) => {
+                    console.log(msg);
+                    existingApp.npmInstalled = 1;
+                    await existingApp.save();
+                    cleanupFiles([zipPath]);
+                })
+                .catch(async (error) => {
+                    existingApp.npmInstalled = -1;
+                    await existingApp.save();
+                    cleanupFiles([zipPath, extractPath]);
+                });
+        });
+
+        return res.status(200).json({
+            error: false,
+            message: "The integration has been updated."
+        });
+
+    } catch (error) {
+        // Clean up files in case of any error
+        cleanupFiles([zipPath, extractPath]);
+
+        return res.status(400).json({
+            error: true,
+            message: error.message || "Error in updating app."
+        });
+    }
+};
+
 exports.removeInstalledApp = async (req, res) => {
     const loggedinuser = req.user;
 
@@ -392,13 +469,11 @@ exports.serveLogo = async (req, res) => {
 
 exports.allInstalledApps = async (req, res) => {
     try {
-        const apps = await App.find({}).select('appId');
-
-        const onlyAppIds = apps?.map(app => app.appId);
+        const apps = await App.find({}).select('appId version -_id');
 
         return res.status(200).json({
             error: false,
-            message: onlyAppIds || []
+            message: apps || []
         });
 
     } catch (error) {
@@ -439,6 +514,14 @@ exports.installedApps = async (req, res) => {
             message: "Error in retrieving installed apps."
         });
     }
+}
+
+const getAxiosInstance = () => {
+    return axios.create({
+        httpsAgent: new https.Agent({
+            rejectUnauthorized: false
+        })
+    });
 }
 
 exports.connectTest = async (req, res) => {
@@ -490,6 +573,7 @@ exports.connectTest = async (req, res) => {
             payload: null,
             appUrl: appUrl,
             req,
+            axios: getAxiosInstance(),
             connectionSuccess,
             connectionFailed
         }, {
@@ -648,6 +732,7 @@ exports.runIntegratedApp = async (req, res) => {
             config: decryptedConfig,
             payload: listing,
             appUrl: appUrl,
+            axios: getAxiosInstance(),
             req,
             sendResponse,
             sendError

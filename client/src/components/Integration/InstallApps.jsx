@@ -4,6 +4,7 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { loadingState, loginState } from '../../atoms';
 import { Helmet } from 'react-helmet';
 import { GrAppsRounded } from "react-icons/gr";
+import { FaSync, FaDownload  } from "react-icons/fa";
 import SingleHostedApp from './SingleHostedApp';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
 import NoListing from '../Misc/NoListing';
@@ -12,6 +13,7 @@ import useCurrentRoute from '../../hooks/useCurrentRoute';
 import NiceButton from '../NiceViews/NiceButton';
 import makeToast from '../../utils/ToastUtils';
 import { useNavigate } from 'react-router-dom';
+import semver from 'semver';
 
 const InstallApps = () => {
     const navigate = useNavigate();
@@ -19,7 +21,7 @@ const InstallApps = () => {
     const observerRef = useRef(null);
     const setLoading = useSetRecoilState(loadingState);
     const [appList, setAppList] = useState([]);
-    const [installedApps, setInstalledApps] = useState(new Set());
+    const [installedApps, setInstalledApps] = useState(new Map());
     const [currentPage, setCurrentPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -32,12 +34,26 @@ const InstallApps = () => {
         const timestamp = new Date().getTime();
         ApiService.get(`/api/v1/app/installed/all?timestamp=${timestamp}`, loginData?.token, navigate)
             .then(data => {
-                setInstalledApps(new Set(data.message));
+                // Convert array to Map for easier lookup with version info
+                const appsMap = new Map(
+                    data.message.map(app => [app.appId, app.version])
+                );
+                setInstalledApps(appsMap);
             })
             .catch((error) => {
                 if (!error.handled) makeToast("error", "Failed to fetch installed apps list.");
             });
     }, [loginData?.token, navigate]);
+
+    const checkForUpdates = (installedVersion, latestVersion) => {
+        if (!installedVersion || !latestVersion) return false;
+        try {
+            return semver.gt(latestVersion, installedVersion);
+        } catch (error) {
+            console.error('Version comparison error:', error);
+            return false;
+        }
+    };
 
     const loadApps = useCallback((page = 1, append = false) => {
         setIsLoadingMore(true);
@@ -52,10 +68,7 @@ const InstallApps = () => {
                     setHasMore(false);
                 } else {
                     setAppList(prev => {
-                        // If append is true, combine previous and new data, otherwise just use new data
                         const combinedApps = append ? [...prev, ...appsData] : appsData;
-
-                        // Sort the combined array by appName
                         return combinedApps.sort((a, b) =>
                             a.appName.toLowerCase().localeCompare(b.appName.toLowerCase())
                         );
@@ -76,7 +89,6 @@ const InstallApps = () => {
         loadApps(1, false);
     }, [loadApps]);
 
-    // Infinite scroll setup
     const lastElementRef = useCallback(node => {
         if (isLoadingMore) return;
         if (observerRef.current) observerRef.current.disconnect();
@@ -119,7 +131,7 @@ const InstallApps = () => {
         ApiService.postWithFormData('/api/v1/app/fromzip', formData, loginData?.token, navigate)
             .then(() => {
                 makeToast("success", "Integration from zip is installed.");
-                fetchInstalledApps(); // Refresh installed apps list after successful upload
+                fetchInstalledApps();
                 navigate("/manage/apps");
             })
             .catch((error) => {
@@ -165,22 +177,36 @@ const InstallApps = () => {
             <div className="mt-8">
                 {appList?.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                        {appList.map((app, index) => (
-                            index === appList.length - 1 ? (
+                        {appList.map((app, index) => {
+                            const installedVersion = installedApps.get(app.appId);
+                            const hasUpdate = checkForUpdates(installedVersion, app.version);
+                            const isInstalled = installedApps.has(app.appId);
+
+                            const StatusIcon = isInstalled ?
+                                (hasUpdate ? FaDownload : FaSync) :
+                                null;
+
+                            return index === appList.length - 1 ? (
                                 <div key={`${app.appId}_${index}`} ref={lastElementRef}>
                                     <SingleHostedApp
                                         app={app}
-                                        isInstalled={installedApps.has(app.appId)}
+                                        isInstalled={isInstalled}
+                                        StatusIcon={StatusIcon}
+                                        hasUpdate={hasUpdate}
+                                        installedVersion={installedVersion}
                                     />
                                 </div>
                             ) : (
                                 <SingleHostedApp
                                     key={`${app.appId}_${index}`}
                                     app={app}
-                                    isInstalled={installedApps.has(app.appId)}
+                                    isInstalled={isInstalled}
+                                    StatusIcon={StatusIcon}
+                                    hasUpdate={hasUpdate}
+                                    installedVersion={installedVersion}
                                 />
-                            )
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     <NoListing

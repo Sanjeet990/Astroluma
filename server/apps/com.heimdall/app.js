@@ -1,4 +1,3 @@
-const axios = require('axios');
 
 const connectionTest = async (testerInstance) => {
     try {
@@ -11,7 +10,7 @@ const connectionTest = async (testerInstance) => {
 
         //console.log(`${connectionUrl}/health`);
 
-        const response = await axios.get(`${connectionUrl}/health`);
+        const response = await testerInstance?.axios.get(`${connectionUrl}/health`);
 
         if (response.status === 200) {
             await testerInstance.connectionSuccess();
@@ -35,7 +34,7 @@ const initialize = async (application) => {
 
     try {
         
-        const response = await axios.get(`${appUrl}/health`);
+        const response = await application?.axios.get(`${appUrl}/health`);
 
         const data = response.data;
 

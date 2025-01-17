@@ -1,4 +1,3 @@
-const axios = require('axios');
 
 const formatCount = (count) => {
     if (count >= 1000000) {
@@ -23,7 +22,7 @@ const connectionTest = async (testerInstance) => {
         const videoId = connectionUrl.split('v=')[1];
         const apiUrl = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${apiKey}&part=snippet,statistics`;
 
-        await axios.get(apiUrl);
+        await testerInstance?.axios.get(apiUrl);
 
         await testerInstance.connectionSuccess();
         
@@ -44,7 +43,7 @@ const initialize = async (application) => {
     const apiUrl = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&key=${apiKey}&part=snippet,statistics`;
 
     try {
-        const response = await axios.get(apiUrl);
+        const response = await application?.axios.get(apiUrl);
         const videoData = response.data.items[0];
         const thumb = response.data.items[0].snippet.thumbnails.high.url;
 

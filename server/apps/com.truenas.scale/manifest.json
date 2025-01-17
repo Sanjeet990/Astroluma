@@ -19,14 +19,6 @@
             "type": "password",
             "required": true,
             "placeholder": "Enter TrueNas Scale API Key"
-        },
-        {
-            "name": "skipTlsValidation",
-            "label": "Skip TLS Validation",
-            "type": "checkbox",
-            "required": true,
-            "default": true,
-            "placeholder": "Skip TLS Validation"
         }
     ]
 }

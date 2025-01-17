@@ -1,5 +1,6 @@
 const { spawn } = require('child_process');
 const os = require('os');
+const CryptoJS = require('crypto-js');
 
 exports.isValidStream  = (url) => {
     return new Promise((resolve, reject) => {

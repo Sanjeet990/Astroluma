@@ -33,13 +33,6 @@
             "type": "string",
             "required": true,
             "placeholder": "Enter realm"
-        },
-        {
-            "name": "skipTlsValidation",
-            "label": "Skip TLS Validation",
-            "type": "checkbox",
-            "default": true,
-            "placeholder": "Skip TLS Validation"
         }
     ]
 }
