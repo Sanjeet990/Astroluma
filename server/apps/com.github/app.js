@@ -1,4 +1,3 @@
-const axios = require('axios');
 const moment = require('moment');
 
 const extractRepoInfo = (url) => {
@@ -26,7 +25,7 @@ const connectionTest = async (testerInstance) => {
 
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/pulls`;
         
-        await axios.get(apiUrl, {
+        await testerInstance?.axios.get(apiUrl, {
             auth: {
                 username,
                 password,
@@ -57,7 +56,7 @@ const initialize = async (application) => {
 
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/pulls`;
         
-        const response = await axios.get(apiUrl, {
+        const response = await application?.axios.get(apiUrl, {
             auth: {
                 username,
                 password,

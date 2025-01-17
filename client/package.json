@@ -35,6 +35,7 @@
     "react-toastify": "^10.0.5",
     "recoil": "^0.7.7",
     "recoil-persist": "^5.1.0",
+    "semver": "^7.6.3",
     "totp-generator": "^1.0.0"
   },
   "devDependencies": {

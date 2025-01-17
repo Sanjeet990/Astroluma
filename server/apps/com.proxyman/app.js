@@ -1,4 +1,3 @@
-const axios = require('axios');
 
 const connectionTest = async (testerInstance) => {
     //implementa a connection tester logic
@@ -11,7 +10,7 @@ const connectionTest = async (testerInstance) => {
             await testerInstance.connectionFailed("Please provide all the required configuration parameters");
         }
 
-        const tokenResponse = await axios.post(`${apiUrl}/api/tokens`, {
+        const tokenResponse = await testerInstance?.axios.post(`${apiUrl}/api/tokens`, {
             identity: email,
             secret: password,
             expiry: '1y'
@@ -44,7 +43,7 @@ const initialize = async (application) => {
 
     try {
         // Obtain the bearer token
-        const tokenResponse = await axios.post(`${apiUrl}/api/tokens`, {
+        const tokenResponse = await application?.axios.post(`${apiUrl}/api/tokens`, {
             identity: email,
             secret: password,
             expiry: '1y'
@@ -57,7 +56,7 @@ const initialize = async (application) => {
         const token = tokenResponse.data.token;
 
         // Fetch the statistics using the bearer token
-        const statsResponse = await axios.get(`${apiUrl}/api/reports/hosts`, {
+        const statsResponse = await application?.axios.get(`${apiUrl}/api/reports/hosts`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }

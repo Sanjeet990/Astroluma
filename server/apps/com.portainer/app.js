@@ -1,4 +1,3 @@
-const axios = require('axios');
 
 const connectionTest = async (testerInstance) => {
     try {
@@ -12,7 +11,7 @@ const connectionTest = async (testerInstance) => {
 
         const authUrl = `${connectionUrl}/api/auth`;
 
-        const response = await axios.post(authUrl, {
+        const response = await testerInstance?.axios.post(authUrl, {
             username,
             password
         });
@@ -45,7 +44,7 @@ const initialize = async (application) => {
 
     try {
         // Step 1: Authenticate using the access token to get a JWT token
-        const authResponse = await axios.post(authUrl, {
+        const authResponse = await application?.axios.post(authUrl, {
             username,
             password
         });
@@ -53,7 +52,7 @@ const initialize = async (application) => {
         const jwtToken = authResponse.data.jwt;
 
         // Step 2: Fetch the available endpoints
-        const endpointsResponse = await axios.get(endpointsUrl, {
+        const endpointsResponse = await application?.axios.get(endpointsUrl, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`
             }
@@ -65,7 +64,7 @@ const initialize = async (application) => {
 
         // Step 3: Use the endpoint ID to fetch data from Portainer
         const apiUrl = `${sanitizedListingUrl}/api/endpoints/${endpointId}/docker/info`;
-        const response = await axios.get(apiUrl, {
+        const response = await application?.axios.get(apiUrl, {
             headers: {
                 'Authorization': `Bearer ${jwtToken}`
             }
