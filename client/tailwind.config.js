@@ -1875,7 +1875,7 @@ export default {
         'cardBorder': '#533b75',
         'cardText': '#e6e6ff',
         'internalCardBg': '#13131f',
-        'internalCardBorder': '#291b3d',
+        'internalCardBorder': '#533b75',
         'internalCardText': '#e6e6ff',
         'internalDragColor': '#7b4dff',
         'internalDragStripColor': '#04cfb8',

@@ -11,7 +11,6 @@ const ImageView = ({
   parent = 'images'
 }) => {
 
-  console.log('ImageView.jsx: parent:', src);
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
 
@@ -62,7 +61,6 @@ const ImageView = ({
     let isMounted = true;
 
     const loadImage = async () => {
-      console.log(imageSrc);
 
       if (!imageSrc) {
         return;
