@@ -1,14 +1,36 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import NiceInput from '../NiceViews/NiceInput';
 import NiceCheckbox from '../NiceViews/NiceCheckbox';
 import NiceButton from '../NiceViews/NiceButton';
+import JoditEditor from 'jodit-react';
+import '../Page/Jodit.css';
+import { useRecoilValue } from 'recoil';
+import { colorThemeState } from '../../atoms';
+import SystemThemes from '../../utils/SystemThemes';
 
 const AppConfigurator = ({ application, config, appConfigurationListener, connectionStatus, testConnectionListener }) => {
+    const colorTheme = useRecoilValue(colorThemeState);
+    const [themeType, setThemeType] = useState("light");
+
+    useEffect(() => {
+        const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
+        setThemeType(newThemeType);
+    }, [colorTheme]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         appConfigurationListener({ ...config, [name]: type === 'checkbox' ? checked : value });
     };
+
+    const handleHtmlChange = (name, value) => {
+        appConfigurationListener({ ...config, [name]: value });
+    };
+
+    const joditConfig = useMemo(() => ({
+        readonly: false,
+        theme: themeType,
+        placeholder: ''
+    }), [themeType]);
 
     if (!application) return null;
 
@@ -16,7 +38,7 @@ const AppConfigurator = ({ application, config, appConfigurationListener, connec
         <div className="w-full mt-4">
             <form className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4" id='appConfigurator' name='appConfigurator'>
                 {application?.config?.map((field, index) => (
-                    <div key={index} className={`${field.type === 'checkbox' || field.type === 'radio' ? 'flex items-center' : ''}`}>
+                    <div key={index} className={`${field.type === 'html' ? 'col-span-1 md:col-span-2' : ''} ${field.type === 'checkbox' || field.type === 'radio' ? 'flex items-center' : ''}`}>
                         {field.type === 'select' ? (
                             <>
                                 <label className="block mb-1 md:mb-2" htmlFor={field.name}>{`${field.label} ${field.required ? '*' : ''}`}</label>
@@ -63,6 +85,18 @@ const AppConfigurator = ({ application, config, appConfigurationListener, connec
                                     </div>
                                 ))}
                             </div>
+                        ) : field.type === 'html' ? (
+                            <div className="w-full mb-4">
+                                <label className="block mb-2" htmlFor={field.name}>
+                                    {field.label}
+                                </label>
+                                <JoditEditor
+                                    style={{ height: '300px' }}
+                                    value={config[field.name] || ''}
+                                    config={joditConfig}
+                                    onChange={newContent => handleHtmlChange(field.name, newContent)}
+                                />
+                            </div>
                         ) : (
                             <NiceInput
                                 label={`${field.label} ${field.required ? '*' : ''}`}
@@ -77,13 +111,11 @@ const AppConfigurator = ({ application, config, appConfigurationListener, connec
                     </div>
                 ))}
             </form>
-            {
-                connectionStatus && (
-                    <div className={`mt-6 break-words text-sm border p-2 rounded-lg max-h-72 overflow-y-auto ${connectionStatus.status === 'success' ? 'text-green-600 border-green-600' : 'text-red-600 border-red-600'}`} role="alert">
-                        {connectionStatus.message}
-                    </div>
-                )
-            }
+            {connectionStatus && (
+                <div className={`mt-6 break-words text-sm border p-2 rounded-lg max-h-72 overflow-y-auto ${connectionStatus.status === 'success' ? 'text-green-600 border-green-600' : 'text-red-600 border-red-600'}`} role="alert">
+                    {connectionStatus.message}
+                </div>
+            )}
             <div className="flex justify-end space-x-4 mt-4 md:mt-6">
                 <NiceButton
                     label="Test Connection"

@@ -157,14 +157,20 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   <>
                     <SidebarLinkItem
                       icon={<MdDashboardCustomize />}
+                      active={activeRoute === '/'}
+                      text="Site Front"
+                      to="/" />
+
+                    <SidebarLinkItem
+                      icon={<MdDashboardCustomize />}
                       active={activeRoute === '/manage'}
-                      text="Dashboard"
+                      text="Settings Home"
                       to="/manage" />
 
                     <SidebarLinkItem
                       icon={<IoSettingsSharp />}
                       active={activeRoute === '/manage/general'}
-                      text="General Settings"
+                      text="General"
                       to="/manage/general" />
 
                     <SidebarLinkItem
