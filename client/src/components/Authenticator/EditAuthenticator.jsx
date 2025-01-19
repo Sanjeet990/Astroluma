@@ -40,15 +40,17 @@ const EditAuthenticator = () => {
 
     useEffect(() => {
         setSelectedImage({
-            iconUrl: "authenticator",
-            iconUrlLight: null,
-            iconProvider: 'com.astroluma.self'
+            image: {
+                iconUrl: "authenticator",
+                iconUrlLight: null,
+                iconProvider: 'com.astroluma.self'
+            }
         });
         if (authId) {
             setLoading(true);
             ApiService.get(`/api/v1/totp/${authId}`, loginData?.token, navigate)
                 .then(data => {
-                    setSelectedImage(data?.message?.serviceIcon);
+                    setSelectedImage({ image: data?.message?.serviceIcon });
                     setServiceName(data?.message?.serviceName);
                     setAccountName(data?.message?.accountName);
                     setSecretKey(data?.message?.secretKey);
@@ -60,9 +62,11 @@ const EditAuthenticator = () => {
                 });
         } else {
             setSelectedImage({
-                iconUrl: "authenticator",
-                iconUrlLight: null,
-                iconProvider: 'com.astroluma.self'
+                image: {
+                    iconUrl: "authenticator",
+                    iconUrlLight: null,
+                    iconProvider: 'com.astroluma.self'
+                }
             });
             setServiceName('');
             setAccountName('');
@@ -96,7 +100,7 @@ const EditAuthenticator = () => {
             return;
         }
 
-        if (!serviceIcon || !selectedImage) {
+        if (!serviceIcon || !selectedImage?.image) {
             makeToast("warning", "Service Icon is required.");
             return;
         }
@@ -110,7 +114,7 @@ const EditAuthenticator = () => {
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/totp/save', { authId, serviceIcon: selectedImage, serviceName, secret, accountName }, loginData?.token, navigate)
+        ApiService.post('/api/v1/totp/save', { authId, serviceIcon: selectedImage?.image, serviceName, secret, accountName }, loginData?.token, navigate)
             .then(() => {
                 makeToast("success", "Service saved.");
                 setServiceIcon("authenticator");
@@ -231,7 +235,7 @@ const EditAuthenticator = () => {
 
                     <NiceUploader
                         label="Service Icon"
-                        selectedImage={selectedImage}
+                        selectedImage={selectedImage?.image}
                         placeholder="Select or upload icon"
                     />
 

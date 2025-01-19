@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ClickOutside from '../ClickOutside';
-import UserOne from '/avatar.png';
 import { FaChevronRight } from 'react-icons/fa';
 import { RiLogoutCircleLine } from 'react-icons/ri';
 import { IoSettingsSharp } from "react-icons/io5";
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { FaUserCircle } from "react-icons/fa";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { motion } from 'framer-motion'; // Import motion from Framer Motion
 import { colorThemeState, loginState, userDataState } from '../../atoms';
+import SystemThemes from '../../utils/SystemThemes';
+import ImageView from '../Misc/ImageView';
 
 const DropdownUser = () => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -15,7 +17,22 @@ const DropdownUser = () => {
     const setLoginState = useSetRecoilState(loginState);
     const navigate = useNavigate();
 
-    const setColorTheme = useSetRecoilState(colorThemeState);
+    const [colorTheme, setColorTheme] = useRecoilState(colorThemeState);
+    const [themeType, setThemeType] = useState("light");
+
+    useEffect(() => {
+        const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
+        setThemeType(newThemeType);
+    }, [colorTheme]);
+
+    const decideTheIcon = useCallback(() => {
+        const iconObject = userData?.userAvatar;
+        if (themeType === "dark" && iconObject?.iconUrlLight) {
+            return iconObject?.iconUrlLight;
+        } else {
+            return iconObject?.iconUrl;
+        }
+    }, [userData, themeType]);
 
     const doLogout = (e) => {
         setDropdownOpen(false);
@@ -28,6 +45,11 @@ const DropdownUser = () => {
     const goToSettings = () => {
         setDropdownOpen(false);
         navigate("/manage");
+    }
+
+    const goToMyProfile = () => {
+        setDropdownOpen(false);
+        navigate("/manage/profile");
     }
 
     return (
@@ -45,7 +67,7 @@ const DropdownUser = () => {
                 </span>
 
                 <span className="h-12 w-12 rounded-full">
-                    <img src={UserOne} alt="User" />
+                    <ImageView src={decideTheIcon()} alt="User avatar" className="h-12 w-12 rounded-full" />
                 </span>
 
                 <FaChevronRight />
@@ -72,6 +94,19 @@ const DropdownUser = () => {
                             >
                                 <IoSettingsSharp />
                                 Settings
+                            </div>
+                        </motion.li>
+                        <motion.li
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            <div
+                                role="button"
+                                onClick={goToMyProfile}
+                                className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out lg:text-base cursor-pointer text-headerText hover:text-headerHoverText"
+                            >
+                                <FaUserCircle />
+                                My Profile
                             </div>
                         </motion.li>
                         <motion.li

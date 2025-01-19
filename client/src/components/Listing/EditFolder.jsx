@@ -42,9 +42,11 @@ const EditFolder = () => {
     //fetch details of the folder by listingId
     useEffect(() => {
         setSelectedImage({
-            iconUrl: "folder",
-            iconUrlLight: null,
-            iconProvider: 'com.astroluma.self'
+            image: {
+                iconUrl: "folder",
+                iconUrlLight: null,
+                iconProvider: 'com.astroluma.self'
+            }
         });
         setLoading(true);
         ApiService.get(`/api/v1/listing/folder/${listingId}`, loginData?.token, navigate)
@@ -55,7 +57,7 @@ const EditFolder = () => {
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
                     if (data?.message?.listing?.listingIcon) {
-                        setSelectedImage(data?.message?.listing?.listingIcon );
+                        setSelectedImage({ image: data?.message?.listing?.listingIcon });
                     }
 
                     if (data?.message?.listing?.listingType !== "category") {
@@ -63,9 +65,11 @@ const EditFolder = () => {
                     }
                 } else {
                     setSelectedImage({
-                        iconUrl: "folder",
-                        iconUrlLight: null,
-                        iconProvider: 'com.astroluma.self'
+                        image: {
+                            iconUrl: "folder",
+                            iconUrlLight: null,
+                            iconProvider: 'com.astroluma.self'
+                        }
                     });
                     setFolderName("");
                     setShowInSidebar(false);
@@ -88,8 +92,8 @@ const EditFolder = () => {
             return;
         }
 
-        
-        if (!selectedImage) {
+
+        if (!selectedImage?.image) {
             makeToast("warning", "You must have to select an icon");
             return;
         }
@@ -97,7 +101,7 @@ const EditFolder = () => {
         //Call the API to store the data
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/folder', { listingId, parentId, folderName, folderIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token, navigate)
+        ApiService.post('/api/v1/listing/save/folder', { listingId, parentId, folderName, folderIcon: selectedImage?.image, showInSidebar, showOnFeatured }, loginData?.token, navigate)
             .then(() => {
                 setSelectedImage(null);
                 setFolderName("");
@@ -136,7 +140,7 @@ const EditFolder = () => {
                         />
                         <NiceUploader
                             label="Folder Icon"
-                            selectedImage={selectedImage}
+                            selectedImage={selectedImage?.image}
                             placeholder="Select or upload icon"
                         />
                         {

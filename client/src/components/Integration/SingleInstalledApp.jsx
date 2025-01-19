@@ -4,8 +4,15 @@ import ImageView from '../Misc/ImageView';
 import PropTypes from 'prop-types';
 import { FiTrash } from 'react-icons/fi';
 import NiceButton from '../NiceViews/NiceButton';
+import { useRecoilValue } from 'recoil';
+import { userDataState } from '../../atoms';
 
 const SingleInstalledApp = ({ app, handleAppRemove, configurationHandler }) => {
+
+    const userData = useRecoilValue(userDataState);
+
+    const isSuperAdmin = userData?.isSuperAdmin;
+
     // Determine npm status and color
     const getNpmStatus = () => {
         switch (app.npmInstalled) {
@@ -51,7 +58,7 @@ const SingleInstalledApp = ({ app, handleAppRemove, configurationHandler }) => {
                         title="Remove"
                         role="button"
                         onClick={() => handleAppRemove(app)}
-                        className="cursor-pointer opacity-50 transition-opacity hover:opacity-100 text-internalCardIconColor hover:text-internalCardIconHoverColor"
+                        className={`cursor-pointer opacity-50 transition-opacity hover:opacity-100 text-internalCardIconColor hover:text-internalCardIconHoverColor ${!isSuperAdmin ? 'hidden' : ''}`}
                     >
                         <FiTrash size={20} />
                     </div>
@@ -98,7 +105,8 @@ const SingleInstalledApp = ({ app, handleAppRemove, configurationHandler }) => {
 
 SingleInstalledApp.propTypes = {
     app: PropTypes.object,
-    handleAppRemove: PropTypes.func
+    handleAppRemove: PropTypes.func,
+    configurationHandler: PropTypes.func
 };
 
 const MemoizedComponent = React.memo(SingleInstalledApp);

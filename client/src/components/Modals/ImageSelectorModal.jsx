@@ -3,12 +3,11 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { iconPackState, imageModalState, selectedImageState } from '../../atoms';
 import NiceModal from '../NiceViews/NiceModal';
 import NiceTab from '../NiceViews/NiceTab';
-import PropTypes from 'prop-types';
 import MyIconsSection from '../Icons/MyIconsSection';
 import CustomIconPack from '../Icons/CustomIconPack';
 import { BrowserRouter } from 'react-router-dom';
 
-const ImageSelectorModal = ({ title }) => {
+const ImageSelectorModal = () => {
   const [modalState, setModalState] = useRecoilState(imageModalState);
   const [tabConfig, setTabConfig] = useState([]);
 
@@ -36,7 +35,7 @@ const ImageSelectorModal = ({ title }) => {
   };
 
   const handleSelectImage = (image) => {
-    setSelectedImage(image);
+    setSelectedImage({image, data: modalState?.data});
     closeModal();
   };
 
@@ -46,7 +45,7 @@ const ImageSelectorModal = ({ title }) => {
 
   return (
     <NiceModal
-      title={title || "Select Image"}
+      title={modalState?.title || "Select Icon"}
       show={modalState.isOpen}
       closeModal={closeModal}
       body={
@@ -69,10 +68,6 @@ const ImageSelectorModal = ({ title }) => {
       }
     />
   );
-};
-
-ImageSelectorModal.propTypes = {
-  title: PropTypes.string
 };
 
 export default React.memo(ImageSelectorModal);

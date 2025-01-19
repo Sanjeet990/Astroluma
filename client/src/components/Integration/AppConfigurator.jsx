@@ -7,6 +7,7 @@ import '../Page/Jodit.css';
 import { useRecoilValue } from 'recoil';
 import { colorThemeState } from '../../atoms';
 import SystemThemes from '../../utils/SystemThemes';
+import PropTypes from 'prop-types';
 
 const AppConfigurator = ({ application, config, appConfigurationListener, connectionStatus, testConnectionListener }) => {
     const colorTheme = useRecoilValue(colorThemeState);
@@ -125,6 +126,14 @@ const AppConfigurator = ({ application, config, appConfigurationListener, connec
             </div>
         </div>
     );
+};
+
+AppConfigurator.propTypes = {
+    application: PropTypes.object,
+    config: PropTypes.object,
+    appConfigurationListener: PropTypes.func,
+    connectionStatus: PropTypes.object,
+    testConnectionListener: PropTypes.func
 };
 
 const MemoizedComponent = React.memo(AppConfigurator);

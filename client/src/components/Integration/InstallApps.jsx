@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import ApiService from '../../utils/ApiService';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { loadingState, loginState } from '../../atoms';
+import { loadingState, loginState, userDataState } from '../../atoms';
 import { Helmet } from 'react-helmet';
 import { GrAppsRounded } from "react-icons/gr";
 import { FaSync, FaDownload  } from "react-icons/fa";
@@ -22,10 +22,12 @@ const InstallApps = () => {
     const setLoading = useSetRecoilState(loadingState);
     const [appList, setAppList] = useState([]);
     const [installedApps, setInstalledApps] = useState(new Map());
-    const [currentPage, setCurrentPage] = useState(1);
+    //const [currentPage, setCurrentPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const loginData = useRecoilValue(loginState);
+
+    const userData = useRecoilValue(userDataState);
 
     useDynamicFilter(false);
     useCurrentRoute("/manage/apps");
@@ -73,7 +75,7 @@ const InstallApps = () => {
                             a.appName.toLowerCase().localeCompare(b.appName.toLowerCase())
                         );
                     });
-                    setCurrentPage(page);
+                    //setCurrentPage(page);
                 }
             })
             .catch((error) => {
@@ -83,7 +85,7 @@ const InstallApps = () => {
                 setLoading(false);
                 setIsLoadingMore(false);
             });
-    }, [loginData?.token, setLoading, navigate, fetchInstalledApps]);
+    }, [setLoading, navigate, fetchInstalledApps]);
 
     useEffect(() => {
         loadApps(1, false);
@@ -101,7 +103,7 @@ const InstallApps = () => {
         });
 
         if (node) observerRef.current.observe(node);
-    }, [isLoadingMore, hasMore, currentPage, loadApps]);
+    }, [isLoadingMore, hasMore]);
 
     const uploadZip = () => {
         fileInputRef.current?.click();
@@ -141,6 +143,12 @@ const InstallApps = () => {
             });
     };
 
+    
+
+    if(!userData?.isSuperAdmin){
+        return null;
+    }
+    
     return (
         <>
             <Helmet>

@@ -40,7 +40,6 @@ const PrivateRoute = () => {
     !iconPacks?.length;
 
   useEffect(() => {
-    console.log("PrivateRoute useEffect");
     if ((reloadData || isDataMissing) && loginData?.token) {
       setLoading(true);
 

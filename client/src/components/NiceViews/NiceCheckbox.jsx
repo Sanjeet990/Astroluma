@@ -40,7 +40,8 @@ NiceCheckbox.propTypes = {
     label: PropTypes.string,
     checked: PropTypes.bool,
     onChange: PropTypes.func,
-    disabled: PropTypes.bool
+    disabled: PropTypes.bool,
+    name: PropTypes.string
 }
 
 const MemoizedComponent = React.memo(NiceCheckbox);

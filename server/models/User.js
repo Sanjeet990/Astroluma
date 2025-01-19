@@ -24,8 +24,14 @@ const userSchema = new Schema({
     type: String,
     default: "dark",
   },
-  profilePicture: {
-    type: String,
+  userAvatar: {
+    type: Object,
+    required: false,
+    default: {
+      iconUrl: "defaultuser",
+      iconUrlLight: null,
+      iconProvider: 'com.astroluma.self'
+    },
   },
   isSuperAdmin: {
     type: Boolean,

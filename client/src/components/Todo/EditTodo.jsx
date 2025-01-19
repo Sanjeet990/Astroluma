@@ -43,11 +43,13 @@ const EditTodo = () => {
     //fetch details of the folder by listingId
     useEffect(() => {
         setSelectedImage({
-            iconUrl: "todo",
-            iconUrlLight: null,
-            iconProvider: 'com.astroluma.self'
+            image: {
+                iconUrl: "todo",
+                iconUrlLight: null,
+                iconProvider: 'com.astroluma.self'
+            }
         });
-        
+
         setLoading(true);
         ApiService.get(`/api/v1/listing/todo/${listingId}`, loginData?.token, navigate)
             .then(data => {
@@ -57,7 +59,7 @@ const EditTodo = () => {
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
                     if (data?.message?.listing?.listingIcon) {
-                        setSelectedImage(data?.message?.listing?.listingIcon);
+                        setSelectedImage({ image: data?.message?.listing?.listingIcon });
                     }
 
                     if (data?.message?.listing?.listingType !== "todo") {
@@ -65,9 +67,11 @@ const EditTodo = () => {
                     }
                 } else {
                     setSelectedImage({
-                        iconUrl: "todo",
-                        iconUrlLight: null,
-                        iconProvider: 'com.astroluma.self'
+                        image: {
+                            iconUrl: "todo",
+                            iconUrlLight: null,
+                            iconProvider: 'com.astroluma.self'
+                        }
                     });
                     setTodoName("");
                     setShowInSidebar(false);
@@ -89,13 +93,13 @@ const EditTodo = () => {
             return;
         }
 
-        if (!selectedImage) {
+        if (!selectedImage?.image) {
             makeToast("warning", "You must have to select an icon");
             return;
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/todo', { listingId, parentId, todoName, todoIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token, navigate)
+        ApiService.post('/api/v1/listing/save/todo', { listingId, parentId, todoName, todoIcon: selectedImage?.image, showInSidebar, showOnFeatured }, loginData?.token, navigate)
             .then(() => {
                 setSelectedImage(null);
                 setTodoName("");
@@ -135,7 +139,7 @@ const EditTodo = () => {
                         <NiceUploader
                             label="Todo Icon"
                             placeholder='Select or upload icon'
-                            selectedImage={selectedImage}
+                            selectedImage={selectedImage?.image}
                         />
                         {
                             !parentId &&

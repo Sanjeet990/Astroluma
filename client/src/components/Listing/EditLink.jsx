@@ -34,7 +34,6 @@ const EditLink = () => {
     const [localUrl, setLocalUrl] = useState("");
     const [showInSidebar, setShowInSidebar] = useState(false);
     const [showOnFeatured, setShowOnFeatured] = useState(!parentId ? true : false);
-    const [disabledFeatured, setDisabledFeatured] = useState(!parentId ? true : false);
     const [integrationList, setIntegrationList] = useState([]);
     const [pageList, setPageList] = useState([]);
     const [haveRemoteUrl, setHaveRemoteUrl] = useState(false);
@@ -48,9 +47,11 @@ const EditLink = () => {
 
     useEffect(() => {
         setSelectedImage({
-            iconUrl: "link",
-            iconUrlLight: null,
-            iconProvider: 'com.astroluma.self'
+            image: {
+                iconUrl: "link",
+                iconUrlLight: null,
+                iconProvider: 'com.astroluma.self'
+            }
         });
         setLoading(true);
         ApiService.get(`/api/v1/listing/link/${listingId}`, loginData?.token, navigate)
@@ -62,7 +63,7 @@ const EditLink = () => {
                     setLocalUrl(data?.message?.listing?.localUrl || "");
                     setShowInSidebar(data?.message?.listing?.inSidebar);
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
-                    setDisabledFeatured(data?.message?.listing?.parentId ? false : true);
+                    //setDisabledFeatured(data?.message?.listing?.parentId ? false : true);
 
                     if (data?.message?.listing?.integration) {
                         const integration = data?.message?.integrations.find(app => app.appId === data?.message?.listing?.integration?.appId);
@@ -71,7 +72,7 @@ const EditLink = () => {
                     }
 
                     if (data?.message?.listing?.listingIcon) {
-                        setSelectedImage(data?.message?.listing?.listingIcon);
+                        setSelectedImage({ image: data?.message?.listing?.listingIcon });
                     }
 
                     if (data?.message?.listing?.listingType !== "link") {
@@ -91,9 +92,11 @@ const EditLink = () => {
                     }
                 } else {
                     setSelectedImage({
-                        iconUrl: "link",
-                        iconUrlLight: null,
-                        iconProvider: 'com.astroluma.self'
+                        image: {
+                            iconUrl: "link",
+                            iconUrlLight: null,
+                            iconProvider: 'com.astroluma.self'
+                        }
                     });
                     setLinkName("");
                     setLinkURL("");
@@ -112,7 +115,7 @@ const EditLink = () => {
             }).finally(() => {
                 setLoading(false);
             });
-    }, [listingId, loginData?.token, navigate, setFolderReloadStatus, setLoading, setSelectedImage]);
+    }, [listingId, loginData?.token, navigate, setFolderReloadStatus, setLoading, setSelectedImage, parentId]);
 
     const handleFormSubmit = () => {
         let remoteUrl = linkURL;
@@ -123,7 +126,7 @@ const EditLink = () => {
             return;
         }
 
-        if (!selectedImage) {
+        if (!selectedImage?.image) {
             makeToast("warning", "You must have to select an icon");
             return;
         }
@@ -143,7 +146,7 @@ const EditLink = () => {
             listingId,
             parentId,
             linkName,
-            linkIcon: selectedImage,
+            linkIcon: selectedImage?.image,
             linkURL: tempLink,
             localUrl,
             showInSidebar,
@@ -276,7 +279,7 @@ const EditLink = () => {
                             <div>
                                 <NiceUploader
                                     label="Link Icon"
-                                    selectedImage={selectedImage}
+                                    selectedImage={selectedImage?.image}
                                     placeholder="Select or upload icon"
                                 />
                             </div>
