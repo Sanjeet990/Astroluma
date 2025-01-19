@@ -102,7 +102,7 @@ exports.listingDetails = async (req, res) => {
         }).select('-pageContent'); // Exclude pageContent field
 
         //select apps from the db
-        const appList = await App.find({});
+        const appList = await App.find({ npmInstalled: 1 }).sort({ appName: 1 });
 
         const appsDir = path.join(__dirname, '../../storage/apps'); // Path to the apps directory
 

@@ -180,6 +180,52 @@ exports.updateOwnAvatar = async (req, res) => {
     }
 }
 
+exports.doDebrand = async (req, res) => {
+    const loggedinuser = req.user;
+
+    const userId = loggedinuser?._id;
+    
+    try {
+        await User.updateOne(
+            { _id: userId },
+            { $set: { hideBranding: true } }
+        );
+
+        return res.status(200).json({
+            error: false,
+            message: "Astroluma branding removed successfully."
+        });
+    } catch (error) {
+        return res.status(400).json({
+            error: true,
+            message: "Error in removing Astroluma branding."
+        });
+    }
+}
+
+exports.doRebrand = async (req, res) => {
+    const loggedinuser = req.user;
+
+    const userId = loggedinuser?._id;
+    
+    try {
+        await User.updateOne(
+            { _id: userId },
+            { $set: { hideBranding: false } }
+        );
+
+        return res.status(200).json({
+            error: false,
+            message: "Astroluma branding applied successfully."
+        });
+    } catch (error) {
+        return res.status(400).json({
+            error: true,
+            message: "Error in applying Astroluma branding."
+        });
+    }
+}
+
 // Get information of a specific user
 exports.accountInfo = async (req, res) => {
     const loggedinuser = req.user;

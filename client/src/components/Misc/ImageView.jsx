@@ -40,7 +40,8 @@ const ImageView = ({
       'camera': '/cctv.png',
       'device': '/computer.png',
       '/default.png': '/default.png',
-      '/astroluma.svg': '/astroluma.svg'
+      '/astroluma.svg': '/astroluma.svg',
+      'defaultuser': '/avatar.png'
     };
 
     if (specialCases[sourceToUse]) {

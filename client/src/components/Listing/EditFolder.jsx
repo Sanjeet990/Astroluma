@@ -86,12 +86,10 @@ const EditFolder = () => {
 
     const handleFormSubmit = () => {
 
-
         if (!folderName) {
             makeToast("warning", "Please fill all the fields");
             return;
         }
-
 
         if (!selectedImage?.image) {
             makeToast("warning", "You must have to select an icon");
