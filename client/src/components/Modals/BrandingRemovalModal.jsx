@@ -1,15 +1,22 @@
 import React from 'react';
-import { useRecoilState } from 'recoil';
-import { removeBrandingModalState } from '../../atoms';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { loadingState, loginState, reloadDashboardDataState, removeBrandingModalState } from '../../atoms';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceModal from '../NiceViews/NiceModal';
 import { BiCoffee } from 'react-icons/bi';
 import { AiOutlineHeart } from 'react-icons/ai';
 import { CONSTANTS } from '../../utils/Constants';
+import makeToast from '../../utils/ToastUtils';
+import ApiService from '../../utils/ApiService';
+import { useNavigate } from 'react-router-dom';
 
 const BrandingRemovalModal = () => {
 
+  const navigate = useNavigate();
   const [modalState, setModalState] = useRecoilState(removeBrandingModalState);
+  const setLoading = useSetRecoilState(loadingState);
+  const loginData = useRecoilValue(loginState);
+  const setReloadData = useSetRecoilState(reloadDashboardDataState);
 
   const closeModal = () => {
     setModalState({ ...modalState, isOpen: false });
@@ -18,6 +25,24 @@ const BrandingRemovalModal = () => {
   const doDonate = () => {
     window.open(CONSTANTS.BuyMeACoffee, '_blank');
   };
+
+  const doRemoveBranding = (donating) => {
+    setLoading(true);
+    ApiService.get("/api/v1/accounts/debrand", loginData?.token, navigate)
+      .then(() => {
+        setReloadData(true);
+        makeToast("success", "Astroluma branding removed successfully.");
+      })
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Error removing branding.");
+      }).finally(() => {
+        setLoading(false);
+        closeModal();
+        if (donating) {
+          doDonate();
+        }
+      });
+  }
 
   return (
     <NiceModal
@@ -32,15 +57,13 @@ const BrandingRemovalModal = () => {
           <h3 className="text-xl font-semibold text-center">Help Us Keep Creating</h3>
           <div className="space-y-4">
             <p className="text-center">
-              If you&#39;re finding this tool valuable, consider supporting its development.
-              Your contribution helps maintain and improve the project.
+              Your support keeps this tool alive and thriving! Every contribution helps us maintain and improve the project.
             </p>
             <p className="text-center">
-              While you can remove branding for free, your donation would help us
-              continue building great tools for everyone.
+              Plus, as a token of appreciation, contributors will be featured on the Astroluma portal, showcasing their invaluable support to our community.
             </p>
             <p className="text-sm text-modalBodyText/50 text-center italic">
-              Note: Branding removal is available for free - supporting us is entirely optional!
+              Branding removal is complimentary, but your support ensures we can continue building great tools for everyone. Thank you for helping us grow!
             </p>
           </div>
         </div>
@@ -50,12 +73,12 @@ const BrandingRemovalModal = () => {
           <NiceButton
             label="No, Thanks"
             className="bg-buttonDanger text-buttonText"
-            onClick={closeModal}
+            onClick={() => doRemoveBranding(false)}
           />
           <NiceButton
             label="Support Us"
             className="bg-buttonSuccess text-buttonText"
-            onClick={doDonate}
+            onClick={() => doRemoveBranding(true)}
           />
         </div>
       }

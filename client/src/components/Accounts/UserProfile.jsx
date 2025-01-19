@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
 import Breadcrumb from "../Breadcrumb/Breadcrumb";
-import { FaUser, FaCamera, FaKey, FaTimes, FaCog, FaChevronRight } from 'react-icons/fa';
+import { FaUser, FaCamera, FaKey, FaTimes, FaCog, FaChevronRight, FaStar, FaCoffee } from 'react-icons/fa';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { changePasswordModalState, colorThemeState, imageModalState, loadingState, loginState, reloadDashboardDataState, selectedImageState, userDataState } from "../../atoms";
+import { changePasswordModalState, colorThemeState, imageModalState, loadingState, loginState, reloadDashboardDataState, removeBrandingModalState, selectedImageState, userDataState } from "../../atoms";
 import SystemThemes from "../../utils/SystemThemes";
 import ImageView from "../Misc/ImageView";
 import ApiService from "../../utils/ApiService";
@@ -12,6 +12,8 @@ import makeToast from "../../utils/ToastUtils";
 import useDynamicFilter from "../../hooks/useDynamicFilter";
 import useCurrentRoute from "../../hooks/useCurrentRoute";
 import UpdatePasswordModal from "../Modals/UpdatePasswordModal";
+import BrandingRemovalModal from "../Modals/BrandingRemovalModal";
+import { CONSTANTS } from "../../utils/Constants";
 
 const UserProfile = () => {
 
@@ -25,6 +27,7 @@ const UserProfile = () => {
     const setLoading = useSetRecoilState(loadingState);
     const setReloadData = useSetRecoilState(reloadDashboardDataState);
     const setChangePassword = useSetRecoilState(changePasswordModalState);
+    const setRemoveBranding = useSetRecoilState(removeBrandingModalState);
 
     const colorTheme = useRecoilValue(colorThemeState);
     const [themeType, setThemeType] = useState("light");
@@ -70,6 +73,20 @@ const UserProfile = () => {
         }
     }, [userData, themeType]);
 
+    const doReBranding = () => {
+        setLoading(true);
+        ApiService.get("/api/v1/accounts/rebrand", loginData?.token, navigate)
+            .then(() => {
+                setReloadData(true);
+                makeToast("success", "Astroluma branding applied successfully.");
+            })
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Error applying Astroluma branding.");
+            }).finally(() => {
+                setLoading(false);
+            });
+    }
+
     const ProfileItems = ({ title, subtitle, icon, onClick }) => {
         return (
             <div
@@ -104,6 +121,15 @@ const UserProfile = () => {
         navigate(`/manage/accounts/${userData?._id}`);
     }
 
+    const removeBranding = () => {
+        //setChangePassword({ isOpen: true, data: { userId: userData?._id } });
+        setRemoveBranding({ isOpen: true });
+    }
+
+    const doDonate = () => {
+        window.open(CONSTANTS.BuyMeACoffee, '_blank');
+    };
+
     return (
         <>
             <Helmet>
@@ -113,6 +139,7 @@ const UserProfile = () => {
             <Breadcrumb type="custom" pageTitle="My Profile" breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }]} />
 
             <UpdatePasswordModal />
+            <BrandingRemovalModal />
 
             <div className="max-w-4xl mx-auto w-full mt-4">
                 <div className="card border bg-cardBg text-cardText border-cardBorder shadow-md rounded-xl px-8 pt-6 pb-8 mb-4">
@@ -159,10 +186,27 @@ const UserProfile = () => {
                                     icon={<FaKey className="h-5 w-5" />}
                                 />
 
+                                {
+                                    !userData.hideBranding ? <ProfileItems
+                                        title="Remove Astroluma Branding"
+                                        subtitle="Remove powered by Astroluma text"
+                                        onClick={removeBranding}
+                                        icon={<FaTimes className="h-5 w-5" />}
+                                    />
+                                        :
+                                        <ProfileItems
+                                            title="Show Astroluma Branding"
+                                            subtitle="Show powered by Astroluma text"
+                                            onClick={doReBranding}
+                                            icon={<FaStar className="h-5 w-5" />}
+                                        />
+                                }
+
                                 <ProfileItems
-                                    title="Remove Astroluma Branding"
-                                    subtitle="Customize your site appearance"
-                                    icon={<FaTimes className="h-5 w-5" />}
+                                    title="Support Our Project"
+                                    subtitle="Support our project development"
+                                    onClick={doDonate}
+                                    icon={<FaCoffee className="h-5 w-5" />}
                                 />
 
                             </div>

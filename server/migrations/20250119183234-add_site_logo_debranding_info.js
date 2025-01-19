@@ -1,20 +1,27 @@
 module.exports = {
   async up(db, client) {
-    
+
     const usersCollection = db.collection('users');
 
     const allUsers = await usersCollection.find({}).toArray();
 
     allUsers.forEach(async (user) => {
-      if (!user.userAvatar) {
-        const avatar = {
-          iconUrl: "defaultuser",
+      if (!user.siteLogo) {
+        const logo = {
+          iconUrl: "astroluma",
           iconUrlLight: null,
           iconProvider: 'com.astroluma.self'
         };
-        await usersCollection.updateOne({ _id: user._id }, { $set: { userAvatar: avatar } });
+        await usersCollection.updateOne({ _id: user._id }, { $set: { siteLogo: logo } });
       }
     });
+
+    allUsers.forEach(async (user) => {
+      if (!user.hasOwnProperty('hideBranding')) {
+        await usersCollection.updateOne({ _id: user._id }, { $set: { hideBranding: false } });
+      }
+    });
+
   },
 
   async down(db, client) {

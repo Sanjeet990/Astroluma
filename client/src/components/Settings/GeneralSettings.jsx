@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { isHostModeState, loadingState, loginState, reloadDashboardDataState } from '../../atoms';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { isHostModeState, loadingState, loginState, reloadDashboardDataState, selectedImageState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
 import NiceButton from '../NiceViews/NiceButton';
@@ -13,6 +13,7 @@ import { Helmet } from 'react-helmet';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import { useNavigate } from 'react-router-dom';
+import NiceUploader from '../NiceViews/NiceUploader';
 
 const GeneralSettings = () => {
 
@@ -24,6 +25,7 @@ const GeneralSettings = () => {
     const loginData = useRecoilValue(loginState);
     const setReloadData = useSetRecoilState(reloadDashboardDataState);
     const isHostMode = useRecoilValue(isHostModeState);
+    const [selectedImage, setSelectedImage] = useRecoilState(selectedImageState);
 
     const [siteName, setSiteName] = useState('');
     const [authenticator, setAuthenticator] = useState(false);
@@ -44,9 +46,14 @@ const GeneralSettings = () => {
             return makeToast("warning", "Site name is required");
         }
 
+        if (!selectedImage?.image) {
+            makeToast("warning", "You must have to select a site logo.");
+            return;
+        }
+
         //send data to save
         setLoading(true);
-        ApiService.post("/api/v1/settings", { siteName, authenticator, camerafeed, networkdevices, todolist, snippetmanager }, loginData?.token, navigate)
+        ApiService.post("/api/v1/settings", { siteName, siteLogo: selectedImage?.image, authenticator, camerafeed, networkdevices, todolist, snippetmanager }, loginData?.token, navigate)
             .then(() => {
                 makeToast("success", "Details saved successfully.");
                 setReloadData(true);
@@ -69,6 +76,10 @@ const GeneralSettings = () => {
                 setNetworkdevices(data?.message?.networkdevices);
                 setTodolist(data?.message?.todolist);
                 setSnippetManager(data?.message?.snippetmanager);
+
+                if (data?.message?.siteLogo) {
+                    setSelectedImage({ image: data?.message?.siteLogo });
+                }
             })
             .catch((error) => {
                 if (!error.handled) makeToast("error", "Failed to fetch settings.");
@@ -98,6 +109,12 @@ const GeneralSettings = () => {
                             className='border bg-inputBg border-inputBorder text-inputText placeholder-inputPlaceholder'
                             onChange={(e) => setSiteName(e.target.value)}
                             placeholder="Enter site name"
+                        />
+
+                        <NiceUploader
+                            label="Site Logo"
+                            selectedImage={selectedImage?.image}
+                            placeholder="Select or upload icon"
                         />
 
                         <NicePreferenceHeader

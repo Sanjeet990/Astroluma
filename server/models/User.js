@@ -33,9 +33,23 @@ const userSchema = new Schema({
       iconProvider: 'com.astroluma.self'
     },
   },
+  siteLogo: {
+    type: Object,
+    required: false,
+    default: {
+      iconUrl: "astroluma",
+      iconUrlLight: null,
+      iconProvider: 'com.astroluma.self'
+    },
+  },
   isSuperAdmin: {
     type: Boolean,
     default: false,
+  },
+  hideBranding: {
+    type: Boolean,
+    default: false,
+    required: false,
   },
   location: {
     type: String,

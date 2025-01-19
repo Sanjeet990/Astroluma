@@ -170,7 +170,7 @@ const InstalledApps = () => {
 
             {
                 !isSuperAdmin && <NiceTip title="Information">
-                    Only Admin can install, update and remove integrations. You can only view the installed integrations.
+                    Only Admin can install, update and remove integrations. You can only view and use the installed integrations.
                 </NiceTip>
             }
             <div className="mt-8">
