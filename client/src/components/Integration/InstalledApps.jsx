@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import ApiService from '../../utils/ApiService';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { integrationConfigureModalState, loadingState, loginState, removeInstalledIntegrationModalState } from '../../atoms';
+import { integrationConfigureModalState, loadingState, loginState, removeInstalledIntegrationModalState, userDataState } from '../../atoms';
 import { Helmet } from 'react-helmet';
 import { GrAppsRounded } from "react-icons/gr";
 import SingleInstalledApp from './SingleInstalledApp';
@@ -11,6 +11,7 @@ import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import NiceLink from '../NiceViews/NiceLink';
 import NiceButton from '../NiceViews/NiceButton';
+import NiceTip from '../NiceViews/NiceTip';
 import makeToast from '../../utils/ToastUtils';
 import RemoveInstalledIntegration from '../Modals/RemoveInstalledIntegration';
 import { useNavigate } from 'react-router-dom';
@@ -30,6 +31,9 @@ const InstalledApps = () => {
     const observer = useRef();
 
     const loginData = useRecoilValue(loginState);
+    const userData = useRecoilValue(userDataState);
+
+    const isSuperAdmin = userData?.isSuperAdmin;
 
     useDynamicFilter(false);
     useCurrentRoute("/manage/apps");
@@ -85,6 +89,14 @@ const InstalledApps = () => {
         if (node) observer.current.observe(node);
     }, [hasMore, isLoadingMore, loadMoreData]);
 
+
+    // Reload data after successful syncFromDisk
+    const reloadData = useCallback(() => {
+        setCurrentPage(1);
+        setHasMore(true);
+        loadInitialData();
+    }, [loadInitialData]);
+
     // Initial data load
     useEffect(() => {
 
@@ -96,14 +108,7 @@ const InstalledApps = () => {
             emitter.off(RELOAD_INSTALLED_APPS, reloadData);
         };
 
-    }, [loadInitialData]);
-
-    // Reload data after successful syncFromDisk
-    const reloadData = useCallback(() => {
-        setCurrentPage(1);
-        setHasMore(true);
-        loadInitialData();
-    }, [loadInitialData]);
+    }, [loadInitialData, reloadData]);
 
     const handleAppRemove = (app) => {
         setRemoveInstalledIntegration({ isOpen: true, data: { app } });
@@ -128,7 +133,6 @@ const InstalledApps = () => {
     }
 
     const handleConfigureClick = (app) => {
-        console.log(app);
         setConfigModalState({ isOpen: true, data: app });
     };
 
@@ -150,7 +154,7 @@ const InstalledApps = () => {
 
             <div className="flex flex-col justify-between">
                 <div className="text-left w-full md:w-auto" />
-                <div className="flex flex-wrap justify-end space-x-2 mt-4 md:mt-0">
+                <div className={`flex flex-wrap justify-end space-x-2 mt-4 md:mt-0 mb-4 ${!isSuperAdmin ? "hidden" : ""}`}>
                     <NiceButton
                         onClick={syncFromDisk}
                         label="Sync from Disk"
@@ -164,6 +168,11 @@ const InstalledApps = () => {
                 </div>
             </div>
 
+            {
+                !isSuperAdmin && <NiceTip title="Information">
+                    Only Admin can install, update and remove integrations. You can only view the installed integrations.
+                </NiceTip>
+            }
             <div className="mt-8">
                 {appList?.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">

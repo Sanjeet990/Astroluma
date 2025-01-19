@@ -156,7 +156,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   :
                   <>
                     <SidebarLinkItem
-                      icon={<MdDashboardCustomize />}
+                      icon={<FaHome />}
                       active={activeRoute === '/'}
                       text="Site Front"
                       to="/" />
@@ -233,11 +233,19 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                       active={activeRoute === '/manage/apps'}
                       to="/manage/apps" />
 
+                    {
+                      userData?.isSuperAdmin && <SidebarLinkItem
+                        icon={<MdFace />}
+                        text="User Accounts"
+                        active={activeRoute === '/manage/accounts'}
+                        to="/manage/accounts" />
+                    }
+
                     <SidebarLinkItem
                       icon={<MdFace />}
-                      text="User Accounts"
-                      active={activeRoute === '/manage/accounts'}
-                      to="/manage/accounts" />
+                      text="My Profile"
+                      active={activeRoute === '/manage/profile'}
+                      to="/manage/profile" />
 
                     <SidebarLinkItem
                       icon={<MdContactSupport />}

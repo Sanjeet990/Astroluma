@@ -5,14 +5,13 @@ const User = require('../models/User');
 exports.saveAccount = async (req, res) => {
     const loggedinuser = req.user;
 
+    let userId = req.body.userId;
+
     if (loggedinuser.isSuperAdmin === false) {
-        return res.status(400).json({
-            error: true,
-            message: "You are not authorized to add users."
-        });
+        userId = loggedinuser._id;
     }
 
-    const { userId, fullName, username, password, siteName } = req.body;
+    const { fullName, username, password, siteName } = req.body;
 
     if (!fullName || !username || !siteName) {
         return res.status(400).json({
@@ -112,18 +111,84 @@ exports.userList = async (req, res) => {
     }
 };
 
-// Get information of a specific user
-exports.accountInfo = async (req, res) => {
+exports.updateAvatar = async (req, res) => {
     const loggedinuser = req.user;
 
-    if (loggedinuser.isSuperAdmin === false) {
+    if (!loggedinuser.isSuperAdmin) {
         return res.status(400).json({
             error: true,
-            message: "You are not authorized to view user information."
+            message: "You are not authorized to change passwords."
         });
     }
 
     const userId = req.params.userId;
+    const { avatar } = req.body;
+
+    if (!avatar) {
+        return res.status(400).json({
+            error: true,
+            message: "Avatar is not supplied."
+        });
+    }
+
+    try {
+        await User.updateOne(
+            { _id: userId },
+            { $set: { userAvatar: avatar } }
+        );
+
+        return res.status(200).json({
+            error: false,
+            message: "Avatar changed successfully."
+        });
+    } catch (error) {
+        return res.status(400).json({
+            error: true,
+            message: "Error in changing avatar."
+        });
+    }
+}
+
+exports.updateOwnAvatar = async (req, res) => {
+    const loggedinuser = req.user;
+
+    const userId = loggedinuser?._id;
+    const { avatar } = req.body;
+
+    if (!avatar) {
+        return res.status(400).json({
+            error: true,
+            message: "Avatar is not supplied."
+        });
+    }
+
+    try {
+        await User.updateOne(
+            { _id: userId },
+            { $set: { userAvatar: avatar } }
+        );
+
+        return res.status(200).json({
+            error: false,
+            message: "Avatar changed successfully."
+        });
+    } catch (error) {
+        return res.status(400).json({
+            error: true,
+            message: "Error in changing avatar."
+        });
+    }
+}
+
+// Get information of a specific user
+exports.accountInfo = async (req, res) => {
+    const loggedinuser = req.user;
+
+    let userId = req.params.userId;
+
+    if (loggedinuser.isSuperAdmin === false) {
+        userId = loggedinuser._id;
+    }
 
     try {
         const user = await User.findOne({ _id: userId }, { password: 0 }); // Exclude password field
@@ -189,15 +254,17 @@ exports.deleteUser = async (req, res) => {
 exports.changePassword = async (req, res) => {
     const loggedinuser = req.user;
 
-    if (!loggedinuser.isSuperAdmin) {
-        return res.status(400).json({
-            error: true,
-            message: "You are not authorized to change passwords."
-        });
-    }
-
     const userId = req.params.userId;
     const { password } = req.body;
+
+    if (!loggedinuser.isSuperAdmin) {
+        if (loggedinuser._id.toString() !== userId) {
+            return res.status(400).json({
+                error: true,
+                message: "You are not authorized to change passwords."
+            });
+        }
+    }
 
     if (!password || password.length < 6) {
         return res.status(400).json({

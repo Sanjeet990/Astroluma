@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { changePasswordModalState, loadingState, loginState } from '../../atoms';
+import { imageModalState, loadingState, loginState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceInput from '../NiceViews/NiceInput';
@@ -8,10 +8,10 @@ import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
 import { useNavigate } from 'react-router-dom';
 
-const UpdatePasswordModal = () => {
+const UpdateAvatarModal = () => {
   const navigate = useNavigate();
 
-  const [modalState, setModalState] = useRecoilState(changePasswordModalState);
+  const [modalState, setModalState] = useRecoilState(imageModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
 
@@ -19,8 +19,6 @@ const UpdatePasswordModal = () => {
   const [repeatPassword, setRepeatPassword] = useState();
 
   const closeModal = () => {
-    setPassword("");
-    setRepeatPassword("");
     setModalState({ ...modalState, isOpen: false });
   };
 
@@ -44,7 +42,6 @@ const UpdatePasswordModal = () => {
         closeModal();
       })
       .catch((error) => {
-        console.log(error);
         if (!error.handled) makeToast("error", "Password can not be changed.");
       })
       .finally(() => {
@@ -55,7 +52,7 @@ const UpdatePasswordModal = () => {
   return (
     <NiceModal
       show={modalState.isOpen}
-      title="Reset Password"
+      title="Change Avatar"
       body={
         <>
           <NiceInput
@@ -95,6 +92,6 @@ const UpdatePasswordModal = () => {
 
 }
 
-const MemoizedComponent = React.memo(UpdatePasswordModal);
+const MemoizedComponent = React.memo(UpdateAvatarModal);
 export default MemoizedComponent;
 

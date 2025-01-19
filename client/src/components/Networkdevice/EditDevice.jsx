@@ -42,9 +42,11 @@ const EditDevice = () => {
     //fetch details of the folder by listingId
     useEffect(() => {
         setSelectedImage({
-            iconUrl: "device",
-            iconUrlLight: null,
-            iconProvider: 'com.astroluma.self'
+            image: {
+                iconUrl: "device",
+                iconUrlLight: null,
+                iconProvider: 'com.astroluma.self'
+            }
         });
         setLoading(true);
         ApiService.get(`/api/v1/networkdevices/device/${deviceId}`, loginData?.token, navigate)
@@ -59,8 +61,8 @@ const EditDevice = () => {
                     setVirtualDevice(data?.message?.virtualDevice);
 
                     if (data?.message?.deviceIcon) {
-                        setSelectedImage(data?.message?.deviceIcon);
-                    }else{
+                        setSelectedImage({ image: data?.message?.deviceIcon });
+                    } else {
                         setSelectedImage(null);
                     }
 
@@ -68,9 +70,11 @@ const EditDevice = () => {
                     setDeviceMac("");
                     setFolderReloadStatus(true);
                     setSelectedImage({
-                        iconUrl: "device",
-                        iconUrlLight: null,
-                        iconProvider: 'com.astroluma.self'
+                        image: {
+                            iconUrl: "device",
+                            iconUrlLight: null,
+                            iconProvider: 'com.astroluma.self'
+                        }
                     });
                 }
             })
@@ -91,8 +95,8 @@ const EditDevice = () => {
             return;
         }
 
-        
-        if (!selectedImage) {
+
+        if (!selectedImage?.image) {
             makeToast("warning", "You must have to select an icon");
             return;
         }
@@ -133,7 +137,7 @@ const EditDevice = () => {
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/networkdevices/save/device', { deviceId, deviceMac, deviceName, broadcastAddress, broadcastPort, deviceIcon: selectedImage, deviceIp, supportsWol, virtualDevice }, loginData?.token, navigate)
+        ApiService.post('/api/v1/networkdevices/save/device', { deviceId, deviceMac, deviceName, broadcastAddress, broadcastPort, deviceIcon: selectedImage?.image, deviceIp, supportsWol, virtualDevice }, loginData?.token, navigate)
             .then(() => {
                 setDeviceMac("");
                 setDeviceName("");
@@ -176,7 +180,7 @@ const EditDevice = () => {
                         />
                         <NiceUploader
                             label="Device Icon"
-                            selectedImage={selectedImage}
+                            selectedImage={selectedImage?.image}
                             placeholder="Select or upload icon"
                         />
                         <NiceInput

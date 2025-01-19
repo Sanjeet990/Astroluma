@@ -98,7 +98,7 @@ const CategoryListing = () => {
 
             {
                 !parentFolder ?
-                    <WelcomeHeader name={userData?.fullName} />
+                    <WelcomeHeader />
                     :
                     <Breadcrumb type="front" pageTitle={parentFolder?.listingName} breadcrumbList={breadcrumbList} />
             }

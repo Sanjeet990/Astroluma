@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { loadingState, loginState, reloadDashboardDataState } from '../../atoms';
+import { loadingState, loginState, reloadDashboardDataState, userDataState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
 import { Helmet } from 'react-helmet';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
@@ -24,12 +24,15 @@ const EditUser = () => {
     const setLoading = useSetRecoilState(loadingState);
     const setReloadData = useSetRecoilState(reloadDashboardDataState);
     const loginData = useRecoilValue(loginState);
+    const userData = useRecoilValue(userDataState);
 
     const [fullName, setFullName] = useState("");
     const [username, setUserName] = useState("");
     const [password, setPassword] = useState("");
     const [rpassword, setRPassword] = useState("");
     const [siteName, setSiteName] = useState("");
+
+    const isSuperAdmin = userData?._id?.toString() === userId ? false : userData?.isSuperAdmin;
 
     useDynamicFilter(false);
     useCurrentRoute("/manage/accounts");
@@ -107,10 +110,14 @@ const EditUser = () => {
     return (
         <>
             <Helmet>
-                <title>{!userId ? "Add a new user" : "Edit an user"}</title>
+                <title>{!userId ? "Add a new user" : isSuperAdmin ? "Edit an user" : "Update Profile"}</title>
             </Helmet>
 
-            <Breadcrumb type="custom" pageTitle={!userId ? "Add a new user" : "Edit an user"} breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }, { "id": "2", "linkName": "User Accounts", "linkUrl": "/manage/accounts" }]} />
+            <Breadcrumb type="custom" pageTitle={!userId ? "Add a new user" : isSuperAdmin ? "Edit an user" : "Update Profile"} breadcrumbList={[
+                { "id": "1", "linkName": "Settings", "linkUrl": "/manage" },
+                isSuperAdmin ? { "id": "2", "linkName": "User Accounts", "linkUrl": "/manage/accounts" }
+                    : { "id": "2", "linkName": "My Profile", "linkUrl": "/manage/profile" }
+            ]} />
 
             <div className="max-w-4xl mx-auto w-full mt-4">
                 <div className="card border bg-cardBg text-cardText border-cardBorder shadow-md rounded-xl px-8 pt-6 pb-8 mb-4">

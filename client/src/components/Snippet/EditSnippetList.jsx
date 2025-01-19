@@ -42,11 +42,13 @@ const EditSnippetList = () => {
     //fetch details of the folder by listingId
     useEffect(() => {
         setSelectedImage({
-            iconUrl: "snippet",
-            iconUrlLight: null,
-            iconProvider: 'com.astroluma.self'
+            image: {
+                iconUrl: "snippet",
+                iconUrlLight: null,
+                iconProvider: 'com.astroluma.self'
+            }
         });
-        
+
         setLoading(true);
         ApiService.get(`/api/v1/listing/snippet/${listingId}`, loginData?.token, navigate)
             .then(data => {
@@ -56,7 +58,7 @@ const EditSnippetList = () => {
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
                     if (data?.message?.listing?.listingIcon) {
-                        setSelectedImage(data?.message?.listing?.listingIcon);
+                        setSelectedImage({ image: data?.message?.listing?.listingIcon });
                     }
 
                     if (data?.message?.listing?.listingType !== "snippet") {
@@ -64,9 +66,11 @@ const EditSnippetList = () => {
                     }
                 } else {
                     setSelectedImage({
-                        iconUrl: "snippet",
-                        iconUrlLight: null,
-                        iconProvider: 'com.astroluma.self'
+                        image: {
+                            iconUrl: "snippet",
+                            iconUrlLight: null,
+                            iconProvider: 'com.astroluma.self'
+                        }
                     });
                     setSnippetName("");
                     setShowInSidebar(false);
@@ -89,14 +93,14 @@ const EditSnippetList = () => {
             return;
         }
 
-        
-        if (!selectedImage) {
+
+        if (!selectedImage?.image) {
             makeToast("warning", "You must have to select an icon");
             return;
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/snippet', { listingId, parentId, snippetName, snippetIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token, navigate)
+        ApiService.post('/api/v1/listing/save/snippet', { listingId, parentId, snippetName, snippetIcon: selectedImage?.image, showInSidebar, showOnFeatured }, loginData?.token, navigate)
             .then(() => {
                 setSelectedImage(null);
                 setSnippetName("");
@@ -135,7 +139,7 @@ const EditSnippetList = () => {
                         />
                         <NiceUploader
                             label="Snippet Icon"
-                            selectedImage={selectedImage}
+                            selectedImage={selectedImage?.image}
                             placeholder='Select or upload icon'
                         />
                         {
