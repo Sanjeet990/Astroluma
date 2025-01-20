@@ -52,16 +52,28 @@ Astroluma v1.0.1 is released. Check the full changelog [here](https://github.com
 - **Stream Hub**: Support for IP camera streams
 - **Weather Integration**: Real-time weather updates
 - **Third-Party Apps**: 
-  - NGINX Proxy Manager
-  - Proxmox
-  - Portainer
+  - Bazarr
+  - FileBrowser
+  - FreshRSS
   - GitHub
+  - HTML Code
+  - Heimdall
+  - Immich
+  - Linkace
+  - NextCloud
+  - Nginx Proxy Manager
+  - Portainer
+  - Proxmox
+  - Sonarr
+  - Speed Test Tracker
+  - TrueNAS Scale (Core untested)
+  - Uptime Kuma
   - YouTube
   - More coming soon!
 - **Custom Integration Support**: Create your own app integrations
 
 ### Customization
-- **Themes**: 12 built-in themes with more in development
+- **Themes**: 15 built-in themes with more in development
 - **Icon Pack Support**: User configurable icon pack support. Find icons [here](https://getastroluma.com/icons)
 - **Flexible Layout**: Customizable sidebar and category placement
 
@@ -91,6 +103,7 @@ services:
       MONGODB_URI: mongodb://localhost:27017/astroluma
     volumes:
       - uploads_data:/app/storage/uploads
+      - uploads_apps:/app/storage/apps
     depends_on:
       - mongodb
     restart: always
