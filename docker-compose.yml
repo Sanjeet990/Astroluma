@@ -13,6 +13,7 @@ services:
       MONGODB_URI: mongodb://127.0.0.1:27017/astroluma
     volumes:
       - uploads_data:/app/storage/uploads
+      - uploads_app:/app/storage/apps
     depends_on:
       - mongodb
     restart: always
