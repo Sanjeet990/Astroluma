@@ -1,0 +1,17 @@
+{
+    "appName": "Heimdall",
+    "appId": "com.heimdall",
+    "appIcon": "logo.png",
+    "description": "Displays statistics from Heimdall.",
+    "alwaysShowDetailedView": true,
+    "autoRefreshAfterSeconds": 60,
+    "config": [
+        {
+            "name": "overrideurl",
+            "label": "Heimdall URL",
+            "type": "string",
+            "required": false,
+            "placeholder": "If different from the Link URL, enter URL"
+        }
+    ]
+}

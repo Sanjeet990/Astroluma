@@ -38,7 +38,7 @@ const EditStream = () => {
     //fetch details of the link by listingId
     useEffect(() => {
         setLoading(true);
-        ApiService.get(`/api/v1/listing/stream/${listingId}`, loginData?.token)
+        ApiService.get(`/api/v1/listing/stream/${listingId}`, loginData?.token, navigate)
             .then(data => {
                 if (data?.message?.listing) {
                     setLinkName(data?.message?.listing?.listingName);
@@ -52,8 +52,8 @@ const EditStream = () => {
                     setLinkURL("");
                 }
             })
-            .catch(() => {
-                makeToast("error", "Failed to fetch stream details.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to fetch stream details.");
             }).finally(() => {
                 setLoading(false);
             });
@@ -67,15 +67,15 @@ const EditStream = () => {
         }
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/stream', { listingId, parentId, linkName, linkURL }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/stream', { listingId, parentId, linkName, linkURL }, loginData?.token, navigate)
             .then(() => {
                 setLinkName("");
                 setLinkURL("");
                 makeToast("success", "Stream saved.");
                 navigate(-1);
             })
-            .catch(() => {
-                makeToast("error", "Failed to save stream.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to save stream.");
             }).finally(() => {
                 setLoading(false);
             });

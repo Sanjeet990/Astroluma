@@ -6,6 +6,7 @@ import {
   colorThemeState,
   homepageItemState,
   iconPackState,
+  isHostModeState,
   loadingState,
   loginState,
   reloadDashboardDataState,
@@ -22,43 +23,50 @@ const PrivateRoute = () => {
 
   const loginData = useRecoilValue(loginState);
 
-  const setAuthListState = useSetRecoilState(authListState);
   const [reloadData, setReloadData] = useRecoilState(reloadDashboardDataState);
-  const setUserData = useSetRecoilState(userDataState);
-  const setSidebarItems = useSetRecoilState(sidebarItemState);
-  const setHomepageItems = useSetRecoilState(homepageItemState);
+
+  const [authList, setAuthList] = useRecoilState(authListState);
+  const [userData, setUserData] = useRecoilState(userDataState);
+  const [sidebarItems, setSidebarItems] = useRecoilState(sidebarItemState);
+  const [homepageItems, setHomepageItems] = useRecoilState(homepageItemState);
+  const [iconPacks, setIconPacks] = useRecoilState(iconPackState);
   const setColorTheme = useSetRecoilState(colorThemeState);
-  const setIconPacks = useSetRecoilState(iconPackState);
+  const setHostMode = useSetRecoilState(isHostModeState);
+
+  const isDataMissing = !authList?.length ||
+    !userData ||
+    !sidebarItems?.length ||
+    !homepageItems?.length ||
+    !iconPacks?.length;
 
   useEffect(() => {
-    if (reloadData && loginData?.token) {
+    if ((reloadData || isDataMissing) && loginData?.token) {
       setLoading(true);
 
       ApiService.get("/api/v1/dashboard", loginData ? loginData?.token : null, navigate)
         .then(data => {
-          setAuthListState(data?.message?.authenticators);
+          setAuthList(data?.message?.authenticators);
           setUserData(data?.message?.userData);
           setSidebarItems(data?.message?.sidebarItems);
           setHomepageItems(data?.message?.homepageItems);
           setIconPacks(data?.message?.iconPacks);
+          setHostMode(data?.message?.isHostMode);
 
           const theme = data?.message?.userData?.colorTheme;
 
           setColorTheme(theme);
-
-          setReloadData(false); // Set reloadData back to false after data is fetched
         })
         .catch(error => {
           console.log(error);
-          makeToast("error", "Error loading data...");
+          if (!error.handled) makeToast("error", "Error loading data...");
         })
         .finally(() => {
           setLoading(false);
           setReloadData(false);
         });
     }
-  }, [loginData, reloadData, navigate, setLoading, setAuthListState, setUserData, setSidebarItems,
-    setHomepageItems, setColorTheme, setReloadData, setIconPacks]);
+  }, [loginData, reloadData, navigate, setLoading, setAuthList, setUserData, setSidebarItems,
+    setHomepageItems, setColorTheme, setReloadData, setIconPacks, setHostMode, isDataMissing]);
 
   return loginData?.token ? <Outlet /> : <Navigate to="/login" />;
 };

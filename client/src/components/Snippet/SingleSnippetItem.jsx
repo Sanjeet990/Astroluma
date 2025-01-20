@@ -10,8 +10,11 @@ import { motion } from "framer-motion";
 import makeToast from "../../utils/ToastUtils";
 import PropTypes from "prop-types";
 import emitter, { RELOAD_CODE_SNIPPET } from "../../events";
+import { useNavigate } from "react-router-dom";
 
 const SingleSnippetItem = ({ snippet }) => {
+
+    const navigate = useNavigate();
 
     const loginData = useRecoilValue(loginState);
     const setLoading = useSetRecoilState(contentLoadingState);
@@ -21,16 +24,16 @@ const SingleSnippetItem = ({ snippet }) => {
 
     const reloadCodeSnippets = useCallback(() => {
         setLoading(true);
-        ApiService.get(`/api/v1/snippet/list/${snippet?._id}`, loginData?.token)
+        ApiService.get(`/api/v1/snippet/list/${snippet?._id}`, loginData?.token, navigate)
             .then(data => {
                 setFileList(data.message.snippetItems);
             })
-            .catch(() => {
-                makeToast("error", "Can not load data.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Can not load data.");
             }).finally(() => {
                 setLoading(false);
             });
-    }, [snippet, loginData, setLoading]);
+    }, [snippet, loginData, setLoading, navigate]);
 
     useEffect(() => {
         emitter.on(RELOAD_CODE_SNIPPET, reloadCodeSnippets);

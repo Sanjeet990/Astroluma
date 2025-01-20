@@ -66,7 +66,7 @@ const SingleTotpItem = (props) => {
     }
 
     const decideTheIcon = useCallback(() => {
-        const iconObject = props.item?.listingIconItem;
+        const iconObject = props.item?.serviceIcon;
 
         if (themeType === "dark" && iconObject?.iconUrlLight) {
             return iconObject?.iconUrlLight;
@@ -74,7 +74,7 @@ const SingleTotpItem = (props) => {
             return iconObject?.iconUrl;
         }
 
-    }, [props.item?.listingIconItem, themeType]);
+    }, [props.item?.serviceIcon, themeType]);
 
     return (
         <motion.div

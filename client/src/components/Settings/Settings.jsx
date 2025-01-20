@@ -1,16 +1,17 @@
 import React, { useCallback, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
-import { userDataState } from '../../atoms';
+import { isHostModeState, userDataState } from '../../atoms';
 import WelcomeUser from '../Misc/WelcomeUser';
 import { Helmet } from 'react-helmet';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import SingleSettingsItem from './SingleSettingsItem';
 import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdContactSupport } from "react-icons/md";
-import { FaCloudSunRain, FaTshirt, FaHome, FaIcons } from "react-icons/fa";
+import { FaCloudSunRain, FaTshirt, FaHome, FaIcons, FaUserCircle, FaCoffee } from "react-icons/fa";
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import { BsAppIndicator } from "react-icons/bs";
 import { useNavigate } from 'react-router-dom';
+import { CONSTANTS } from '../../utils/Constants';
 
 const Settings = () => {
 
@@ -18,6 +19,8 @@ const Settings = () => {
 
     const userData = useRecoilValue(userDataState);
     const setActiveRoute = useCurrentRoute();
+
+    const isHostMode = useRecoilValue(isHostModeState);
 
     useDynamicFilter(false);
 
@@ -95,7 +98,7 @@ const Settings = () => {
             title: 'Network Devices',
             description: 'Manage network devices and their settings',
             icon: <MdOutlineImportantDevices />,
-            show: userData?.networkdevices,
+            show: (userData?.networkdevices && isHostMode),
             route: '/manage/networkdevices'
         },
         {
@@ -119,16 +122,32 @@ const Settings = () => {
             title: 'User Account',
             description: 'Manage account settings and preferences',
             icon: <MdFace />,
-            show: true,
+            show: userData?.isSuperAdmin,
             route: '/manage/accounts'
         },
         {
             id: 13,
+            title: 'My Profile',
+            description: 'Manage own profile settings and preferences',
+            icon: <FaUserCircle />,
+            show: true,
+            route: '/manage/profile'
+        },
+        {
+            id: 14,
             title: 'Support',
             description: 'Get help and support related to Astroluma',
             icon: <MdContactSupport />,
             show: true,
             route: 'https://getastroluma.com/contact'
+        },
+        {
+            id: 15,
+            title: 'Buy Me a Coffee',
+            description: 'Support the developer by buying a coffee',
+            icon: <FaCoffee />,
+            show: true,
+            route: CONSTANTS.BuyMeACoffee
         },
     ]
 

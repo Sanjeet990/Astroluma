@@ -29,7 +29,7 @@ const ViewPage = () => {
     useEffect(() => {
         if (pageId) {
             setLoading(true);
-            ApiService.get(`/api/v1/page/info/${pageId}/active`, loginData?.token)
+            ApiService.get(`/api/v1/page/info/${pageId}/active`, loginData?.token, navigate)
                 .then(data => {
                     if (data?.message) {
                         setPageTitle(data?.message?.pageTitle);
@@ -39,8 +39,8 @@ const ViewPage = () => {
                         setPageContent("");
                     }
                 })
-                .catch(() => {
-                    navigate("/");
+                .catch((error) => {
+                    if (!error.handled) navigate("/");
                 }).finally(() => {
                     setLoading(false);
                 });

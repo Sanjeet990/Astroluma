@@ -1,16 +1,20 @@
 import React from 'react';
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { deleteIntegrationModalState, deletedIntegrationState, loadingState, loginState } from '../../atoms';
+import { removeInstalledIntegrationModalState, loadingState, loginState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
 import NiceButton from '../NiceViews/NiceButton';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
+import emitter, { RELOAD_INSTALLED_APPS } from '../../events';
 
-const DeleteIntegrationModal = () => {
-  const [modalState, setModalState] = useRecoilState(deleteIntegrationModalState);
+
+const RemoveInstalledIntegration = () => {
+  const navigate = useNavigate();
+
+  const [modalState, setModalState] = useRecoilState(removeInstalledIntegrationModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
-  const setDeletedIntegration = useSetRecoilState(deletedIntegrationState);
 
   const closeModal = () => {
     setModalState({ ...modalState, isOpen: false });
@@ -19,14 +23,15 @@ const DeleteIntegrationModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/app/remove/${modalState.data?._id}`, loginData?.token)
+    ApiService.get(`/api/v1/app/${modalState.data?.app.appId}/delete`, loginData?.token, navigate)
       .then(() => {
-        makeToast("success", "Integration removed successfully.");
-        setDeletedIntegration(modalState.data);
+        makeToast("success", "Integration removed.");
+        //setDeletedSnippet(modalState.data?.snippetItem);
+        emitter.emit(RELOAD_INSTALLED_APPS)
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", "Cannot remove integration. Please try later.");
+      .catch((error) => {
+        if (!error.handled) makeToast("error", "Integration cannot be remove.");
       })
       .finally(() => {
         setLoading(false);
@@ -36,8 +41,8 @@ const DeleteIntegrationModal = () => {
   return (
     <NiceModal
       show={modalState.isOpen}
-      title="Delete confirm"
-      body={<p>Are you sure you want to remove this integration? This is a permanent action and cannot be undone.</p>}
+      title="Remove confirm"
+      body={<p>Are you sure you want to remove this integration?</p>}
       footer={
         <>
           <NiceButton
@@ -53,7 +58,8 @@ const DeleteIntegrationModal = () => {
         </>
       } />
   );
+  
 }
 
-const MemoizedComponent = React.memo(DeleteIntegrationModal);
+const MemoizedComponent = React.memo(RemoveInstalledIntegration);
 export default MemoizedComponent;

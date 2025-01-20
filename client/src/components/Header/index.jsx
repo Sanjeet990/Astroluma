@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import DropdownUser from './DropdownUser';
 import { IoHomeSharp, IoQrCode } from "react-icons/io5";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
-import { authenticatorPanelState, filterQueryState, isFilterVisibleState, userDataState } from '../../atoms';
+import { authenticatorPanelState, filterQueryState, isFilterVisibleState, isHostModeState, userDataState } from '../../atoms';
 import { motion } from 'framer-motion';
 import { FaRegListAlt } from "react-icons/fa";
 import { MdOutlineImportantDevices, MdSmartDisplay } from "react-icons/md";
@@ -15,6 +15,9 @@ const Header = (props) => {
 
   const isFilterVisible = useRecoilValue(isFilterVisibleState);
   const setDebouncedFilterValue = useSetRecoilState(filterQueryState);
+
+  const isHostMode = useRecoilValue(isHostModeState);
+
   const [filterValue, setFilterValue] = useState("");
 
   const [showAuthenticator, setShowAuthenticator] = useRecoilState(authenticatorPanelState);
@@ -179,7 +182,7 @@ const Header = (props) => {
               </motion.div>
             }
             {
-              userData?.networkdevices && <motion.div
+              (userData?.networkdevices && isHostMode) && <motion.div
                 className="cursor-pointer text-headerText hover:text-headerHoverText"
                 onClick={openDevices}
                 whileTap={{ scale: 0.95 }}

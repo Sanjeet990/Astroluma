@@ -1,24 +1,32 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { motion } from 'framer-motion';
 import { BsAppIndicator } from "react-icons/bs";
 import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdDashboardCustomize, MdContactSupport } from "react-icons/md";
-import { FaGlobeAsia, FaRegListAlt, FaHome, FaCloudSunRain, FaTshirt, FaIcons } from "react-icons/fa";
+import { FaGlobeAsia, FaRegListAlt, FaHome, FaCloudSunRain, FaTshirt, FaIcons, FaUserCircle } from "react-icons/fa";
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import SidebarButtonItem from './SidebarButtonItem';
 import SidebarLinkItem from './SidebarLinkItem';
 import { isLocal } from '../../utils/Helper';
 import PropTypes from 'prop-types';
-import { activeRouteState, authenticatorPanelState, sidebarItemState, userDataState, sidebarExpandedState } from '../../atoms';
+import { activeRouteState, authenticatorPanelState, sidebarItemState, userDataState, sidebarExpandedState, isHostModeState, colorThemeState } from '../../atoms';
 import packageJson from '../../../package.json';
 import BuyMeACoffee from '../BuyMeACoffee';
+import SystemThemes from '../../utils/SystemThemes';
+import ImageView from '../Misc/ImageView';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const sidebarItems = useRecoilValue(sidebarItemState);
   const userData = useRecoilValue(userDataState);
+
+  const colorTheme = useRecoilValue(colorThemeState);
+  const [themeType, setThemeType] = useState("light");
+
   const activeRoute = useRecoilValue(activeRouteState);
   const [showAuthenticator, setShowAuthenticator] = useRecoilState(authenticatorPanelState);
+
+  const isHostMode = useRecoilValue(isHostModeState);
 
   const location = useLocation();
   const { pathname } = location;
@@ -31,6 +39,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const [sidebarExpanded] = useState(
     storedSidebarExpanded === null ? false : storedSidebarExpanded === 'true'
   );
+
+  useEffect(() => {
+    const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
+    setThemeType(newThemeType);
+  }, [colorTheme]);
+
 
   // close on click outside
   useEffect(() => {
@@ -85,6 +99,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     return url;
   }
 
+  const decideTheIcon = useCallback(() => {
+    const iconObject = userData?.siteLogo;
+    if (themeType === "dark" && iconObject?.iconUrlLight) {
+      return iconObject?.iconUrlLight;
+    } else {
+      return iconObject?.iconUrl;
+    }
+  }, [userData, themeType]);
+
   const openAuthenticator = () => {
     setShowAuthenticator(!showAuthenticator);
   }
@@ -99,11 +122,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
         <motion.div whileHover={{ scale: 1.05 }}>
           <Link to="/" className="flex flex-col items-center">
-            <div className="flex items-start">
-              <img width="32" src='/astroluma.svg' alt="Logo" className="mr-2 mt-1" />
-              <div className="flex flex-col items-left">
+            <div className="flex items-center">
+              <div className="h-10 w-10">
+                <ImageView src={decideTheIcon()} alt="Logo" className="h-12 w-12 rounded-full" />
+              </div>
+              <div className="flex flex-col items-left ml-2">
                 <span className='text-2xl Orbitron'>{userData?.siteName || "Astroluma"}</span>
-                <span className="text-xxs">Powered by Astroluma v{packageJson.version}</span>
+                {!userData?.hideBranding && <span className="text-xxs">Powered by Astroluma v{packageJson.version}</span>}
               </div>
             </div>
           </Link>
@@ -154,15 +179,21 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   :
                   <>
                     <SidebarLinkItem
+                      icon={<FaHome />}
+                      active={activeRoute === '/'}
+                      text="Site Front"
+                      to="/" />
+
+                    <SidebarLinkItem
                       icon={<MdDashboardCustomize />}
                       active={activeRoute === '/manage'}
-                      text="Dashboard"
+                      text="Settings Home"
                       to="/manage" />
 
                     <SidebarLinkItem
                       icon={<IoSettingsSharp />}
                       active={activeRoute === '/manage/general'}
-                      text="General Settings"
+                      text="General"
                       to="/manage/general" />
 
                     <SidebarLinkItem
@@ -204,7 +235,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     }
 
                     {
-                      userData?.networkdevices && <SidebarLinkItem
+                      (userData?.networkdevices && isHostMode) && <SidebarLinkItem
                         icon={<MdOutlineImportantDevices />}
                         text="Network Devices"
                         active={activeRoute === '/manage/networkdevices'}
@@ -225,11 +256,19 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                       active={activeRoute === '/manage/apps'}
                       to="/manage/apps" />
 
+                    {
+                      userData?.isSuperAdmin && <SidebarLinkItem
+                        icon={<MdFace />}
+                        text="User Accounts"
+                        active={activeRoute === '/manage/accounts'}
+                        to="/manage/accounts" />
+                    }
+
                     <SidebarLinkItem
-                      icon={<MdFace />}
-                      text="User Accounts"
-                      active={activeRoute === '/manage/accounts'}
-                      to="/manage/accounts" />
+                      icon={<FaUserCircle />}
+                      text="My Profile"
+                      active={activeRoute === '/manage/profile'}
+                      to="/manage/profile" />
 
                     <SidebarLinkItem
                       icon={<MdContactSupport />}
@@ -262,8 +301,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   }
 
                   {
-                    userData?.networkdevices && <SidebarLinkItem
-                      icon={<IoQrCode />}
+                    (userData?.networkdevices && isHostMode) && <SidebarLinkItem
+                      icon={<MdOutlineImportantDevices />}
                       active={pathname === '/networkdevices'}
                       text="Network Devices"
                       to="/networkdevices" />

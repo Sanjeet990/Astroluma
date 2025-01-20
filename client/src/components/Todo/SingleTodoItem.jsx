@@ -6,6 +6,7 @@ import { deletedTodoState, editedTodoState, loadingState, loginState, newDeleteM
 import ApiService from '../../utils/ApiService';
 import { motion } from 'framer-motion';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const todoShape = PropTypes.shape({
     _id: PropTypes.string.isRequired,
@@ -19,6 +20,8 @@ const todoShape = PropTypes.shape({
 });
 
 const SingleTodoItem = ({ listingId, todo }) => {
+    const navigate = useNavigate();
+
     const setLoading = useSetRecoilState(loadingState);
     const loginData = useRecoilValue(loginState);
     const [todoItem, setTodoItem] = useState(todo);
@@ -45,13 +48,13 @@ const SingleTodoItem = ({ listingId, todo }) => {
 
     const manageCompleted = () => {
         setLoading(true);
-        ApiService.get(`/api/v1/todo/completion/${todo?._id}`, loginData?.token)
+        ApiService.get(`/api/v1/todo/completion/${todo?._id}`, loginData?.token, navigate)
             .then(data => {
                 setTodoItem(data?.message);
                 makeToast("success", "Status changed successfully.");
             })
-            .catch(() => {
-                makeToast("Error", "Can not change status.");
+            .catch((error) => {
+                if (!error.handled) makeToast("Error", "Can not change status.");
             })
             .finally(() => {
                 setLoading(false);

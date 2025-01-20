@@ -7,6 +7,13 @@
     "autoRefreshAfterSeconds": 60,
     "config": [
         {
+            "name": "overrideurl",
+            "label": "Portainer URL",
+            "type": "string",
+            "required": false,
+            "placeholder": "If different from the Link URL, enter URL"
+        },
+        {
             "name": "username",
             "label": "Username",
             "type": "string",

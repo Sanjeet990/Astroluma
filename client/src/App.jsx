@@ -3,6 +3,7 @@ import { useRecoilValue } from 'recoil';
 import { colorThemeState } from './atoms';
 import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import "react-toastify/dist/ReactToastify.css";
+import 'react-modern-drawer/dist/index.css'
 import { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import { Helmet } from "react-helmet"
@@ -18,14 +19,15 @@ import EditLink from './components/Listing/EditLink';
 import CategoryListing from './components/Listing/CategoryListing';
 import TodoListing from './components/Todo/TodoListing';
 import EditTodo from './components/Todo/EditTodo';
-import AppListing from './components/Integration/AppListing';
 import InstalledApps from './components/Integration/InstalledApps';
+import InstallApps from './components/Integration/InstallApps';
 import EditStream from './components/Listing/EditStream';
 import StreamListing from './components/Listing/StreamListing';
 import WakeListings from './components/Networkdevice/WakeListings';
 import EditDevice from './components/Networkdevice/EditDevice';
 import WakeFrontListing from './components/Networkdevice/WakeFrontListing';
 import NetworkError from './components/Misc/NetworkError';
+import DatabaseError from './components/Misc/DatabaseError';
 import ContentLoader from './components/Layout/ContentLoader';
 import AccountList from './components/Accounts/AccountList';
 import EditUser from './components/Accounts/EditUser';
@@ -45,6 +47,7 @@ import IconPacks from './components/IconPacks/index';
 import AddIconPack from './components/IconPacks/AddIconPack';
 
 import SystemThemes from './utils/SystemThemes';
+import UserProfile from './components/Accounts/UserProfile';
 
 const App = () => {
   const [themeType, setThemeType] = useState("dark");
@@ -79,7 +82,7 @@ const App = () => {
     <Loader>
       <ToastContainer style={{ zIndex: 100000 }} theme={themeType} />
 
-      <ImageSelectorModal title="Select icon" />
+      <ImageSelectorModal />
 
       <BrowserRouter
         future={{
@@ -115,7 +118,7 @@ const App = () => {
                             <Route key={Math.random()} path="/networkdevices" element={<WakeFrontListing />} />
                             <Route key={Math.random()} path="/manage" element={<Settings />} />
                             <Route key={Math.random()} path="/manage/apps" element={<InstalledApps />} />
-                            <Route key={Math.random()} path="/manage/apps/all" element={<AppListing />} />
+                            <Route key={Math.random()} path="/manage/apps/install" element={<InstallApps />} />
                             <Route key={Math.random()} path="/manage/listing" element={<Listings type="listing" />} />
                             <Route key={Math.random()} path="/manage/streaming" element={<Listings type="streaming" />} />
                             <Route key={Math.random()} path="/manage/listing/save/folder" element={<EditFolder />} />
@@ -140,6 +143,7 @@ const App = () => {
                             <Route key={Math.random()} path="/manage/networkdevices" element={<WakeListings />} />
                             <Route key={Math.random()} path="/manage/networkdevices/save" element={<EditDevice />} />
                             <Route key={Math.random()} path="/manage/networkdevices/save/:deviceId" element={<EditDevice />} />
+                            <Route key={Math.random()} path="/manage/profile" element={<UserProfile />} />
                             <Route key={Math.random()} path="/manage/accounts" element={<AccountList />} />
                             <Route key={Math.random()} path="/manage/accounts/add" element={<EditUser />} />
                             <Route key={Math.random()} path="/manage/accounts/:userId" element={<EditUser />} />
@@ -165,6 +169,7 @@ const App = () => {
               <Route path="/client-error" element={<ClientError />} />
               <Route path="/server-error" element={<NotFound />} />
               <Route path="/network-error" element={<NetworkError />} />
+              <Route path="/database-error" element={<DatabaseError />} />
             </Routes>
           </div>
         </div>

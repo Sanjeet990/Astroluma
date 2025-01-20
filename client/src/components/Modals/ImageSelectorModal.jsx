@@ -3,11 +3,11 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { iconPackState, imageModalState, selectedImageState } from '../../atoms';
 import NiceModal from '../NiceViews/NiceModal';
 import NiceTab from '../NiceViews/NiceTab';
-import PropTypes from 'prop-types';
 import MyIconsSection from '../Icons/MyIconsSection';
 import CustomIconPack from '../Icons/CustomIconPack';
+import { BrowserRouter } from 'react-router-dom';
 
-const ImageSelectorModal = ({ title }) => {
+const ImageSelectorModal = () => {
   const [modalState, setModalState] = useRecoilState(imageModalState);
   const [tabConfig, setTabConfig] = useState([]);
 
@@ -22,11 +22,11 @@ const ImageSelectorModal = ({ title }) => {
   }, [modalState.isOpen]);
 
   useEffect(() => {
-    const tempItemArray = allIconPacks.map(pack => ({
+    const tempItemArray = allIconPacks?.map(pack => ({
       name: pack.iconProvider,
       label: pack.iconName
     }));
-    tempItemArray.unshift({ name: 'com.astroluma.self', label: 'My Icons' });
+    tempItemArray?.unshift({ name: 'com.astroluma.self', label: 'My Icons' });
     setTabConfig(tempItemArray);
   }, [allIconPacks]);
 
@@ -35,7 +35,7 @@ const ImageSelectorModal = ({ title }) => {
   };
 
   const handleSelectImage = (image) => {
-    setSelectedImage(image);
+    setSelectedImage({image, data: modalState?.data});
     closeModal();
   };
 
@@ -45,7 +45,7 @@ const ImageSelectorModal = ({ title }) => {
 
   return (
     <NiceModal
-      title={title || "Select Image"}
+      title={modalState?.title || "Select Icon"}
       show={modalState.isOpen}
       closeModal={closeModal}
       body={
@@ -54,10 +54,10 @@ const ImageSelectorModal = ({ title }) => {
 
           <div className="mt-4">
             {
-              activeTab === "com.astroluma.self" && <MyIconsSection onSelectImage={handleSelectImage} />
+              activeTab === "com.astroluma.self" && <BrowserRouter><MyIconsSection onSelectImage={handleSelectImage} /></BrowserRouter>
             }
             {
-              allIconPacks.map(iconPack => (
+              allIconPacks?.map(iconPack => (
                 iconPack.iconProvider === activeTab && (
                   <CustomIconPack key={iconPack.iconProvider} iconPack={iconPack} onSelectImage={handleSelectImage} />
                 )
@@ -68,10 +68,6 @@ const ImageSelectorModal = ({ title }) => {
       }
     />
   );
-};
-
-ImageSelectorModal.propTypes = {
-  title: PropTypes.string
 };
 
 export default React.memo(ImageSelectorModal);

@@ -77,11 +77,11 @@ const SingleListing = ({ item, deleteListing, id }) => {
     }, [item._id, item.listingType]);
 
     const decideTheIcon = useCallback(() => {
-        const iconObject = item?.listingIconItem;
+        const iconObject = item?.listingIcon;
         return (themeType === "dark" && iconObject?.iconUrlLight)
             ? iconObject.iconUrlLight
             : iconObject?.iconUrl;
-    }, [item?.listingIconItem, themeType]);
+    }, [item?.listingIcon, themeType]);
 
     const getDefaultIcon = useCallback(() => {
         return LISTING_TYPES[item.listingType]?.defaultIcon || LISTING_TYPES.link.defaultIcon;
@@ -247,10 +247,7 @@ SingleListing.propTypes = {
         listingType: PropTypes.string.isRequired,
         listingName: PropTypes.string.isRequired,
         onFeatured: PropTypes.bool,
-        listingIconItem: PropTypes.shape({
-            iconUrl: PropTypes.string,
-            iconUrlLight: PropTypes.string,
-        })
+        listingIcon: PropTypes.object,
     }).isRequired,
     deleteListing: PropTypes.func.isRequired,
     id: PropTypes.string.isRequired

@@ -1,21 +1,7 @@
-'use strict';
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
-
-// Helper function to process listingIcon
-function addListingIconItem(doc) {
-  if (!doc) return;
-
-  if (typeof doc.serviceIcon === 'string') {
-    doc.listingIconItem = {
-      iconUrl: doc.deviceIcon,
-      iconUrlLight: null,
-      iconProvider: 'com.astroluma.self',
-    };
-  } else {
-    doc.listingIconItem = doc.serviceIcon;
-  }
-}
+const CryptoJS = require('crypto-js');
+const { getSecretKey } = require('../utils/apiutils');
 
 const authenticatorSchema = new Schema({
   serviceName: {
@@ -34,6 +20,28 @@ const authenticatorSchema = new Schema({
   secretKey: {
     type: String,
     required: true,
+    get: function(encryptedValue) {
+      
+      if (!encryptedValue) {
+        return null;
+      }
+
+      try {
+        // Try direct decryption
+        const bytes = CryptoJS.AES.decrypt(encryptedValue, getSecretKey());
+        
+        const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+        
+        if (!decrypted) {
+          //console.log('Decryption resulted in empty string');
+          return encryptedValue; // Return original if decryption gives empty string
+        }
+        
+        return decrypted;
+      } catch (error) {
+        return encryptedValue; // Return original value if decryption fails
+      }
+    }
   },
   sortOrder: {
     type: Number,
@@ -47,38 +55,8 @@ const authenticatorSchema = new Schema({
   }
 }, {
   timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
-
-
-// Virtual for listingIconItem
-authenticatorSchema.virtual('listingIconItem').get(function () {
-  if (typeof this.serviceIcon === 'string') {
-    return {
-      iconId: this.serviceIcon,
-      iconUrl: this.serviceIcon,
-      iconUrlLight: null,
-      iconProvider: 'com.astroluma.self',
-    };
-  }
-  return this.serviceIcon;
-});
-
-// Post-find middleware
-authenticatorSchema.post(['find', 'findOne', 'findById'], function (docs, next) {
-  // Handle single document
-  if (!Array.isArray(docs)) {
-    addListingIconItem(docs);
-    return next();
-  }
-
-  // Handle array of documents
-  docs.forEach(doc => {
-    addListingIconItem(doc);
-  });
-
-  next();
+  toJSON: { getters: true },
+  toObject: { getters: true }
 });
 
 const Authenticator = mongoose.model('Authenticator', authenticatorSchema);

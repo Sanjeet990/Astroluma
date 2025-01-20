@@ -46,7 +46,7 @@ const OtpComponent = () => {
             document.body.removeChild(textArea);
         }
 
-    }, [otp, otpGenerated]);
+    }, [otp, otpGenerated, isSecure]);
 
     useEffect(() => {
         const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
@@ -69,7 +69,7 @@ const OtpComponent = () => {
     }, [selectedService]);
 
     const decideTheIcon = useCallback((service) => {
-        const iconObject = service?.listingIconItem;
+        const iconObject = service?.serviceIcon;
 
         if (themeType === "dark" && iconObject?.iconUrlLight) {
             return iconObject?.iconUrlLight;
@@ -126,7 +126,7 @@ const OtpComponent = () => {
 
             {otpGenerated && (
                 <div className="absolute bottom-0 left-0 w-full">
-                    <div className="text-xs text-center mb-2 text-authpanelOtpColor/50">
+                    <div className="text-xs text-center mb-2 text-authPanelSingleItemSubText/50">
                         Pro Tip : Double-click to copy OTP
                     </div>
                     <div 

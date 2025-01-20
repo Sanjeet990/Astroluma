@@ -64,13 +64,13 @@ const SingleListingInFront = (props) => {
     }
 
     const decideTheIcon = useCallback(() => {
-        const iconObject = props.item?.listingIconItem;
+        const iconObject = props.item?.listingIcon;
         if (themeType === "dark" && iconObject?.iconUrlLight) {
             return iconObject?.iconUrlLight;
         } else {
             return iconObject?.iconUrl;
         }
-    }, [props.item?.listingIconItem, themeType]);
+    }, [props.item?.listingIcon, themeType]);
 
     const copyLinkTextToClipboard = (e) => {
         e.preventDefault();
@@ -114,7 +114,7 @@ const SingleListingInFront = (props) => {
         const fetchData = () => {
             //console.log("Running Integration: ", props?.item?.integration);
             if (props.item.integration) {
-                ApiService.get(`/api/v1/app/run/${props?.item?.integration?._id}/${props.item._id}`, loginData?.token)
+                ApiService.get(`/api/v1/app/run/${props.item._id}/${props?.item?.integration?._id}`, loginData?.token)
                     .then(data => {
                         setHtmlData(data?.html);
                         setFullHtmlData(data?.fullHtml);

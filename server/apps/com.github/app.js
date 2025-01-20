@@ -1,4 +1,3 @@
-const axios = require('axios');
 const moment = require('moment');
 
 const extractRepoInfo = (url) => {
@@ -12,22 +11,52 @@ const extractRepoInfo = (url) => {
     };
 }
 
+const connectionTest = async (testerInstance) => {
+    //implementa a connection tester logic
+    try {
+        const connectionUrl = testerInstance?.appUrl; 
+        const {username, password} = testerInstance?.config;
+
+        if (!connectionUrl || !username || !password) {
+            return testerInstance.connectionFailed("GitHub link or username or password is missing.");
+        }
+
+        const { owner, repo } = extractRepoInfo(connectionUrl);
+
+        const apiUrl = `https://api.github.com/repos/${owner}/${repo}/pulls`;
+        
+        await testerInstance?.axios.get(apiUrl, {
+            auth: {
+                username,
+                password,
+            },
+            params: {
+                state: 'open',
+            },
+        });
+
+        await testerInstance.connectionSuccess();
+    } catch (error) {
+        await testerInstance.connectionFailed(error);
+    }
+}
+
 const initialize = async (application) => {
 
     const {username, password} = application.config;
-    
-    const listingUrl = application?.payload?.listingUrl || application?.payload?.localUrl;
+
+    const listingUrl = application?.appUrl;
 
     if(!username || !password || !listingUrl) {
-        return await application.sendError(400, 'Please provide all the required configuration parameters');
+        await application.sendError('Please provide all the required configuration parameters');
     }
 
     try {
         const { owner, repo } = extractRepoInfo(listingUrl);
 
         const apiUrl = `https://api.github.com/repos/${owner}/${repo}/pulls`;
-
-        const response = await axios.get(apiUrl, {
+        
+        const response = await application?.axios.get(apiUrl, {
             auth: {
                 username,
                 password,
@@ -64,8 +93,10 @@ const initialize = async (application) => {
         await application.sendResponse('response.tpl', 200, variables);
 
     } catch (error) {
-        await application.sendError(400, 'Error in fetching data from GitHub.');
+        //console.log(error);
+        await application.sendError(error);
     }
 }
 
 global.initialize = initialize;
+global.connectionTest = connectionTest;

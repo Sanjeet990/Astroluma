@@ -14,8 +14,11 @@ import SingleIconPackItem from './SingleIconPackItem';
 import NoListing from '../Misc/NoListing';
 import makeToast from '../../utils/ToastUtils';
 import NiceLink from '../NiceViews/NiceLink';
+import { useNavigate } from 'react-router-dom';
 
 const IconPacks = () => {
+  const navigate = useNavigate();
+
   useDynamicFilter(false);
   useCurrentRoute("/manage/iconpack");
 
@@ -27,17 +30,17 @@ const IconPacks = () => {
 
   const fetchIconPacks = useCallback(() => {
     setLoading(true);
-    ApiService.get("/api/v1/iconpack/list", loginData?.token)
+    ApiService.get("/api/v1/iconpack/list", loginData?.token, navigate)
       .then((response) => {
         setAllIconPacks(() => response?.message);
         setIconPackState(() => response?.message);
       })
       .catch((error) => {
-        makeToast("error", error?.response?.data?.message);
+        if (!error.handled) makeToast("error", error?.response?.data?.message);
       }).finally(() => {
         setLoading(false);
       });
-  }, [loginData, setLoading, setIconPackState]);
+  }, [loginData, setLoading, setIconPackState, navigate]);
 
   useEffect(() => {
     fetchIconPacks();

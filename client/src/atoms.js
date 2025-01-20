@@ -130,27 +130,6 @@ export const addedTodoState = atom({
   default: null,
 });
 
-export const integrationInstallModalState = atom({
-  key: 'integrationInstallModalState',
-  default: {
-    isOpen: false,
-    data: null,
-  },
-});
-
-export const deleteIntegrationModalState = atom({
-  key: 'deleteIntegrationModalState',
-  default: {
-    isOpen: false,
-    data: null,
-  },
-});
-
-export const deletedIntegrationState = atom({
-  key: 'deletedIntegrationState',
-  default: null,
-});
-
 export const activeRouteState = atom({
   key: 'activeRouteState',
   default: "/",
@@ -314,4 +293,33 @@ export const quickPreviewStreamState = atom({
       };
     },
   ],
+});
+
+export const isHostModeState = atom({
+  key: 'isHostModeState',
+  default: false,
+  effects_UNSTABLE: [persistAtom]
+});
+
+export const removeBrandingModalState = atom({
+  key: 'removeBrandingModalState',
+  default: {
+    isOpen: false
+  },
+});
+
+export const removeInstalledIntegrationModalState = atom({
+  key: 'removeInstalledIntegrationModalState',
+  default: {
+    isOpen: false,
+    data: null,
+  },
+});
+
+export const integrationConfigureModalState = atom({
+  key: 'integrationConfigureModalState',
+  default: {
+    isOpen: false,
+    data: null,
+  },
 });

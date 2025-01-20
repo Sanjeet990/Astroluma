@@ -73,7 +73,7 @@ const SingleDeviceItemFront = (props) => {
 
 
     const decideTheIcon = useCallback(() => {
-        const iconObject = props.item?.listingIconItem;
+        const iconObject = props.item?.deviceIcon;
 
         if (themeType === "dark" && iconObject?.iconUrlLight) {
             return iconObject?.iconUrlLight;
@@ -81,7 +81,7 @@ const SingleDeviceItemFront = (props) => {
             return iconObject?.iconUrl;
         }
 
-    }, [props.item?.listingIconItem, themeType]);
+    }, [props.item?.deviceIcon, themeType]);
 
     return (
         <div

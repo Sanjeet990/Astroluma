@@ -6,8 +6,11 @@ import NiceButton from '../NiceViews/NiceButton';
 import NiceInput from '../NiceViews/NiceInput';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const UpdatePasswordModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(changePasswordModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
@@ -16,6 +19,8 @@ const UpdatePasswordModal = () => {
   const [repeatPassword, setRepeatPassword] = useState();
 
   const closeModal = () => {
+    setPassword("");
+    setRepeatPassword("");
     setModalState({ ...modalState, isOpen: false });
   };
 
@@ -33,13 +38,14 @@ const UpdatePasswordModal = () => {
 
     setLoading(true);
 
-    ApiService.post(`/api/v1/accounts/password/${modalState.data?.userId}`, { password }, loginData?.token)
+    ApiService.post(`/api/v1/accounts/password/${modalState.data?.userId}`, { password }, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Password changed.");
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", "Password can not be changed.");
+      .catch((error) => {
+        console.log(error);
+        if (!error.handled) makeToast("error", "Password can not be changed.");
       })
       .finally(() => {
         setLoading(false);

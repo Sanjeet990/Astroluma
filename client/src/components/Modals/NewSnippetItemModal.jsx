@@ -7,8 +7,11 @@ import NiceButton from '../NiceViews/NiceButton';
 import NiceInput from '../NiceViews/NiceInput';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const NewSnippetItemModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(newSnippetModalState);
   const loginData = useRecoilValue(loginState);
   const [snippetTitle, setSnippetTitle] = useState('');
@@ -54,7 +57,7 @@ const NewSnippetItemModal = () => {
       language
     };
 
-    ApiService.post('/api/v1/snippet/item', newSnippetItem, loginData?.token)
+    ApiService.post('/api/v1/snippet/item', newSnippetItem, loginData?.token, navigate)
       .then(data => {
         makeToast("success", 'Snippet item saved.');
         setSnippetCode('');
@@ -63,8 +66,8 @@ const NewSnippetItemModal = () => {
         savedSnippet({ snippet: data.message, action: modalState.data?.snippetItem ? 'edit' : 'add' });
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", 'Can not save snippet item.');
+      .catch((error) => {
+        if (!error.handled) makeToast("error", 'Can not save snippet item.');
       })
       .finally(() => {
         setLoading(false);

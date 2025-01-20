@@ -43,15 +43,15 @@ const AddIconPack = () => {
 
         //send data to save
         setLoading(true);
-        ApiService.post("/api/v1/iconpack/add", { iconpackUrl }, loginData?.token)
+        ApiService.post("/api/v1/iconpack/add", { iconpackUrl }, loginData?.token, navigate)
             .then(() => {
                 makeToast("success", "Icon pack added successfully.");
                 setIconpackUrl('');
                 setReloadData(true);
                 navigate("/manage/iconpack");
             })
-            .catch((e) => {
-                makeToast("error", e.response?.data?.message || "Failed to add icon pack");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", error.response?.data?.message || "Failed to add icon pack");
             }).finally(() => {
                 setLoading(false);
             });

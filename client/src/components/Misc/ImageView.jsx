@@ -11,6 +11,7 @@ const ImageView = ({
   parent = 'images'
 }) => {
 
+
   const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
 
   // Enhanced image source resolution logic with fallbacks
@@ -32,16 +33,26 @@ const ImageView = ({
     const specialCases = {
       'authenticator': '/otp.png',
       'astroluma': '/astroluma.svg',
+      'link': '/link.png',
+      'folder': '/folder.png',
+      'todo': '/todo.png',
+      'snippet': '/snippet.png',
+      'camera': '/cctv.png',
+      'device': '/computer.png',
       '/default.png': '/default.png',
-      '/astroluma.svg': '/astroluma.svg'
+      '/astroluma.svg': '/astroluma.svg',
+      'defaultuser': '/avatar.png'
     };
 
     if (specialCases[sourceToUse]) {
       return specialCases[sourceToUse];
     }
 
-    // Default local image path construction
-    return `${baseUrl}/${parent}/${sourceToUse}`;
+    if (parent) {
+      return `${baseUrl}/${parent}/${sourceToUse}`;
+    } else {
+      return `${baseUrl}/${sourceToUse}`;
+    }
   }, [src, defaultSrc, errorSrc, baseUrl, parent]);
 
   // Initialize with the primary source
@@ -51,6 +62,7 @@ const ImageView = ({
     let isMounted = true;
 
     const loadImage = async () => {
+
       if (!imageSrc) {
         return;
       }

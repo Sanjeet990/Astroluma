@@ -33,8 +33,15 @@ class ApiService {
       return response.data;
     } catch (error) {
       console.error('GET Request Error:', error);
-      handleApiError(error, navigate);
-      throw error;
+
+      const ishandling = decideHandle(error);
+      if (ishandling) {
+        handleApiError(error, navigate);
+      }
+      throw {
+        ...error,
+        handled: ishandling ? true : false,
+      }
     }
   }
 
@@ -55,9 +62,16 @@ class ApiService {
       const response = await axiosInstance.post(url, data, { headers });
       return response.data;
     } catch (error) {
-      console.error('POST Request Error:', error);
-      handleApiError(error, navigate);
-      throw error;
+      console.error('POST Request Error:', error, navigate);
+
+      const ishandling = decideHandle(error);
+      if (ishandling) {
+        handleApiError(error, navigate);
+      }
+      throw {
+        ...error,
+        handled: ishandling ? true : false,
+      }
     }
   }
 
@@ -82,8 +96,15 @@ class ApiService {
       return response.data;
     } catch (error) {
       console.error('POST FormData Request Error:', error);
-      handleApiError(error, navigate);
-      throw error;
+
+      const ishandling = decideHandle(error);
+      if (ishandling) {
+        handleApiError(error, navigate);
+      }
+      throw {
+        ...error,
+        handled: ishandling ? true : false,
+      }
     }
   }
 
@@ -107,10 +128,37 @@ class ApiService {
       return imageUrl;
     } catch (error) {
       console.error('GET Request Error:', error);
-      handleApiError(error, navigate);
-      throw error;
+
+      const ishandling = decideHandle(error);
+      if (ishandling) {
+        handleApiError(error, navigate);
+      }
+      throw {
+        ...error,
+        handled: ishandling ? true : false,
+      }
     }
   }
+}
+
+const isDatabaseError = (error) => {
+  const dbStatus = error.response?.headers['x-database-status'];
+  return error.response?.status === 500 && dbStatus === 'NOT_CONNECTED';
+};
+
+const decideHandle = (error) => {
+  const statusCode = error.response?.status;
+  if (error.code === 'ERR_NETWORK') {
+    return true;
+  } else {
+    if (statusCode === 401 || statusCode === 403) {
+      return true;
+    }
+    else if (isDatabaseError(error)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 // Helper function to handle API errors and navigate
@@ -122,7 +170,10 @@ const handleApiError = (error, navigate) => {
       if (!navigate) makeToast("error", 'Server is unavailable. Please try again later.');
       else navigate('/network-error');
     }
-    throw error;
+    throw {
+      ...error,
+      handled: false,
+    };
   } else {
 
     const statusCode = error.response?.status;
@@ -135,8 +186,12 @@ const handleApiError = (error, navigate) => {
         navigate('/client-error');
       }
     } else if (statusCode >= 500 && statusCode < 600 && navigate) {
-      // Server error (5xx)
-      navigate('/server-error');
+      if (isDatabaseError(error)) {
+        navigate('/database-error');
+      } else {
+        // Server error (5xx)
+        navigate('/server-error');
+      }
     } else {
       if (navigate) navigate('/network-error');
     }

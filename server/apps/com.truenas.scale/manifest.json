@@ -1,0 +1,24 @@
+{
+    "appName": "TrueNas Scale",
+    "appId": "com.truenas.scale",
+    "appIcon": "logo.png",
+    "description": "",
+    "autoRefreshAfterSeconds": 300,
+    "alwaysShowDetailedView": true,
+    "config": [
+        {
+            "name": "appurl",
+            "label": "App Url",
+            "type": "string",
+            "required": false,
+            "placeholder": "Enter TrueNas Scale URL"
+        },
+        {
+            "name": "apiKey",
+            "label": "API Key",
+            "type": "password",
+            "required": true,
+            "placeholder": "Enter TrueNas Scale API Key"
+        }
+    ]
+}

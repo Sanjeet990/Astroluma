@@ -5,8 +5,11 @@ import ApiService from '../../utils/ApiService';
 import NiceButton from '../NiceViews/NiceButton';
 import SystemThemes from '../../utils/SystemThemes';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const ThemeSettings = () => {
+
+    const navigate = useNavigate();
 
     const setLoading = useSetRecoilState(loadingState);
     const loginData = useRecoilValue(loginState);
@@ -35,13 +38,13 @@ const ThemeSettings = () => {
 
         //send data to save
         setLoading(true);
-        ApiService.post("/api/v1/settings/theme", { colorTheme: currentTheme }, loginData?.token)
+        ApiService.post("/api/v1/settings/theme", { colorTheme: currentTheme }, loginData?.token, navigate)
             .then(() => {
                 makeToast("success", "Theme saved successfully.");
                 //setReloadData(true);
             })
-            .catch(() => {
-                makeToast("error", "Theme could not be saved.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Theme could not be saved.");
             }).finally(() => {
                 setLoading(false);
             });

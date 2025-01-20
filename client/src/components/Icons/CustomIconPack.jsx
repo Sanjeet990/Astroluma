@@ -55,8 +55,8 @@ const CustomIconPack = ({ onSelectImage, iconPack }) => {
                 const initialIcons = data.iconData.slice(0, ITEMS_PER_PAGE);
                 setDisplayedIcons(initialIcons);
             })
-            .catch(() => {
-                makeToast("error", "Error loading data...");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Error loading data...");
             }).finally(() => {
                 setIsLoading(false);
             });

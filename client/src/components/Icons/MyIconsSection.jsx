@@ -9,8 +9,11 @@ import NiceButton from '../NiceViews/NiceButton';
 import NiceLoader from '../NiceViews/NiceLoader';
 import makeToast from '../../utils/ToastUtils';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
 
 const MyIconsSection = ({ onSelectImage }) => {
+    const navigate = useNavigate();
+
     const [isUploading, setIsUploading] = useState(false);
     const [isDataLoading, setIsDataLoading] = useState(false);
     const [hasMoreItems, setHasMoreItems] = useState(true);
@@ -31,18 +34,20 @@ const MyIconsSection = ({ onSelectImage }) => {
         const formData = new FormData();
         formData.append('icon', iconFile);
 
-        try {
-            await ApiService.postWithFormData('/api/v1/images/upload', formData, loginData?.token);
-            makeToast("success", "File uploaded.");
-            setPage(1);
-            setImageList([]);
-            setHasMoreItems(true);
-            fetchImages();
-        } catch {
-            makeToast("error", "Cannot upload file.");
-        } finally {
-            setIsUploading(false);
-        }
+        ApiService.postWithFormData('/api/v1/images/upload', formData, loginData?.token, navigate)
+            .then(() => {
+                makeToast("success", "File uploaded.");
+                setPage(1);
+                setImageList([]);
+                setHasMoreItems(true);
+                fetchImages();
+            })
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Cannot upload file.");
+            }).finally(() => {
+                setIsUploading(false);
+            });
+
     };
 
     const handleIconUpload = (file) => {
@@ -57,25 +62,29 @@ const MyIconsSection = ({ onSelectImage }) => {
         if (!loginData?.token) return;
 
         setIsDataLoading(true);
-        try {
-            const { data } = await ApiService.get(`/api/v1/images?page=${page}`, loginData.token);
-            if (data.length === 0) {
-                setHasMoreItems(false);
-                return;
-            }
 
-            setImageList(prev => {
-                const newImages = data.filter(newImg =>
-                    !prev.some(existingImg => existingImg._id === newImg._id)
-                );
-                return [...prev, ...newImages];
+        ApiService.get(`/api/v1/images?page=${page}`, loginData?.token, navigate)
+            .then((response) => {
+                const data = response?.data;
+                if (data.length === 0) {
+                    setHasMoreItems(false);
+                    return;
+                }
+    
+                setImageList(prev => {
+                    const newImages = data.filter(newImg =>
+                        !prev.some(existingImg => existingImg._id === newImg._id)
+                    );
+                    return [...prev, ...newImages];
+                });
+            })
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Cannot load images.");
+            }).finally(() => {
+                setIsDataLoading(false);
             });
-        } catch {
-            makeToast("error", "Cannot load images.");
-        } finally {
-            setIsDataLoading(false);
-        }
-    }, [page, loginData?.token]);
+
+    }, [page, loginData?.token, navigate]);
 
     useEffect(() => {
         fetchImages();
@@ -115,6 +124,7 @@ const MyIconsSection = ({ onSelectImage }) => {
             makeToast("error", "No valid icon format available");
         }
     };
+
 
     const renderImageGrid = () => (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 overflow-auto max-h-64 place-items-center">

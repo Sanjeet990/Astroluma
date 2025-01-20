@@ -29,11 +29,14 @@
     "react-drag-drop-files": "^2.4.0",
     "react-helmet": "^6.1.0",
     "react-icons": "^5.1.0",
+    "react-modern-drawer": "^1.4.0",
     "react-router-dom": "^6.23.0",
+    "react-select": "^5.9.0",
     "react-syntax-highlighter": "^15.5.0",
     "react-toastify": "^10.0.5",
     "recoil": "^0.7.7",
     "recoil-persist": "^5.1.0",
+    "semver": "^7.6.3",
     "totp-generator": "^1.0.0"
   },
   "devDependencies": {

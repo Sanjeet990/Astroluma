@@ -41,31 +41,44 @@ const EditFolder = () => {
 
     //fetch details of the folder by listingId
     useEffect(() => {
+        setSelectedImage({
+            image: {
+                iconUrl: "folder",
+                iconUrlLight: null,
+                iconProvider: 'com.astroluma.self'
+            }
+        });
         setLoading(true);
-        ApiService.get(`/api/v1/listing/folder/${listingId}`, loginData?.token)
+        ApiService.get(`/api/v1/listing/folder/${listingId}`, loginData?.token, navigate)
             .then(data => {
                 if (data?.message?.listing) {
                     setFolderName(data?.message?.listing?.listingName);
                     setShowInSidebar(data?.message?.listing?.inSidebar);
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
-                    if (data?.message?.listing?.listingIconItem) {
-                        setSelectedImage(data?.message?.listing?.listingIconItem );
+                    if (data?.message?.listing?.listingIcon) {
+                        setSelectedImage({ image: data?.message?.listing?.listingIcon });
                     }
 
                     if (data?.message?.listing?.listingType !== "category") {
                         navigate("/manage/listing");
                     }
                 } else {
-                    setSelectedImage(null);
+                    setSelectedImage({
+                        image: {
+                            iconUrl: "folder",
+                            iconUrlLight: null,
+                            iconProvider: 'com.astroluma.self'
+                        }
+                    });
                     setFolderName("");
                     setShowInSidebar(false);
                     setShowOnFeatured(false);
                     setFolderReloadStatus(true);
                 }
             })
-            .catch(() => {
-                makeToast("error", "Failed to fetch folder details.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to fetch folder details.");
             }).finally(() => {
                 setLoading(false);
             });
@@ -73,16 +86,20 @@ const EditFolder = () => {
 
     const handleFormSubmit = () => {
 
-
-        if (!folderName || !selectedImage) {
+        if (!folderName) {
             makeToast("warning", "Please fill all the fields");
+            return;
+        }
+
+        if (!selectedImage?.image) {
+            makeToast("warning", "You must have to select an icon");
             return;
         }
 
         //Call the API to store the data
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/folder', { listingId, parentId, folderName, folderIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/folder', { listingId, parentId, folderName, folderIcon: selectedImage?.image, showInSidebar, showOnFeatured }, loginData?.token, navigate)
             .then(() => {
                 setSelectedImage(null);
                 setFolderName("");
@@ -93,8 +110,8 @@ const EditFolder = () => {
                 makeToast("success", "Folder saved.");
                 navigate(-1);
             })
-            .catch(() => {
-                makeToast("error", "Failed to save folder.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to save folder.");
             }).finally(() => {
                 setLoading(false);
             });
@@ -121,7 +138,7 @@ const EditFolder = () => {
                         />
                         <NiceUploader
                             label="Folder Icon"
-                            selectedImage={selectedImage}
+                            selectedImage={selectedImage?.image}
                             placeholder="Select or upload icon"
                         />
                         {

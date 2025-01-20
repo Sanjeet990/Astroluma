@@ -5,10 +5,10 @@ exports.saveTotp = async (req, res) => {
     const { serviceIcon, serviceName, secret, accountName, authId } = req.body;
 
     // Do error handling
-    if (!serviceIcon || !serviceName || !accountName || !secret) {
+    if (!serviceIcon || !serviceName || !accountName || (!secret && !userId)) {
         return res.status(400).json({
             error: true,
-            message: "Service Icon, Service Name, Account Name, and Secret are required."
+            message: "Service Icon, Service Name, Account Name are required. Secret is required if userId is not present."
         });
     }
 
@@ -28,7 +28,7 @@ exports.saveTotp = async (req, res) => {
 
             authenticator.serviceIcon = serviceIcon;
             authenticator.serviceName = serviceName;
-            authenticator.secretKey = secret;
+            //authenticator.secretKey = secret; No need to update the secretKey
             authenticator.accountName = accountName;
 
             await authenticator.save();
@@ -140,6 +140,11 @@ exports.totpDetails = async (req, res) => {
                 _id: authId,
                 userId
             });
+
+            if (totpData) {
+                totpData.secretKey = "************************";
+            }
+            
         }
 
         return res.status(200).json({

@@ -42,8 +42,16 @@ const EditTodo = () => {
 
     //fetch details of the folder by listingId
     useEffect(() => {
+        setSelectedImage({
+            image: {
+                iconUrl: "todo",
+                iconUrlLight: null,
+                iconProvider: 'com.astroluma.self'
+            }
+        });
+
         setLoading(true);
-        ApiService.get(`/api/v1/listing/todo/${listingId}`, loginData?.token)
+        ApiService.get(`/api/v1/listing/todo/${listingId}`, loginData?.token, navigate)
             .then(data => {
                 if (data?.message?.listing) {
                     setTodoName(data?.message?.listing?.listingName);
@@ -51,22 +59,28 @@ const EditTodo = () => {
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
                     if (data?.message?.listing?.listingIcon) {
-                        setSelectedImage(data?.message?.listing?.listingIcon);
+                        setSelectedImage({ image: data?.message?.listing?.listingIcon });
                     }
 
                     if (data?.message?.listing?.listingType !== "todo") {
                         navigate("/manage/listing");
                     }
                 } else {
-                    setSelectedImage(null);
+                    setSelectedImage({
+                        image: {
+                            iconUrl: "todo",
+                            iconUrlLight: null,
+                            iconProvider: 'com.astroluma.self'
+                        }
+                    });
                     setTodoName("");
                     setShowInSidebar(false);
                     setShowOnFeatured(false);
                     setFolderReloadStatus(true);
                 }
             })
-            .catch(() => {
-                makeToast("error", "Can not fetch todo details. ");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Can not fetch todo details. ");
             }).finally(() => {
                 setLoading(false);
             });
@@ -74,13 +88,18 @@ const EditTodo = () => {
 
     const handleFormSubmit = () => {
 
-        if (!todoName || !selectedImage) {
+        if (!todoName) {
             makeToast("warning", "Please fill all the fields");
             return;
         }
 
+        if (!selectedImage?.image) {
+            makeToast("warning", "You must have to select an icon");
+            return;
+        }
+
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/todo', { listingId, parentId, todoName, todoIcon: selectedImage, showInSidebar, showOnFeatured }, loginData?.token)
+        ApiService.post('/api/v1/listing/save/todo', { listingId, parentId, todoName, todoIcon: selectedImage?.image, showInSidebar, showOnFeatured }, loginData?.token, navigate)
             .then(() => {
                 setSelectedImage(null);
                 setTodoName("");
@@ -91,8 +110,8 @@ const EditTodo = () => {
                 makeToast("success", "Todo saved.");
                 navigate(-1);
             })
-            .catch(() => {
-                makeToast("error", "Can not save todo. ");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Can not save todo. ");
             }).finally(() => {
                 setLoading(false);
             });
@@ -120,7 +139,7 @@ const EditTodo = () => {
                         <NiceUploader
                             label="Todo Icon"
                             placeholder='Select or upload icon'
-                            selectedImage={selectedImage}
+                            selectedImage={selectedImage?.image}
                         />
                         {
                             !parentId &&

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import { authenticatorPanelState, filterQueryState, selectedAuthState } from '../../atoms';
 import AuthenticatorSidebar from '../Authenticator/AuthenticatorSidebar';
 import { useLocation } from 'react-router-dom';
@@ -8,13 +8,14 @@ import Sidebar from '../Sidebar/index';
 import Header from '../Header/index';
 import PropTypes from 'prop-types';
 import { useBottomScrollListener } from 'react-bottom-scroll-listener';
+import Drawer from 'react-modern-drawer'
 import emitter, { PAGE_BOTTOM_EVENT } from '../../events';
 
 const Layout = ({ children }) => {
 
     // Mobile sidebar visibility state
     const [showSidebar, setShowSidebar] = useState(false);
-    const showAuthenticator = useRecoilValue(authenticatorPanelState);
+    const [showAuthenticator, setShowAuthenticator] = useRecoilState(authenticatorPanelState);
     const setSelectedService = useSetRecoilState(selectedAuthState);
     const setFilterQuery = useSetRecoilState(filterQueryState);
 
@@ -32,6 +33,10 @@ const Layout = ({ children }) => {
         emitter.emit(PAGE_BOTTOM_EVENT)
     });
 
+    const authPanelClosed = () => {
+        setShowAuthenticator(false);
+    }
+
     return (
         <>
             <Sidebar sidebarOpen={showSidebar} setSidebarOpen={setShowSidebar} />
@@ -43,9 +48,17 @@ const Layout = ({ children }) => {
                 </main>
             </div>
             <AnimatePresence>
-                {
-                    showAuthenticator && <AuthenticatorSidebar />
-                }
+                <Drawer
+                    open={showAuthenticator}
+                    onClose={authPanelClosed}
+                    size={360}
+                    zIndex={1100}
+                    lockBackgroundScroll={true}
+                    className='w-full md:w-96'
+                    direction='right'
+                >
+                    <AuthenticatorSidebar />
+                </Drawer>
             </AnimatePresence>
         </>
     )

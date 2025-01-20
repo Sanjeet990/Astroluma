@@ -7,8 +7,11 @@ import NiceCheckbox from '../NiceViews/NiceCheckbox';
 import NiceInput from '../NiceViews/NiceInput';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
+import { useNavigate } from 'react-router-dom';
 
 const NewTodoItemModal = () => {
+  const navigate = useNavigate();
+
   const [modalState, setModalState] = useRecoilState(newTodoModalState);
   const loginData = useRecoilValue(loginState);
   const [todoName, setTodoName] = useState('');
@@ -62,7 +65,7 @@ const NewTodoItemModal = () => {
       dueDate: enableDueDate ? dueDate : null,
     };
 
-    ApiService.post('/api/v1/todo/item', newTodoItem, loginData?.token)
+    ApiService.post('/api/v1/todo/item', newTodoItem, loginData?.token, navigate)
       .then(data => {
         makeToast("success", 'Todo item saved.');
         setTodoName('');
@@ -71,8 +74,8 @@ const NewTodoItemModal = () => {
         modalState.data?.todoItem ? setEditedTodo(data.message) : setAddedTodo(data.message);
         closeModal();
       })
-      .catch(() => {
-        makeToast("error", 'Can not save todo item.');
+      .catch((error) => {
+        if (!error.handled) makeToast("error", 'Can not save todo item.');
       })
       .finally(() => {
         setLoading(false);

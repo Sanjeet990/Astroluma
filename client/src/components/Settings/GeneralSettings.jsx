@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { loadingState, loginState, reloadDashboardDataState } from '../../atoms';
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
+import { isHostModeState, loadingState, loginState, reloadDashboardDataState, selectedImageState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
 import NiceButton from '../NiceViews/NiceButton';
@@ -8,17 +8,24 @@ import NiceInput from '../NiceViews/NiceInput';
 import NiceCheckbox from '../NiceViews/NiceCheckbox';
 import makeToast from '../../utils/ToastUtils';
 import NiceBack from '../NiceViews/NiceBack';
+import NicePreferenceHeader from '../NiceViews/NicePreferenceHeader';
 import { Helmet } from 'react-helmet';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
+import { useNavigate } from 'react-router-dom';
+import NiceUploader from '../NiceViews/NiceUploader';
 
 const GeneralSettings = () => {
+
+    const navigate = useNavigate();
 
     const setActiveRoute = useCurrentRoute();
 
     const setLoading = useSetRecoilState(loadingState);
     const loginData = useRecoilValue(loginState);
     const setReloadData = useSetRecoilState(reloadDashboardDataState);
+    const isHostMode = useRecoilValue(isHostModeState);
+    const [selectedImage, setSelectedImage] = useRecoilState(selectedImageState);
 
     const [siteName, setSiteName] = useState('');
     const [authenticator, setAuthenticator] = useState(false);
@@ -28,7 +35,7 @@ const GeneralSettings = () => {
     const [networkdevices, setNetworkdevices] = useState(false);
 
     useDynamicFilter(false);
-    
+
     useEffect(() => {
         setActiveRoute("/manage/general");
     }, [setActiveRoute]);
@@ -39,15 +46,20 @@ const GeneralSettings = () => {
             return makeToast("warning", "Site name is required");
         }
 
+        if (!selectedImage?.image) {
+            makeToast("warning", "You must have to select a site logo.");
+            return;
+        }
+
         //send data to save
         setLoading(true);
-        ApiService.post("/api/v1/settings", { siteName, authenticator, camerafeed, networkdevices, todolist, snippetmanager }, loginData?.token)
+        ApiService.post("/api/v1/settings", { siteName, siteLogo: selectedImage?.image, authenticator, camerafeed, networkdevices, todolist, snippetmanager }, loginData?.token, navigate)
             .then(() => {
                 makeToast("success", "Details saved successfully.");
                 setReloadData(true);
             })
-            .catch(() => {
-                makeToast("error", "Failed to save settings.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to save settings.");
             }).finally(() => {
                 setLoading(false);
             });
@@ -56,7 +68,7 @@ const GeneralSettings = () => {
     //fetch the settings to prefill in form
     useEffect(() => {
         setLoading(true);
-        ApiService.get("/api/v1/settings", loginData?.token)
+        ApiService.get("/api/v1/settings", loginData?.token, navigate)
             .then(data => {
                 setSiteName(data?.message?.siteName);
                 setAuthenticator(data?.message?.authenticator);
@@ -64,14 +76,17 @@ const GeneralSettings = () => {
                 setNetworkdevices(data?.message?.networkdevices);
                 setTodolist(data?.message?.todolist);
                 setSnippetManager(data?.message?.snippetmanager);
+
+                if (data?.message?.siteLogo) {
+                    setSelectedImage({ image: data?.message?.siteLogo });
+                }
             })
-            .catch(() => {
-                makeToast("error", "Failed to fetch settings.");
+            .catch((error) => {
+                if (!error.handled) makeToast("error", "Failed to fetch settings.");
             }).finally(() => {
                 setLoading(false);
             });
-    }, [loginData, setLoading]);
-
+    }, [loginData, setLoading, navigate]);
 
     return (
         <>
@@ -84,6 +99,10 @@ const GeneralSettings = () => {
             <div className="max-w-4xl mx-auto w-full">
                 <div className="card border bg-cardBg text-cardText border-cardBorder shadow-md rounded-xl px-8 pt-6 pb-8 mb-4">
                     <div className="mt-4">
+
+                        <NicePreferenceHeader
+                            title="Appearance" />
+
                         <NiceInput
                             label="Site Name"
                             value={siteName}
@@ -91,6 +110,15 @@ const GeneralSettings = () => {
                             onChange={(e) => setSiteName(e.target.value)}
                             placeholder="Enter site name"
                         />
+
+                        <NiceUploader
+                            label="Site Logo"
+                            selectedImage={selectedImage?.image}
+                            placeholder="Select or upload icon"
+                        />
+
+                        <NicePreferenceHeader
+                            title="Features" />
 
                         <NiceCheckbox
                             label="Enable Todo List"
@@ -113,6 +141,7 @@ const GeneralSettings = () => {
                         <NiceCheckbox
                             label='Enable Network Device Scanning'
                             checked={networkdevices}
+                            disabled={!isHostMode}
                             onChange={(e) => setNetworkdevices(e.target.checked)}
                         />
 
@@ -121,6 +150,7 @@ const GeneralSettings = () => {
                             checked={authenticator}
                             onChange={(e) => setAuthenticator(e.target.checked)}
                         />
+
                     </div>
                     <div className="flex justify-end mt-4">
                         <NiceBack />
