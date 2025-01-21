@@ -86,7 +86,7 @@ const GeneralSettings = () => {
             }).finally(() => {
                 setLoading(false);
             });
-    }, [loginData, setLoading, navigate]);
+    }, [loginData, setLoading, navigate, setSelectedImage]);
 
     return (
         <>

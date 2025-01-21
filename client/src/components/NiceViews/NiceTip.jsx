@@ -18,6 +18,7 @@ const NiceTip = ({ title, children }) => {
 }
 
 NiceTip.propTypes = {
+    title: PropTypes.string,
     children: PropTypes.node
 }
 

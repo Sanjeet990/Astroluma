@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { contentLoadingState, filterQueryState, loginState, reloadFolderListingState, userDataState } from '../../atoms';
+import { contentLoadingState, filterQueryState, loginState, reloadFolderListingState } from '../../atoms';
 import ApiService from '../../utils/ApiService';
 import SingleListingInFront from './SingleListingInFront';
 import { Helmet } from "react-helmet"
@@ -30,8 +30,6 @@ const CategoryListing = () => {
     const [loading, setLoading] = useRecoilState(contentLoadingState);
 
     const setActiveRoute = useCurrentRoute();
-
-    const userData = useRecoilValue(userDataState);
 
     const globalFilterQuery = useRecoilValue(filterQueryState);
 

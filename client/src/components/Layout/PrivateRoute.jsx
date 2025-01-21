@@ -11,6 +11,7 @@ import {
   loginState,
   reloadDashboardDataState,
   sidebarItemState,
+  siteDataLoadedState,
   userDataState
 } from '../../atoms';
 import ApiService from '../../utils/ApiService';
@@ -32,6 +33,7 @@ const PrivateRoute = () => {
   const [iconPacks, setIconPacks] = useRecoilState(iconPackState);
   const setColorTheme = useSetRecoilState(colorThemeState);
   const setHostMode = useSetRecoilState(isHostModeState);
+  const setDataLoaded = useSetRecoilState(siteDataLoadedState);
 
   const isDataMissing = !authList?.length ||
     !userData ||
@@ -41,6 +43,7 @@ const PrivateRoute = () => {
 
   useEffect(() => {
     if ((reloadData || isDataMissing) && loginData?.token) {
+      setDataLoaded(false);
       setLoading(true);
 
       ApiService.get("/api/v1/dashboard", loginData ? loginData?.token : null, navigate)
@@ -55,9 +58,9 @@ const PrivateRoute = () => {
           const theme = data?.message?.userData?.colorTheme;
 
           setColorTheme(theme);
+          setDataLoaded(true);
         })
         .catch(error => {
-          console.log(error);
           if (!error.handled) makeToast("error", "Error loading data...");
         })
         .finally(() => {
@@ -66,7 +69,7 @@ const PrivateRoute = () => {
         });
     }
   }, [loginData, reloadData, navigate, setLoading, setAuthList, setUserData, setSidebarItems,
-    setHomepageItems, setColorTheme, setReloadData, setIconPacks, setHostMode, isDataMissing]);
+    setHomepageItems, setColorTheme, setReloadData, setIconPacks, setHostMode, isDataMissing, setDataLoaded]);
 
   return loginData?.token ? <Outlet /> : <Navigate to="/login" />;
 };

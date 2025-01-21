@@ -4,6 +4,11 @@ import { atom } from 'recoil';
 import { recoilPersist } from 'recoil-persist';
 const { persistAtom } = recoilPersist();
 
+export const siteDataLoadedState = atom({
+  key: 'siteDataLoadedState',
+  default: false,
+});
+
 export const loadingState = atom({
   key: 'loadingState',
   default: false,
