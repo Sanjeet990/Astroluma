@@ -28,7 +28,8 @@ Astroluma is a feature-rich, productivity oriented, user-friendly dashboard desi
 
 ## Updates
 
-Astroluma v1.0.1 is released. Check the full changelog [here](https://github.com/Sanjeet990/Astroluma/releases/tag/v1.0.1)
+**Jan 21, 2025**
+- Astroluma v1.0.2 is released. Check the full changelog [here](https://github.com/Sanjeet990/Astroluma/releases)
 
 ## Features
 
