@@ -115,7 +115,7 @@ const AccountList = () => {
           setSelectedImage(null);
         });
     }
-  }, [loginData?.token, setLoading, navigate, selectedImage, isInitialMount, setSelectedImage]);
+  }, [loginData?.token, setLoading, navigate, selectedImage, isInitialMount, setSelectedImage, setReloadData, userData?._id]);
 
   const deleteUser = (userId) => {
     setUserDelete({ isOpen: true, data: { userId } });

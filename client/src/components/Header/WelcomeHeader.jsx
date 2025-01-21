@@ -1,7 +1,6 @@
 import React from 'react';
 import WelcomeUser from '../Misc/WelcomeUser';
 import WeatherWidget from './WeatherWidget';
-import PropTypes from 'prop-types';
 
 const WelcomeHeader = () => {
     return (

@@ -14,6 +14,36 @@ import useCurrentRoute from "../../hooks/useCurrentRoute";
 import UpdatePasswordModal from "../Modals/UpdatePasswordModal";
 import BrandingRemovalModal from "../Modals/BrandingRemovalModal";
 import { CONSTANTS } from "../../utils/Constants";
+import PropTypes from "prop-types";
+
+const ProfileItems = ({ title, subtitle, icon, onClick }) => {
+    return (
+        <div
+            className="rounded-lg shadow hover:shadow-md transition-shadow border border-cardBorder text-cardText"
+            onClick={onClick}
+        >
+            <button className="w-full p-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                        {icon}
+                        <div className="text-left">
+                            <h3 className="font-medium">{title}</h3>
+                            <p className="text-xxs">{subtitle}</p>
+                        </div>
+                    </div>
+                    <FaChevronRight className="h-5 w-5" />
+                </div>
+            </button>
+        </div>
+    );
+};
+
+ProfileItems.propTypes = {
+    title: PropTypes.string.isRequired,
+    subtitle: PropTypes.string.isRequired,
+    icon: PropTypes.node.isRequired,
+    onClick: PropTypes.func.isRequired
+};
 
 const UserProfile = () => {
 
@@ -62,7 +92,7 @@ const UserProfile = () => {
                     setSelectedImage(null);
                 });
         }
-    }, [loginData?.token, setLoading, navigate, selectedImage, isInitialMount, setSelectedImage]);
+    }, [loginData?.token, setLoading, navigate, selectedImage, isInitialMount, setSelectedImage, setReloadData]);
 
     const decideTheIcon = useCallback(() => {
         const iconObject = userData?.userAvatar;
@@ -85,28 +115,6 @@ const UserProfile = () => {
             }).finally(() => {
                 setLoading(false);
             });
-    }
-
-    const ProfileItems = ({ title, subtitle, icon, onClick }) => {
-        return (
-            <div
-                className="rounded-lg shadow hover:shadow-md transition-shadow border border-cardBorder text-cardText"
-                onClick={onClick}
-            >
-                <button className="w-full p-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                            {icon}
-                            <div className="text-left">
-                                <h3 className="font-medium">{title}</h3>
-                                <p className="text-xxs">{subtitle}</p>
-                            </div>
-                        </div>
-                        <FaChevronRight className="h-5 w-5" />
-                    </div>
-                </button>
-            </div>
-        );
     }
 
     const changeAvatar = () => {
