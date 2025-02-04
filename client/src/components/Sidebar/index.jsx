@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BsAppIndicator } from "react-icons/bs";
 import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdDashboardCustomize, MdContactSupport } from "react-icons/md";
 import { FaGlobeAsia, FaRegListAlt, FaHome, FaCloudSunRain, FaTshirt, FaIcons, FaUserCircle } from "react-icons/fa";
@@ -19,15 +19,11 @@ import ImageView from '../Misc/ImageView';
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const sidebarItems = useRecoilValue(sidebarItemState);
   const userData = useRecoilValue(userDataState);
-
   const siteDataLoaded = useRecoilValue(siteDataLoadedState);
-
   const colorTheme = useRecoilValue(colorThemeState);
   const [themeType, setThemeType] = useState("light");
-
   const activeRoute = useRecoilValue(activeRouteState);
   const [showAuthenticator, setShowAuthenticator] = useRecoilState(authenticatorPanelState);
-
   const isHostMode = useRecoilValue(isHostModeState);
 
   const location = useLocation();
@@ -46,7 +42,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
     setThemeType(newThemeType);
   }, [colorTheme]);
-
 
   // close on click outside
   useEffect(() => {
@@ -80,9 +75,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   }, [sidebarExpanded, setStoredSidebarExpanded]);
 
   const decideTheLink = (singleItem) => {
-    // Check the hostname
     const hostname = window.location.hostname;
-
     let url = singleItem.listingUrl;
 
     if (singleItem.listingType === "category") {
@@ -117,220 +110,218 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   return (
     <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-40 flex h-screen w-72.5 flex-col overflow-y-hidden bg-sidebarBg text-sidebarText lg:static lg:translate-x-0 drop-shadow-1 dark:drop-shadow-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:duration-0 duration-300 ease-linear`}
+      className={`absolute left-0 top-0 z-40 flex h-screen w-72.5 flex-col bg-sidebarBg text-sidebarText lg:static lg:translate-x-0 drop-shadow-1 dark:drop-shadow-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:duration-0 duration-300 ease-linear`}
     >
-
-      {
-        siteDataLoaded && <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
-            <div className="h-10">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Link to="/" className="flex flex-col items-center">
-                  <div className="flex items-center">
-                    <div className="h-10 w-10">
-                      <ImageView src={decideTheIcon()} alt="Logo" className="h-12 w-12 rounded-full" />
-                    </div>
-                    <div className="flex flex-col items-left ml-2">
-                      <span className='text-2xl Orbitron'>{userData?.siteName || "Astroluma"}</span>
-                      {!userData?.hideBranding && <span className="text-xxs">Powered by Astroluma v{packageJson.version}</span>}
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            </div>
-
-            <button
-              ref={trigger}
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              aria-controls="sidebar"
-              aria-expanded={sidebarOpen}
-              className="block lg:hidden"
+      {siteDataLoaded && (
+        <div className="flex flex-col h-full">
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+              className="flex-none"
             >
-              <svg
-                className="fill-current"
-                width="20"
-                height="18"
-                viewBox="0 0 20 18"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M19 8.175H2.98748L9.36248 1.6875C9.69998 1.35 9.69998 0.825 9.36248 0.4875C9.02498 0.15 8.49998 0.15 8.16248 0.4875L0.399976 8.3625C0.0624756 8.7 0.0624756 9.225 0.399976 9.5625L8.16248 17.4375C8.31248 17.5875 8.53748 17.7 8.76248 17.7C8.98748 17.7 9.17498 17.625 9.36248 17.475C9.69998 17.1375 9.69998 16.6125 9.36248 16.275L3.02498 9.8625H19C19.45 9.8625 19.825 9.4875 19.825 9.0375C19.825 8.55 19.45 8.175 19 8.175Z"
-                  fill=""
-                />
-              </svg>
-            </button>
-          </div>
+              <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
+                <div className="h-10">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Link to="/" className="flex flex-col items-center">
+                      <div className="flex items-center">
+                        <div className="h-10 w-10">
+                          <ImageView src={decideTheIcon()} alt="Logo" className="h-12 w-12 rounded-full" />
+                        </div>
+                        <div className="flex flex-col items-left ml-2">
+                          <span className='text-2xl Orbitron'>{userData?.siteName || "Astroluma"}</span>
+                          {!userData?.hideBranding && <span className="text-xxs">Powered by Astroluma v{packageJson.version}</span>}
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                </div>
 
-          <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
+                <button
+                  ref={trigger}
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  aria-controls="sidebar"
+                  aria-expanded={sidebarOpen}
+                  className="block lg:hidden"
+                >
+                  <svg
+                    className="fill-current"
+                    width="20"
+                    height="18"
+                    viewBox="0 0 20 18"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M19 8.175H2.98748L9.36248 1.6875C9.69998 1.35 9.69998 0.825 9.36248 0.4875C9.02498 0.15 8.49998 0.15 8.16248 0.4875L0.399976 8.3625C0.0624756 8.7 0.0624756 9.225 0.399976 9.5625L8.16248 17.4375C8.31248 17.5875 8.53748 17.7 8.76248 17.7C8.98748 17.7 9.17498 17.625 9.36248 17.475C9.69998 17.1375 9.69998 16.6125 9.36248 16.275L3.02498 9.8625H19C19.45 9.8625 19.825 9.4875 19.825 9.0375C19.825 8.55 19.45 8.175 19 8.175Z"
+                      fill=""
+                    />
+                  </svg>
+                </button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="flex-1 overflow-y-auto no-scrollbar">
             <nav className="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
               <div>
-
                 <ul className="mb-6 flex flex-col gap-1.5">
-                  {
-                    !pathname.startsWith('/manage') ?
-                      sidebarItems?.map((singleItem) => {
-                        const route = decideTheLink(singleItem);
-                        const isActive = route === activeRoute ? true : false;
+                  {!pathname.startsWith('/manage') ?
+                    sidebarItems?.map((singleItem) => {
+                      const route = decideTheLink(singleItem);
+                      const isActive = route === activeRoute ? true : false;
+                      const icon = route === "/" ? <FaHome /> : <BsAppIndicator />;
+                      return <SidebarLinkItem
+                        key={singleItem?._id}
+                        active={isActive}
+                        icon={icon}
+                        text={singleItem?.listingName}
+                        to={route} />
+                    })
+                    :
+                    <>
+                      <SidebarLinkItem
+                        icon={<FaHome />}
+                        active={activeRoute === '/'}
+                        text="Site Front"
+                        to="/" />
 
-                        const icon = route === "/" ? <FaHome /> : <BsAppIndicator />;
-                        return <SidebarLinkItem
-                          key={singleItem?._id}
-                          active={isActive}
-                          icon={icon}
-                          text={singleItem?.listingName}
-                          to={route} />
-                      })
-                      :
-                      <>
+                      <SidebarLinkItem
+                        icon={<MdDashboardCustomize />}
+                        active={activeRoute === '/manage'}
+                        text="Settings Home"
+                        to="/manage" />
+
+                      <SidebarLinkItem
+                        icon={<IoSettingsSharp />}
+                        active={activeRoute === '/manage/general'}
+                        text="General"
+                        to="/manage/general" />
+
+                      <SidebarLinkItem
+                        icon={<MdListAlt />}
+                        active={activeRoute === '/manage/listing'}
+                        text="Listings"
+                        to="/manage/listing" />
+
+                      <SidebarLinkItem
+                        icon={<MdMenuBook />}
+                        text="Pages"
+                        active={activeRoute === '/manage/page'}
+                        to="/manage/page" />
+
+                      <SidebarLinkItem
+                        icon={<FaCloudSunRain />}
+                        text="Weather"
+                        active={activeRoute === '/manage/weather'}
+                        to="/manage/weather" />
+
+                      <SidebarLinkItem
+                        icon={<FaTshirt />}
+                        text="Themes"
+                        active={activeRoute === '/manage/theme'}
+                        to="/manage/theme" />
+
+                      <SidebarLinkItem
+                        icon={<FaIcons />}
+                        text="Icon Packs"
+                        active={activeRoute === '/manage/iconpack'}
+                        to="/manage/iconpack" />
+
+                      {userData?.camerafeed && 
                         <SidebarLinkItem
-                          icon={<FaHome />}
-                          active={activeRoute === '/'}
-                          text="Site Front"
-                          to="/" />
+                          icon={<MdSmartDisplay />}
+                          active={activeRoute === '/manage/streaming'}
+                          text="Stream Hub"
+                          to="/manage/streaming" />
+                      }
 
+                      {(userData?.networkdevices && isHostMode) && 
                         <SidebarLinkItem
-                          icon={<MdDashboardCustomize />}
-                          active={activeRoute === '/manage'}
-                          text="Settings Home"
-                          to="/manage" />
+                          icon={<MdOutlineImportantDevices />}
+                          text="Network Devices"
+                          active={activeRoute === '/manage/networkdevices'}
+                          to="/manage/networkdevices" />
+                      }
 
+                      {userData?.authenticator && 
                         <SidebarLinkItem
-                          icon={<IoSettingsSharp />}
-                          active={activeRoute === '/manage/general'}
-                          text="General"
-                          to="/manage/general" />
+                          icon={<IoQrCode />}
+                          text="TOTP Authenticator"
+                          active={activeRoute === '/manage/totp'}
+                          to="/manage/totp" />
+                      }
 
+                      <SidebarLinkItem
+                        icon={<BsAppIndicator />}
+                        text="App Integrations"
+                        active={activeRoute === '/manage/apps'}
+                        to="/manage/apps" />
+
+                      {userData?.isSuperAdmin && 
                         <SidebarLinkItem
-                          icon={<MdListAlt />}
-                          active={activeRoute === '/manage/listing'}
-                          text="Listings"
-                          to="/manage/listing" />
+                          icon={<MdFace />}
+                          text="User Accounts"
+                          active={activeRoute === '/manage/accounts'}
+                          to="/manage/accounts" />
+                      }
 
-                        <SidebarLinkItem
-                          icon={<MdMenuBook />}
-                          text="Pages"
-                          active={activeRoute === '/manage/page'}
-                          to="/manage/page" />
+                      <SidebarLinkItem
+                        icon={<FaUserCircle />}
+                        text="My Profile"
+                        active={activeRoute === '/manage/profile'}
+                        to="/manage/profile" />
 
-                        <SidebarLinkItem
-                          icon={<FaCloudSunRain />}
-                          text="Weather"
-                          active={activeRoute === '/manage/weather'}
-                          to="/manage/weather" />
-
-                        <SidebarLinkItem
-                          icon={<FaTshirt />}
-                          text="Themes"
-                          active={activeRoute === '/manage/theme'}
-                          to="/manage/theme" />
-
-                        <SidebarLinkItem
-                          icon={<FaIcons />}
-                          text="Icon Packs"
-                          active={activeRoute === '/manage/iconpack'}
-                          to="/manage/iconpack" />
-
-                        {
-                          userData?.camerafeed && <SidebarLinkItem
-                            icon={<MdSmartDisplay />}
-                            active={activeRoute === '/manage/streaming'}
-                            text="Stream Hub"
-                            to="/manage/streaming" />
-                        }
-
-                        {
-                          (userData?.networkdevices && isHostMode) && <SidebarLinkItem
-                            icon={<MdOutlineImportantDevices />}
-                            text="Network Devices"
-                            active={activeRoute === '/manage/networkdevices'}
-                            to="/manage/networkdevices" />
-                        }
-
-                        {
-                          userData?.authenticator && <SidebarLinkItem
-                            icon={<IoQrCode />}
-                            text="TOTP Authenticator"
-                            active={activeRoute === '/manage/totp'}
-                            to="/manage/totp" />
-                        }
-
-                        <SidebarLinkItem
-                          icon={<BsAppIndicator />}
-                          text="App Integrations"
-                          active={activeRoute === '/manage/apps'}
-                          to="/manage/apps" />
-
-                        {
-                          userData?.isSuperAdmin && <SidebarLinkItem
-                            icon={<MdFace />}
-                            text="User Accounts"
-                            active={activeRoute === '/manage/accounts'}
-                            to="/manage/accounts" />
-                        }
-
-                        <SidebarLinkItem
-                          icon={<FaUserCircle />}
-                          text="My Profile"
-                          active={activeRoute === '/manage/profile'}
-                          to="/manage/profile" />
-
-                        <SidebarLinkItem
-                          icon={<MdContactSupport />}
-                          text="Support"
-                          active={false}
-                          to="https://getastroluma.com/contact" />
-
-                      </>
+                      <SidebarLinkItem
+                        icon={<MdContactSupport />}
+                        text="Support"
+                        active={false}
+                        to="https://getastroluma.com/contact" />
+                    </>
                   }
                 </ul>
 
-                {
-                  !pathname.startsWith('/manage') && <>
+                {!pathname.startsWith('/manage') && 
+                  <>
                     <h3 className="mb-4 ml-4 text-sm">Features</h3>
-
                     <ul className="mb-6 flex flex-col gap-1.5">
-
                       <SidebarLinkItem
                         icon={<IoSettingsSharp />}
                         active={false}
                         text="Settings"
                         to="/manage" />
 
-                      {
-                        userData?.camerafeed && <SidebarLinkItem
+                      {userData?.camerafeed && 
+                        <SidebarLinkItem
                           icon={<MdSmartDisplay />}
                           active={pathname === '/streaming'}
                           text="Stream Hub"
                           to="/streaming" />
                       }
 
-                      {
-                        (userData?.networkdevices && isHostMode) && <SidebarLinkItem
+                      {(userData?.networkdevices && isHostMode) && 
+                        <SidebarLinkItem
                           icon={<MdOutlineImportantDevices />}
                           active={pathname === '/networkdevices'}
                           text="Network Devices"
                           to="/networkdevices" />
                       }
 
-                      {
-                        userData?.todolist && <SidebarLinkItem
+                      {userData?.todolist && 
+                        <SidebarLinkItem
                           icon={<FaRegListAlt />}
                           active={pathname === '/tasks'}
                           text="Tasks"
                           to="/tasks" />
                       }
 
-                      {
-                        activeRoute === '/page' && <SidebarButtonItem
+                      {activeRoute === '/page' && 
+                        <SidebarButtonItem
                           id="page"
                           icon={<FaGlobeAsia />}
                           active
@@ -338,8 +329,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         />
                       }
 
-                      {
-                        userData?.authenticator && <SidebarButtonItem
+                      {userData?.authenticator && 
+                        <SidebarButtonItem
                           id="btnAuth"
                           icon={<IoQrCode />}
                           active={pathname === '/authenticator'}
@@ -347,20 +338,20 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                           clickHandler={openAuthenticator}
                         />
                       }
-
                     </ul>
                   </>
                 }
               </div>
             </nav>
           </div>
-          {
-            pathname.startsWith('/manage') && <div className="mt-auto p-4 text-center text-xs">
+
+          {pathname.startsWith('/manage') && (
+            <div className="flex-none p-4 text-center text-xs">
               <BuyMeACoffee />
             </div>
-          }
-        </motion.div>
-      }
+          )}
+        </div>
+      )}
     </aside>
   );
 };
