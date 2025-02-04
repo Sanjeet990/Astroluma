@@ -91,6 +91,14 @@ const userSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  linksalwaysnewtab:{
+    type: Boolean,
+    default: false,
+  },
+  foldersalwaysnewtab:{
+    type: Boolean,
+    default: false,
+  }
 }, {
   timestamps: true,
 });
