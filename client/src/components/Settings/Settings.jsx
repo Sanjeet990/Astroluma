@@ -11,6 +11,7 @@ import { FaCloudSunRain, FaTshirt, FaHome, FaIcons, FaUserCircle, FaCoffee } fro
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import { BsAppIndicator } from "react-icons/bs";
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { CONSTANTS } from '../../utils/Constants';
 
 const Settings = () => {
@@ -173,8 +174,20 @@ const Settings = () => {
             <div className="w-full">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                     {
-                        SettingItems.map(item => (
-                            item.show && <SingleSettingsItem key={item.id} Setting={item} onSelect={manageSelection} />
+                        SettingItems.map((item, index) => (
+                            <motion.div
+                                layout
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3, delay: index * 0.05 }}
+                                key={item.id}
+                            >
+                                {
+                                    item.show &&
+                                    <SingleSettingsItem Setting={item} onSelect={manageSelection} />
+                                }
+                            </motion.div>
                         ))
                     }
                 </div>
