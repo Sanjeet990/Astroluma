@@ -7,7 +7,7 @@ import { ImNewTab } from "react-icons/im";
 import { Link } from 'react-router-dom';
 import ApiService from '../../utils/ApiService';
 import { useRecoilValue } from 'recoil';
-import { colorThemeState, loginState } from '../../atoms';
+import { colorThemeState, loginState, userDataState } from '../../atoms';
 import { motion, AnimatePresence } from 'framer-motion';
 import NiceButton from '../NiceViews/NiceButton';
 import { GrAppsRounded, GrClose } from "react-icons/gr";
@@ -31,6 +31,7 @@ const SingleListingInFront = (props) => {
     const [showAppsDataForSmallerScreen, setShowAppsDataForSmallerScreen] = useState(false);
 
     const loginData = useRecoilValue(loginState);
+    const userData = useRecoilValue(userDataState);
 
 
     const colorTheme = useRecoilValue(colorThemeState);
@@ -40,6 +41,11 @@ const SingleListingInFront = (props) => {
         const newThemeType = SystemThemes.find(theme => theme.value === colorTheme)?.type || "light";
         setThemeType(newThemeType);
     }, [colorTheme]);
+
+    const shouldShowNewTabIcon = !(
+        (props.item.listingType === "category" && userData.foldersalwaysnewtab) ||
+        (props.item.listingType === "link" && userData.linksalwaysnewtab)
+    );
 
     const decideTheLink = () => {
         // Check the hostname
@@ -61,6 +67,18 @@ const SingleListingInFront = (props) => {
             }
         }
         return url;
+    }
+
+    const handleCardClick = (e) => {
+        const shouldOpenInNewTab = (
+            (props.item.listingType === "category" && userData.foldersalwaysnewtab) ||
+            (props.item.listingType === "link" && userData.linksalwaysnewtab)
+        );
+    
+        if (shouldOpenInNewTab) {
+            e.preventDefault();
+            window.open(decideTheLink(), '_blank');
+        }
     }
 
     const decideTheIcon = useCallback(() => {
@@ -272,7 +290,7 @@ const SingleListingInFront = (props) => {
                                     />
                                 </motion.div>
                             ) :
-                                <Link to={decideTheLink()} className='absolute inset-0 flex flex-col items-center justify-center'>
+                                <Link to={decideTheLink()} onClick={handleCardClick} className='absolute inset-0 flex flex-col items-center justify-center'>
                                     <div className='p-8'>
                                         <ImageView alt="Link" src={decideTheIcon()} defaultSrc="/default.png" errorSrc="/default.png" width="80px" height="80px" />
                                     </div>
@@ -310,7 +328,7 @@ const SingleListingInFront = (props) => {
                         </span>
                     }
                     {
-                        (!showLinkCopy && !showAppsDataForSmallerScreen) && <span
+                        (!showLinkCopy && !showAppsDataForSmallerScreen && shouldShowNewTabIcon) && <span
                             role="button"
                             onClick={openThisLinkInNewTab}
                             className="cursor-pointer opacity-50 hover:opacity-100 text-itemCardIconColor hover:text-itemCardIconHoverColor transition-all duration-300"

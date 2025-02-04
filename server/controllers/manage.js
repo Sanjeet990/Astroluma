@@ -159,7 +159,7 @@ exports.saveSettings = async (req, res) => {
     const userId = req.user?._id;
 
     // Extract settings fields from the request body.
-    const { siteName, siteLogo, authenticator, camerafeed, networkdevices, todolist, snippetmanager } = req.body;
+    const { siteName, siteLogo, authenticator, camerafeed, networkdevices, todolist, snippetmanager, linksalwaysnewtab, foldersalwaysnewtab } = req.body;
 
     // Validate that the user ID exists.
     if (!userId) {
@@ -181,7 +181,7 @@ exports.saveSettings = async (req, res) => {
         // Update user settings in the database.
         await User.updateOne(
             { _id: userId },
-            { siteName, siteLogo, authenticator, camerafeed, networkdevices: networkdevices && isHostMode(), todolist, snippetmanager }
+            { siteName, siteLogo, authenticator, camerafeed, networkdevices: networkdevices && isHostMode(), todolist, snippetmanager, linksalwaysnewtab, foldersalwaysnewtab }
         );
 
         // Return a success response.
@@ -361,7 +361,9 @@ exports.getSetting = async (req, res) => {
                 networkdevices: user.networkdevices,
                 todolist: user.todolist,
                 snippetmanager: user.snippetmanager,
-                siteLogo: user.siteLogo
+                siteLogo: user.siteLogo,
+                linksalwaysnewtab: user.linksalwaysnewtab || false,
+                foldersalwaysnewtab: user.foldersalwaysnewtab || false
             }
         });
     } catch (err) {

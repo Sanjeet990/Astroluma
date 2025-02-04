@@ -31,6 +31,8 @@ const GeneralSettings = () => {
     const [authenticator, setAuthenticator] = useState(false);
     const [camerafeed, setCamerafeed] = useState(false);
     const [todolist, setTodolist] = useState(false);
+    const [linksalwaysnewtab, setLinksAlwaysNewTab] = useState(false);
+    const [foldersalwaysnewtab, setFoldersAlwaysNewTab] = useState(false);
     const [snippetmanager, setSnippetManager] = useState(false);
     const [networkdevices, setNetworkdevices] = useState(false);
 
@@ -53,7 +55,7 @@ const GeneralSettings = () => {
 
         //send data to save
         setLoading(true);
-        ApiService.post("/api/v1/settings", { siteName, siteLogo: selectedImage?.image, authenticator, camerafeed, networkdevices, todolist, snippetmanager }, loginData?.token, navigate)
+        ApiService.post("/api/v1/settings", { siteName, siteLogo: selectedImage?.image, authenticator, camerafeed, networkdevices, todolist, snippetmanager, linksalwaysnewtab, foldersalwaysnewtab }, loginData?.token, navigate)
             .then(() => {
                 makeToast("success", "Details saved successfully.");
                 setReloadData(true);
@@ -75,6 +77,8 @@ const GeneralSettings = () => {
                 setCamerafeed(data?.message?.camerafeed);
                 setNetworkdevices(data?.message?.networkdevices);
                 setTodolist(data?.message?.todolist);
+                setLinksAlwaysNewTab(data?.message?.linksalwaysnewtab);
+                setFoldersAlwaysNewTab(data?.message?.foldersalwaysnewtab);
                 setSnippetManager(data?.message?.snippetmanager);
 
                 if (data?.message?.siteLogo) {
@@ -149,6 +153,21 @@ const GeneralSettings = () => {
                             label="Enable TOTP Authenticator"
                             checked={authenticator}
                             onChange={(e) => setAuthenticator(e.target.checked)}
+                        />
+
+
+                        <NicePreferenceHeader
+                            title="Behaviour" />
+
+                        <NiceCheckbox
+                            label="Always open links in new tab"
+                            checked={linksalwaysnewtab}
+                            onChange={(e) => setLinksAlwaysNewTab(e.target.checked)}
+                        />
+                        <NiceCheckbox
+                            label="Always open folders in new tab"
+                            checked={foldersalwaysnewtab}
+                            onChange={(e) => setFoldersAlwaysNewTab(e.target.checked)}
                         />
 
                     </div>
