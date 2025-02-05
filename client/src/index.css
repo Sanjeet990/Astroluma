@@ -233,16 +233,6 @@ body {
   overflow-y: scroll;
 }
 
-/* Light mode scrollbars */
-*{
-  scrollbar-width: thin;
-  scrollbar-color: #888 #f1f1f1;
-}
-
-.dark *{
-  scrollbar-color: #585858 #1a1a1a;
-}
-
 @keyframes fadeYellowAmber {
   0%, 100% {
     background-color: hsl(31, 96%, 56%);
@@ -339,4 +329,39 @@ code {
   margin-left: 15px;
   font-size: 0.8rem;
   vertical-align: middle;
+}
+
+/* Firefox (uncomment to work in Firefox, although other properties will not work!)  */
+/** {
+  scrollbar-width: thin;
+  scrollbar-color: #397524 #DFE9EB;
+}*/
+
+/* Chrome, Edge and Safari */
+*::-webkit-scrollbar, .dark *::-webkit-scrollbar {
+  @apply h-1 w-2;
+}
+
+*::-webkit-scrollbar-track, .dark *::-webkit-scrollbar-track {
+  @apply bg-scrollbarTrackNormal;
+}
+
+*::-webkit-scrollbar-track:hover, .dark *::-webkit-scrollbar-track:hover {
+  @apply bg-scrollbarTrackHover;
+}
+
+*::-webkit-scrollbar-track:active, .dark *::-webkit-scrollbar-track:active {
+  @apply bg-scrollbarTrackActive;
+}
+
+*::-webkit-scrollbar-thumb, .dark *::-webkit-scrollbar-thumb {
+  @apply rounded bg-scrollbarThumbNormal;
+}
+
+*::-webkit-scrollbar-thumb:hover, .dark *::-webkit-scrollbar-thumb:hover {
+  @apply bg-scrollbarThumbHover;
+}
+
+*::-webkit-scrollbar-thumb:active, .dark *::-webkit-scrollbar-thumb:active {
+  @apply bg-scrollbarThumbActive;
 }
