@@ -136,7 +136,7 @@ const Settings = () => {
         },
         {
             id: 14,
-            title: 'Support',
+            title: 'Get Support',
             description: 'Get help and support related to Astroluma',
             icon: <MdContactSupport />,
             show: true,

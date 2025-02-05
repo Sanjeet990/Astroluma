@@ -4,7 +4,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BsAppIndicator } from "react-icons/bs";
 import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdDashboardCustomize, MdContactSupport } from "react-icons/md";
-import { FaGlobeAsia, FaRegListAlt, FaHome, FaCloudSunRain, FaTshirt, FaIcons, FaUserCircle } from "react-icons/fa";
+import { FaGlobeAsia, FaRegListAlt, FaHome, FaCloudSunRain, FaTshirt, FaIcons, FaUserCircle, FaCoffee } from "react-icons/fa";
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import SidebarButtonItem from './SidebarButtonItem';
 import SidebarLinkItem from './SidebarLinkItem';
@@ -12,9 +12,10 @@ import { isLocal } from '../../utils/Helper';
 import PropTypes from 'prop-types';
 import { activeRouteState, authenticatorPanelState, sidebarItemState, userDataState, sidebarExpandedState, isHostModeState, colorThemeState, siteDataLoadedState } from '../../atoms';
 import packageJson from '../../../package.json';
-import BuyMeACoffee from '../BuyMeACoffee';
 import SystemThemes from '../../utils/SystemThemes';
 import ImageView from '../Misc/ImageView';
+import SidebarItemHeader from './SidebarItemHeader';
+import { CONSTANTS } from '../../utils/Constants';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const sidebarItems = useRecoilValue(sidebarItemState);
@@ -120,27 +121,25 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="flex-none"
+              className="flex-none h-20"
             >
-              <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
-                <div className="h-10">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <Link to="/" className="flex flex-col items-center">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10">
-                          <ImageView src={decideTheIcon()} alt="Logo" className="h-12 w-12 rounded-full" />
-                        </div>
-                        <div className="flex flex-col items-left ml-2">
-                          <span className='text-2xl Orbitron'>{userData?.siteName || "Astroluma"}</span>
-                          {!userData?.hideBranding && <span className="text-xxs">Powered by Astroluma v{packageJson.version}</span>}
-                        </div>
+              <div className="h-20 flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Link to="/" className="flex flex-col items-center">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10">
+                        <ImageView src={decideTheIcon()} alt="Logo" className="h-12 w-12 rounded-full" />
                       </div>
-                    </Link>
-                  </motion.div>
-                </div>
+                      <div className="flex flex-col items-left ml-2">
+                        <span className='text-2xl Orbitron'>{userData?.siteName || "Astroluma"}</span>
+                        {!userData?.hideBranding && <span className="text-xxs">Powered by Astroluma v{packageJson.version}</span>}
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
 
                 <button
                   ref={trigger}
@@ -167,24 +166,28 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             </motion.div>
           </AnimatePresence>
 
-          <div className="flex-1 overflow-y-auto no-scrollbar">
-            <nav className="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
-              <div>
-                <ul className="mb-6 flex flex-col gap-1.5">
-                  {!pathname.startsWith('/manage') ?
-                    sidebarItems?.map((singleItem) => {
-                      const route = decideTheLink(singleItem);
-                      const isActive = route === activeRoute ? true : false;
-                      const icon = route === "/" ? <FaHome /> : <BsAppIndicator />;
-                      return <SidebarLinkItem
-                        key={singleItem?._id}
-                        active={isActive}
-                        icon={icon}
-                        text={singleItem?.listingName}
-                        to={route} />
-                    })
-                    :
-                    <>
+          <div className="flex-1 overflow-y-auto">
+            <nav className="mt-2 py-2 px-4 lg:mt-2 lg:px-2">
+              {
+                !pathname.startsWith('/manage') ?
+                  <ul className="mb-6 flex flex-col gap-1.5">
+                    {
+                      sidebarItems?.map((singleItem) => {
+                        const route = decideTheLink(singleItem);
+                        const isActive = route === activeRoute ? true : false;
+                        const icon = route === "/" ? <FaHome /> : <BsAppIndicator />;
+                        return <SidebarLinkItem
+                          key={singleItem?._id}
+                          active={isActive}
+                          icon={icon}
+                          text={singleItem?.listingName}
+                          to={route} />
+                      })
+                    }
+                  </ul>
+                  :
+                  <>
+                    <ul className="mb-3 flex flex-col gap-1.5">
                       <SidebarLinkItem
                         icon={<FaHome />}
                         active={activeRoute === '/'}
@@ -203,6 +206,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         text="General"
                         to="/manage/general" />
 
+                    </ul>
+
+                    <SidebarItemHeader title="Content" />
+
+                    <ul className="mb-3 flex flex-col gap-1.5">
                       <SidebarLinkItem
                         icon={<MdListAlt />}
                         active={activeRoute === '/manage/listing'}
@@ -221,6 +229,35 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         active={activeRoute === '/manage/weather'}
                         to="/manage/weather" />
 
+                      {userData?.camerafeed &&
+                        <SidebarLinkItem
+                          icon={<MdSmartDisplay />}
+                          active={activeRoute === '/manage/streaming'}
+                          text="Stream Hub"
+                          to="/manage/streaming" />
+                      }
+
+                      {(userData?.networkdevices && isHostMode) &&
+                        <SidebarLinkItem
+                          icon={<MdOutlineImportantDevices />}
+                          text="Network Devices"
+                          active={activeRoute === '/manage/networkdevices'}
+                          to="/manage/networkdevices" />
+                      }
+
+                      {userData?.authenticator &&
+                        <SidebarLinkItem
+                          icon={<IoQrCode />}
+                          text="TOTP Authenticator"
+                          active={activeRoute === '/manage/totp'}
+                          to="/manage/totp" />
+                      }
+
+                    </ul>
+
+                    <SidebarItemHeader title="Customization" />
+
+                    <ul className="mb-3 flex flex-col gap-1.5">
                       <SidebarLinkItem
                         icon={<FaTshirt />}
                         text="Themes"
@@ -232,38 +269,24 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         text="Icon Packs"
                         active={activeRoute === '/manage/iconpack'}
                         to="/manage/iconpack" />
+                    </ul>
 
-                      {userData?.camerafeed && 
-                        <SidebarLinkItem
-                          icon={<MdSmartDisplay />}
-                          active={activeRoute === '/manage/streaming'}
-                          text="Stream Hub"
-                          to="/manage/streaming" />
-                      }
+                    <SidebarItemHeader title="Utility" />
 
-                      {(userData?.networkdevices && isHostMode) && 
-                        <SidebarLinkItem
-                          icon={<MdOutlineImportantDevices />}
-                          text="Network Devices"
-                          active={activeRoute === '/manage/networkdevices'}
-                          to="/manage/networkdevices" />
-                      }
-
-                      {userData?.authenticator && 
-                        <SidebarLinkItem
-                          icon={<IoQrCode />}
-                          text="TOTP Authenticator"
-                          active={activeRoute === '/manage/totp'}
-                          to="/manage/totp" />
-                      }
-
+                    <ul className="mb-3 flex flex-col gap-1.5">
                       <SidebarLinkItem
                         icon={<BsAppIndicator />}
                         text="App Integrations"
                         active={activeRoute === '/manage/apps'}
                         to="/manage/apps" />
 
-                      {userData?.isSuperAdmin && 
+                    </ul>
+
+                    <SidebarItemHeader title="Account" />
+
+                    <ul className="mb-3 flex flex-col gap-1.5">
+
+                      {userData?.isSuperAdmin &&
                         <SidebarLinkItem
                           icon={<MdFace />}
                           text="User Accounts"
@@ -277,79 +300,84 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         active={activeRoute === '/manage/profile'}
                         to="/manage/profile" />
 
+                    </ul>
+
+                    <SidebarItemHeader title="Account" />
+
+                    <ul className="mb-3 flex flex-col gap-1.5">
+
                       <SidebarLinkItem
                         icon={<MdContactSupport />}
-                        text="Support"
+                        text="Get Support"
                         active={false}
                         to="https://getastroluma.com/contact" />
-                    </>
-                  }
-                </ul>
 
-                {!pathname.startsWith('/manage') && 
-                  <>
-                    <h3 className="mb-4 ml-4 text-sm">Features</h3>
-                    <ul className="mb-6 flex flex-col gap-1.5">
                       <SidebarLinkItem
-                        icon={<IoSettingsSharp />}
+                        icon={<FaCoffee />}
+                        text="Buy Me a Coffee"
                         active={false}
-                        text="Settings"
-                        to="/manage" />
-
-                      {userData?.camerafeed && 
-                        <SidebarLinkItem
-                          icon={<MdSmartDisplay />}
-                          active={pathname === '/streaming'}
-                          text="Stream Hub"
-                          to="/streaming" />
-                      }
-
-                      {(userData?.networkdevices && isHostMode) && 
-                        <SidebarLinkItem
-                          icon={<MdOutlineImportantDevices />}
-                          active={pathname === '/networkdevices'}
-                          text="Network Devices"
-                          to="/networkdevices" />
-                      }
-
-                      {userData?.todolist && 
-                        <SidebarLinkItem
-                          icon={<FaRegListAlt />}
-                          active={pathname === '/tasks'}
-                          text="Tasks"
-                          to="/tasks" />
-                      }
-
-                      {activeRoute === '/page' && 
-                        <SidebarButtonItem
-                          id="page"
-                          icon={<FaGlobeAsia />}
-                          active
-                          text="Pages"
-                        />
-                      }
-
-                      {userData?.authenticator && 
-                        <SidebarButtonItem
-                          id="btnAuth"
-                          icon={<IoQrCode />}
-                          active={pathname === '/authenticator'}
-                          text="TOTP Authenticator"
-                          clickHandler={openAuthenticator}
-                        />
-                      }
+                        to={CONSTANTS.BuyMeACoffee} />
                     </ul>
                   </>
-                }
-              </div>
+              }
+
+              {!pathname.startsWith('/manage') &&
+                <>
+                  <SidebarItemHeader title="Features" />
+                  <ul className="mb-3 flex flex-col gap-1.5">
+                    <SidebarLinkItem
+                      icon={<IoSettingsSharp />}
+                      active={false}
+                      text="Settings"
+                      to="/manage" />
+
+                    {userData?.camerafeed &&
+                      <SidebarLinkItem
+                        icon={<MdSmartDisplay />}
+                        active={pathname === '/streaming'}
+                        text="Stream Hub"
+                        to="/streaming" />
+                    }
+
+                    {(userData?.networkdevices && isHostMode) &&
+                      <SidebarLinkItem
+                        icon={<MdOutlineImportantDevices />}
+                        active={pathname === '/networkdevices'}
+                        text="Network Devices"
+                        to="/networkdevices" />
+                    }
+
+                    {userData?.todolist &&
+                      <SidebarLinkItem
+                        icon={<FaRegListAlt />}
+                        active={pathname === '/tasks'}
+                        text="Tasks"
+                        to="/tasks" />
+                    }
+
+                    {activeRoute === '/page' &&
+                      <SidebarButtonItem
+                        id="page"
+                        icon={<FaGlobeAsia />}
+                        active
+                        text="Pages"
+                      />
+                    }
+
+                    {userData?.authenticator &&
+                      <SidebarButtonItem
+                        id="btnAuth"
+                        icon={<IoQrCode />}
+                        active={pathname === '/authenticator'}
+                        text="TOTP Authenticator"
+                        clickHandler={openAuthenticator}
+                      />
+                    }
+                  </ul>
+                </>
+              }
             </nav>
           </div>
-
-          {pathname.startsWith('/manage') && (
-            <div className="flex-none p-4 text-center text-xs">
-              <BuyMeACoffee />
-            </div>
-          )}
         </div>
       )}
     </aside>
