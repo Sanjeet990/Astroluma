@@ -47,15 +47,10 @@ const Layout = ({ children }) => {
     }
 
     const decideTheIcon = useCallback(() => {
-        console.log(userData);
         const iconObject = userData?.siteLogo;
-        let prefix = "";
-        if (iconObject?.iconProvider === "com.astroluma.self") prefix = `${import.meta.env.VITE_API_BASE_URL}/images/`;
-        if (themeType === "dark" && iconObject?.iconUrlLight) {
-            return `${prefix}${iconObject?.iconUrlLight}`;
-        } else {
-            return `${prefix}${iconObject?.iconUrl}`;
-        }
+        const prefix = iconObject?.iconProvider === "com.astroluma.self" ? `${import.meta.env.VITE_API_BASE_URL || ""}/images/` : "";
+        const iconUrl = themeType === "dark" && iconObject?.iconUrlLight ? iconObject.iconUrlLight : iconObject?.iconUrl;
+        return `${prefix}${iconUrl}`;
     }, [userData, themeType]);
 
     useEffect(() => {
