@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import 'react-modern-drawer/dist/index.css'
 import { useEffect, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
-import { Helmet } from "react-helmet"
+import { Helmet } from "react-helmet";
 import Layout from './components/Layout/Layout';
 import Login from './components/Auth/Login';
 import Loader from './components/Layout/Loader';
