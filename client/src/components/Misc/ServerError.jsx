@@ -9,7 +9,7 @@ const ServerError = () => {
       <Helmet>
         <title>Server Error</title>
       </Helmet>
-      <div className="bg-noListingCardBg p-8 rounded-xl shadow-md w-96 border border-noListingCardBorder text-noListingCardText">
+      <div className="bg-noListingCardBg p-8 rounded-xl shadow-md w-full md:w-96 border border-noListingCardBorder text-noListingCardText mx-4">
         <h2 className="text-3xl mb-4 text-center">
           Oops! Some error occurred.
         </h2>

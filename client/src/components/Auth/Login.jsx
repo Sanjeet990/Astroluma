@@ -54,7 +54,7 @@ const Login = () => {
 
     return (
         <div className="flex h-screen items-center justify-center w-full">
-            <div className="bg-noListingCardBg p-8 rounded-xl shadow-md w-96 border border-noListingCardBorder text-noListingCardText">
+            <div className="bg-noListingCardBg p-8 rounded-xl shadow-md w-full md:w-96 border border-noListingCardBorder text-noListingCardText mx-4">
             <div className="absolute top-0 right-0 mt-4 mr-4" />
                 <h2 className="text-2xl  mb-4">Login</h2>
                 <NiceForm onSubmit={doLogin}>

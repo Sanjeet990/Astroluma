@@ -80,7 +80,18 @@ const App = () => {
 
   return (
     <Loader>
-      <ToastContainer style={{ zIndex: 100000 }} theme={themeType} />
+      <ToastContainer
+        style={{ zIndex: 100000 }}
+        theme={themeType}
+        position="bottom-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss={false}
+        draggable
+        pauseOnHover={false} />
 
       <ImageSelectorModal />
 
@@ -152,7 +163,7 @@ const App = () => {
                             <Route key={Math.random()} path="/manage/theme" element={<ThemeList />} />
                             <Route key={Math.random()} path="/manage/iconpack" element={<IconPacks />} />
                             <Route key={Math.random()} path="/manage/iconpack/add" element={<AddIconPack />} />
-                            <Route key={Math.random()} path="/manage/weather" element={<WeatherSettings />} /> 
+                            <Route key={Math.random()} path="/manage/weather" element={<WeatherSettings />} />
                             <Route key={Math.random()} path="/manage/page/add" element={<EditPage />} />
                             <Route key={Math.random()} path="/manage/page/:pageId" element={<EditPage />} />
                             <Route key={Math.random()} path="/manage/totp" element={<AuthenticatorListing />} />

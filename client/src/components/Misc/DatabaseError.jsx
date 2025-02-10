@@ -32,7 +32,7 @@ const DatabaseError = () => {
             <Helmet>
                 <title>Database Connection Error</title>
             </Helmet>
-            <div className="bg-noListingCardBg p-8 rounded-xl shadow-md max-w-2xl w-full border border-noListingCardBorder text-noListingCardText">
+            <div className="bg-noListingCardBg p-8 rounded-xl shadow-md w-full md:w-96 border border-noListingCardBorder text-noListingCardText mx-4">
                 <h2 className="text-3xl mb-4 text-center font-semibold">
                     Database Connection Failed
                 </h2>
