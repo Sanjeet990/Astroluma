@@ -175,7 +175,7 @@ const Settings = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                     {
                         SettingItems.map((item, index) => (
-                            <motion.div
+                            item.show && <motion.div
                                 layout
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
@@ -183,10 +183,7 @@ const Settings = () => {
                                 transition={{ duration: 0.3, delay: index * 0.05 }}
                                 key={item.id}
                             >
-                                {
-                                    item.show &&
-                                    <SingleSettingsItem Setting={item} onSelect={manageSelection} />
-                                }
+                                <SingleSettingsItem Setting={item} onSelect={manageSelection} />
                             </motion.div>
                         ))
                     }

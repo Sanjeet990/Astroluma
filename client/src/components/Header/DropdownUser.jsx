@@ -37,9 +37,10 @@ const DropdownUser = () => {
     const doLogout = (e) => {
         setDropdownOpen(false);
         e.preventDefault();
-        setLoginState(null);
-        setColorTheme("dark");
-        window.location.reload();
+        //setLoginState(null);
+        //setColorTheme("dark");
+        //window.location.reload();
+        navigate("/logout");
     }
 
     const goToSettings = () => {

@@ -48,6 +48,8 @@ import AddIconPack from './components/IconPacks/AddIconPack';
 
 import SystemThemes from './utils/SystemThemes';
 import UserProfile from './components/Accounts/UserProfile';
+import OidcSetup from './components/Accounts/OidcSetup';
+import Logout from './components/Auth/Logout';
 
 const App = () => {
   const [themeType, setThemeType] = useState("dark");
@@ -109,6 +111,7 @@ const App = () => {
           <div className="flex h-screen overflow-hidden">
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/logout" element={<Logout />} />
               <Route
                 path="/*"
                 element={
@@ -155,6 +158,7 @@ const App = () => {
                             <Route key={Math.random()} path="/manage/networkdevices/save" element={<EditDevice />} />
                             <Route key={Math.random()} path="/manage/networkdevices/save/:deviceId" element={<EditDevice />} />
                             <Route key={Math.random()} path="/manage/profile" element={<UserProfile />} />
+                            <Route key={Math.random()} path="/manage/oidc" element={<OidcSetup />} />
                             <Route key={Math.random()} path="/manage/accounts" element={<AccountList />} />
                             <Route key={Math.random()} path="/manage/accounts/add" element={<EditUser />} />
                             <Route key={Math.random()} path="/manage/accounts/:userId" element={<EditUser />} />

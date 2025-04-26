@@ -1,5 +1,6 @@
 const Authenticator = require('../models/Authenticator');
 const User = require('../models/User');
+const GlobalSetting = require('../models/GlobalSetting');
 const Listing = require('../models/Listing');
 const axios = require('axios');
 const IconPack = require('../models/IconPack');
@@ -374,3 +375,129 @@ exports.getSetting = async (req, res) => {
         });
     }
 };
+
+
+exports.oidcSettings = async (req, res) => {
+    const user = req.user;
+
+    //if the user is not admin
+    if (!user?.isSuperAdmin) {
+        return res.status(401).json({
+            error: true,
+            message: "Unauthorized: Admin access required."
+        });
+    }
+
+    const { issuerUrl, clientId, clientSecret, redirectUri, scope, authorizationEndpoint, tokenEndpoint, userinfoEndpoint, jwksUri, logoutUri, autoUserProvisioning, userIdentifier, enableOidcAuth } = req.body;
+
+    if (!issuerUrl || !clientId || !clientSecret || !redirectUri || !scope || !authorizationEndpoint || !tokenEndpoint || !userinfoEndpoint || !jwksUri || !logoutUri || !userIdentifier) {
+        return res.status(400).json({
+            error: true,
+            message: "All fields are required."
+        });
+    }
+
+    try {
+        const oidcSettings = {
+            issuerUrl,
+            clientId,
+            clientSecret,
+            redirectUri,
+            scope,
+            authorizationEndpoint,
+            tokenEndpoint,
+            userinfoEndpoint,
+            jwksUri,
+            logoutUri,
+            userIdentifier,
+            autoProvisioning: autoUserProvisioning
+        };
+
+        const existingSettings = await GlobalSetting.findOne({});
+
+        if (existingSettings) {
+            existingSettings.oidcConfig = oidcSettings;
+            existingSettings.oidcEnabled = enableOidcAuth;
+            await existingSettings.save();
+        } else {
+            await GlobalSetting.create({ oidcConfig: oidcSettings, oidcEnabled: enableOidcAuth });
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: "OIDC settings saved successfully."
+        });
+    } catch (err) {
+        console.error("Error saving OIDC settings:", err);
+        return res.status(500).json({
+            error: true,
+            message: "An error occurred while saving OIDC settings."
+        });
+    }
+
+}
+
+exports.getOidcSettings = async (req, res) => {
+    const user = req.user;
+
+    //if the user is not admin
+    if (!user?.isSuperAdmin) {
+        return res.status(401).json({
+            error: true,
+            message: "Unauthorized: Admin access required."
+        });
+    }
+
+    try {
+        const settings = await GlobalSetting.findOne({});
+
+        let oidcConfig = null;
+        if (settings?.oidcConfig) {
+            const decryptedSecret = settings.oidcConfig.clientSecret;
+            oidcConfig = {
+                issuerUrl: settings.oidcConfig.issuerUrl,
+                clientId: settings.oidcConfig.clientId,
+                clientSecret: decryptedSecret ? decryptedSecret : "",
+                redirectUri: settings.oidcConfig.redirectUri,
+                scope: settings.oidcConfig.scope,
+                authorizationEndpoint: settings.oidcConfig.authorizationEndpoint,
+                tokenEndpoint: settings.oidcConfig.tokenEndpoint,
+                userinfoEndpoint: settings.oidcConfig.userinfoEndpoint,
+                jwksUri: settings.oidcConfig.jwksUri,
+                logoutUri: settings.oidcConfig.logoutUri,
+                autoUserProvisioning: settings.oidcConfig.autoProvisioning,
+                userIdentifier: settings.oidcConfig.userIdentifier,
+                enableOidcAuth: settings.oidcEnabled
+            }
+            //console.log("OIDC settings fetched:", oidcConfig);
+        } else {
+            oidcConfig = {
+                issuerUrl: "",
+                clientId: "",
+                clientSecret: "",
+                redirectUri: "",
+                scope: "",
+                authorizationEndpoint: "",
+                tokenEndpoint: "",
+                userinfoEndpoint: "",
+                jwksUri: "",
+                logoutUri: "",
+                autoUserProvisioning: false,
+                userIdentifier: "",
+                enableOidcAuth: false
+            };
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: oidcConfig
+        });
+
+    } catch (err) {
+        console.error("Error fetching OIDC settings:", err);
+        return res.status(500).json({
+            error: true,
+            message: "An error occurred while fetching OIDC settings."
+        });
+    }
+}

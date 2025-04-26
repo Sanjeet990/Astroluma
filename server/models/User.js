@@ -10,7 +10,7 @@ const userSchema = new Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: false,
   },
   fullName: {
     type: String,
@@ -98,7 +98,11 @@ const userSchema = new Schema({
   foldersalwaysnewtab:{
     type: Boolean,
     default: false,
-  }
+  },
+  provider: {
+    type: String,
+    default: "local",
+  },
 }, {
   timestamps: true,
 });
