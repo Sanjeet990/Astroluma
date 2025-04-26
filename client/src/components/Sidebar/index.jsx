@@ -287,11 +287,19 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     <ul className="mb-3 flex flex-col gap-1.5">
 
                       {userData?.isSuperAdmin &&
-                        <SidebarLinkItem
-                          icon={<MdFace />}
-                          text="User Accounts"
-                          active={activeRoute === '/manage/accounts'}
-                          to="/manage/accounts" />
+                        <>
+                          <SidebarLinkItem
+                            icon={<MdFace />}
+                            text="OIDC Setup"
+                            active={activeRoute === '/manage/oidc'}
+                            to="/manage/oidc" />
+
+                          <SidebarLinkItem
+                            icon={<MdFace />}
+                            text="User Accounts"
+                            active={activeRoute === '/manage/accounts'}
+                            to="/manage/accounts" />
+                        </>
                       }
 
                       <SidebarLinkItem
