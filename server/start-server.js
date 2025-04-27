@@ -1,12 +1,15 @@
-const { exec } = require('child_process');
+const runMigrations = require('./scripts/run-migrations');
 
-exec('migrate-mongo up', (err, stdout, stderr) => {
-  if (err) {
-    console.error("Migration failed: ", stderr);
-  } else {
-    console.log("Migration completed.", stdout);
-  }
-
-  // Start the server regardless of migration result
-  require('./server.js');
-});
+// Run migrations first
+runMigrations()
+  .then(() => {
+    console.log('Migrations completed, starting server...');
+    // Start the server after migrations complete
+    require('./server.js');
+  })
+  .catch((error) => {
+    console.error('Migration error:', error);
+    // Start the server anyway, even if migrations fail
+    console.log('Starting server despite migration issues...');
+    require('./server.js');
+  });

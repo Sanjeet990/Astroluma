@@ -13,11 +13,14 @@ let sequelize;
 if (config.use_env_variable) {
   sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
+  // Set up conditional logging based on DEBUG environment variable
+  const isDebugMode = process.env.DEBUG === 'true';
+  
   // For SQLite, we don't need to pass database, username, password
   sequelize = new Sequelize({
     dialect: config.dialect,
     storage: config.storage,
-    logging: config.logging
+    logging: isDebugMode ? console.log : false
   });
 }
 
@@ -45,6 +48,5 @@ Object.keys(db).forEach(modelName => {
 });
 
 db.sequelize = sequelize;
-db.Sequelize = Sequelize;
 
 module.exports = db;
