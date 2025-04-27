@@ -6,11 +6,11 @@ import makeToast from './ToastUtils';
 const axiosInstance = axios.create();
 
 // Add a request interceptor to introduce a delay
-axiosInstance.interceptors.request.use(async (config) => {
-  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  await delay(200); // Introduce a 500ms delay
-  return config;
-});
+//axiosInstance.interceptors.request.use(async (config) => {
+//  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+//  await delay(200); // Introduce a 500ms delay
+//  return config;
+//});
 
 class ApiService {
   baseUrl = import.meta.env.VITE_API_BASE_URL || '';

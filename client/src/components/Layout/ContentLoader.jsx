@@ -15,7 +15,7 @@ const ContentLoader = ({ children }) => {
         if (loading && !globalLoading) {
             setShowLoader(true);
         } else {
-            timeout = setTimeout(() => setShowLoader(false), 300); // Wait for 300ms before hiding loader
+            timeout = setTimeout(() => setShowLoader(false), 200); // Wait for 200ms before hiding loader
         }
         return () => clearTimeout(timeout); // Cleanup timeout if component unmounts or state changes again
     }, [loading, globalLoading]);

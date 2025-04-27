@@ -41,6 +41,7 @@ const InstalledApps = () => {
     const fetchApps = useCallback(async (page) => {
         try {
             const data = await ApiService.get(`/api/v1/app/installed?page=${page}`, loginData?.token, navigate);
+            console.log(data);
             if (data?.message?.page >= data?.message?.pages) {
                 setHasMore(false);
             }

@@ -38,11 +38,12 @@ const InstallApps = () => {
             .then(data => {
                 // Convert array to Map for easier lookup with version info
                 const appsMap = new Map(
-                    data.message.map(app => [app.appId, app.version])
+                    data.message?.appList.map(app => [app.appId, app.version])
                 );
                 setInstalledApps(appsMap);
             })
             .catch((error) => {
+                console.log(error);
                 if (!error.handled) makeToast("error", "Failed to fetch installed apps list.");
             });
     }, [loginData?.token, navigate]);

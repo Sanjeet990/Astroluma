@@ -32,7 +32,7 @@ const installDependencies = async (appDir) => {
     return new Promise((resolve, reject) => {
         const { exec } = require('child_process');
         const cmd = `cd ${appDir} && npm install --production`;
-        
+
         exec(cmd, (error, stdout, stderr) => {
             if (error) {
                 reject(`Error installing dependencies: ${error.message}`);
@@ -53,7 +53,7 @@ const handleAppInstallation = async (zipPath, extractPath) => {
         }
 
         const zip = new AdmZip(zipPath);
-        
+
         // Extract the ZIP file
         zip.extractAllTo(extractPath, true);
 
@@ -63,6 +63,8 @@ const handleAppInstallation = async (zipPath, extractPath) => {
 
         const manifest = JSON.parse(fs.readFileSync(path.join(extractPath, 'manifest.json'), 'utf8'));
         const package = JSON.parse(fs.readFileSync(path.join(extractPath, 'package.json'), 'utf8'));
+
+        console.log(manifest);
 
         // Check if app already exists
         const existingApp = await App.findOne({
@@ -79,7 +81,7 @@ const handleAppInstallation = async (zipPath, extractPath) => {
         const app = await App.create({
             appId: manifest.appId,
             appName: manifest.appName,
-            appDescription: manifest.appDescription,
+            description: manifest.description || "",
             category: manifest.category || "others",
             supportedThemes: JSON.stringify(manifest.supportedThemes || ["light", "dark"]),
             supportedViewportSize: manifest.supportedViewportSize || "default",
@@ -88,6 +90,7 @@ const handleAppInstallation = async (zipPath, extractPath) => {
             remoteVersion: manifest.version || "0.0.0",
             installedVersion: manifest.version || "0.0.0",
             npmInstalled: 0,
+            version: manifest.version || "0.0.0",
             appIcon: manifest.appIcon || "integration.png",
             coreSettings: manifest.config?.some(setting => setting.scope === "core") || false,
             configured: manifest.config?.some(setting => setting.scope === "core") ? false : true
@@ -178,22 +181,21 @@ const downloadFile = async (url, zipPath) => {
 };
 
 exports.installRemoteApp = async (req, res) => {
+    const zipPath = path.join(__dirname, '../public/uploads/integrations', `${req.params.appId}`);
+    const extractPath = path.join(__dirname, '../../storage/apps', req.params.appId);
+
     try {
         validateUser(req.user);
 
         const appId = req.params.appId;
-        const remoteInfo = await axios.get(`https://storage.reimaginedapps.com/app/${appId}/info`);
-        
-        if (!remoteInfo?.data?.zip) {
-            throw new Error("App not found on remote server.");
+        if (!appId) {
+            throw new Error("No application id provided.");
         }
 
-        const zipUrl = remoteInfo.data.zip;
-        const zipPath = path.join(__dirname, `../../storage/uploads/${appId}.zip`);
-        const extractPath = path.join(__dirname, `../../storage/apps/${appId}`);
+        const appUrl = `https://cdn.jsdelivr.net/gh/Sanjeet990/AstrolumaApps/apps/${appId}.zip`;
 
-        // Download the remote ZIP file
-        await downloadFile(zipUrl, zipPath);
+        // Download file first
+        await downloadFile(appUrl, zipPath);
 
         // Install the app
         const result = await handleAppInstallation(zipPath, extractPath);
@@ -208,37 +210,34 @@ exports.installRemoteApp = async (req, res) => {
 };
 
 exports.updateRemoteApp = async (req, res) => {
+
+    const zipPath = path.join(__dirname, '../public/uploads/integrations', `${req.params.appId}`);
+    const extractPath = path.join(__dirname, '../../storage/apps', req.params.appId);
+    const appPath = path.join(__dirname, '../../storage/apps', req.params.appId);
+
     try {
         validateUser(req.user);
 
         const appId = req.params.appId;
-        const existingApp = await App.findOne({
-            where: { appId }
-        });
+        if (!appId) {
+            throw new Error("No application id provided.");
+        }
 
+        // Check if app exists
+        const existingApp = await App.findOne({ appId });
         if (!existingApp) {
             throw new Error("App not found.");
         }
 
-        const remoteInfo = await axios.get(`https://storage.reimaginedapps.com/app/${appId}/info`);
-        
-        if (!remoteInfo?.data?.zip) {
-            throw new Error("App not found on remote server.");
+        // Remove existing app files
+        if (fs.existsSync(appPath)) {
+            fs.rmSync(appPath, { recursive: true });
         }
 
-        if (remoteInfo.data.version === existingApp.installedVersion) {
-            return res.status(200).json({
-                error: false,
-                message: "App is already up to date."
-            });
-        }
+        const appUrl = `https://cdn.jsdelivr.net/gh/Sanjeet990/AstrolumaApps/apps/${appId}.zip`;
 
-        const zipUrl = remoteInfo.data.zip;
-        const zipPath = path.join(__dirname, `../../storage/uploads/${appId}.zip`);
-        const extractPath = path.join(__dirname, `../../storage/apps/${appId}`);
-
-        // Download the remote ZIP file
-        await downloadFile(zipUrl, zipPath);
+        // Download new version
+        await downloadFile(appUrl, zipPath);
 
         // Extract and check manifest
         const zip = new AdmZip(zipPath);
@@ -251,7 +250,7 @@ exports.updateRemoteApp = async (req, res) => {
         }
 
         const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-        
+
         // Update app information
         await App.update({
             appName: manifest.appName,
@@ -315,7 +314,7 @@ exports.removeInstalledApp = async (req, res) => {
         validateUser(req.user);
 
         const appId = req.params.appId;
-        
+
         // Check if app exists
         const app = await App.findOne({
             where: { appId }
@@ -328,7 +327,7 @@ exports.removeInstalledApp = async (req, res) => {
         // Update listings that use this app
         await Listing.update(
             { integration: null },
-            { 
+            {
                 where: {
                     integration: {
                         [Op.ne]: null
@@ -364,7 +363,7 @@ exports.syncFromDisk = async (req, res) => {
         validateUser(req.user);
 
         const appsDir = path.join(__dirname, '../../storage/apps');
-        
+
         if (!fs.existsSync(appsDir)) {
             fs.mkdirSync(appsDir, { recursive: true });
             return res.status(200).json({
@@ -401,7 +400,7 @@ exports.syncFromDisk = async (req, res) => {
             // Update listings with this integration
             await Listing.update(
                 { integration: null },
-                { 
+                {
                     where: {
                         integration: {
                             [Op.ne]: null
@@ -458,7 +457,7 @@ exports.serveLogo = (req, res) => {
     try {
         const appId = req.params.appId;
         const appsDir = path.join(__dirname, '../../storage/apps');
-        
+
         // Check app directory
         const appDir = path.join(appsDir, appId);
         if (!fs.existsSync(appDir)) {
@@ -493,7 +492,7 @@ exports.serveLogo = (req, res) => {
     }
 };
 
-exports.installedApps = async (req, res) => {
+exports.allInstalledApps = async (req, res) => {
     try {
         // Get apps from database
         const apps = await App.findAll({
@@ -516,7 +515,7 @@ exports.installedApps = async (req, res) => {
     }
 };
 
-exports.allInstalledApps = async (req, res) => {
+exports.installedApps = async (req, res) => {
     try {
         const page = parseInt(req.query.page, 10) || 1;
         const limit = 20;
@@ -701,9 +700,9 @@ exports.runIntegratedApp = async (req, res) => {
 
     try {
         const listing = await Listing.findOne({
-            where: { 
+            where: {
                 id: listingId,
-                userId 
+                userId
             }
         });
 
