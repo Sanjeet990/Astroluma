@@ -1,6 +1,6 @@
 'use strict';
 const CryptoJS = require('crypto-js');
-const { getSecretKey } = require('../../utils/apiutils');
+const { getSecretKey } = require('../utils/apiutils');
 
 const SECRET_KEY = getSecretKey();
 

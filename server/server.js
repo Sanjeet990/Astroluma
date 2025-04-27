@@ -6,7 +6,7 @@ const path = require('path');
 const mongoose = require('mongoose');
 const { handleUpgrade } = require('./websocket.js');
 // Add Sequelize import
-const { sequelize } = require('./models/sequelize');
+const { sequelize } = require('./models');
 
 //INIT APP
 const app = express();

@@ -1,6 +1,6 @@
 'use strict';
 const CryptoJS = require('crypto-js');
-const { getSecretKey } = require('../../utils/apiutils');
+const { getSecretKey } = require('../utils/apiutils');
 
 module.exports = (sequelize, DataTypes) => {
   const Authenticator = sequelize.define('Authenticator', {
