@@ -19,7 +19,7 @@ const SingleSnippetHeaderItem = React.memo(function SingleSnippetHeaderItem({ sn
 
     const toggleMenu = (e) => {
         e.stopPropagation();
-        setMenuOpen(menuOpen === snippet._id ? null : snippet._id);
+        setMenuOpen(menuOpen === snippet.id ? null : snippet.id);
     };
 
     const handleEdit = (e) => {
@@ -71,7 +71,7 @@ const SingleSnippetHeaderItem = React.memo(function SingleSnippetHeaderItem({ sn
                 >
                     <BsThreeDotsVertical />
                 </button>
-                {menuOpen === snippet._id && (
+                {menuOpen === snippet.id && (
                     <div className="absolute right-0 mt-2 w-48 bg-snippetDropDownBg text-snippetDropDownText rounded-md shadow-lg z-10 border border-snippetDropDownBorder">
                         <button 
                             className="block px-4 py-2 text-sm hover:bg-snippetDropDownItemHoverBg w-full text-left" 

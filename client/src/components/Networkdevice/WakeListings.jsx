@@ -67,8 +67,8 @@ const WakeListings = () => {
         }
 
         if (active.id !== over.id) {
-            const oldIndex = itemList.findIndex(item => item._id === active.id);
-            const newIndex = itemList.findIndex(item => item._id === over.id);
+            const oldIndex = itemList.findIndex(item => item.id === active.id);
+            const newIndex = itemList.findIndex(item => item.id === over.id);
             const reorderedArray = arrayMove(itemList, oldIndex, newIndex);
 
             // Update the state with the reordered array
@@ -79,7 +79,7 @@ const WakeListings = () => {
 
     const updateReorderStatusOnServer = (reorderedArray) => {
         setLoading(true);
-        ApiService.post("/api/v1/networkdevices/device/reorder", { items: reorderedArray.map(item => item._id) }, loginData?.token, navigate)
+        ApiService.post("/api/v1/networkdevices/device/reorder", { items: reorderedArray.map(item => item.id) }, loginData?.token, navigate)
             .then(data => {
                 //setReloadData(true);
                 makeToast("success", String(data?.message));
@@ -110,7 +110,7 @@ const WakeListings = () => {
 
         ApiService.get(`/api/v1/networkdevices/delete/${id}`, loginData?.token, navigate)
             .then(() => {
-                setItemList(itemList.filter(item => item._id !== id));
+                setItemList(itemList.filter(item => item.id !== id));
                 makeToast("success", "Selected Item deleted successfully.");
             })
             .catch((error) => {
@@ -153,7 +153,7 @@ const WakeListings = () => {
                                     {
                                         itemList.map((item) => {
                                             return (
-                                                <SingleDeviceItem key={item._id} id={item._id} handle item={item} deleteNetworkDevice={deleteNetworkDevice} />
+                                                <SingleDeviceItem key={item.id} id={item.id} handle item={item} deleteNetworkDevice={deleteNetworkDevice} />
                                             );
                                         })
                                     }

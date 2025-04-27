@@ -57,12 +57,12 @@ const SingleTotpItem = (props) => {
     };
 
     const handleDelete = () => {
-        props.deleteTotpItem(props.item._id)
+        props.deleteTotpItem(props.item.id)
     }
 
     const doEdit = (e) => {
         e.preventDefault();
-        navigate(`/manage/totp/save/${props.item._id}`)
+        navigate(`/manage/totp/save/${props.item.id}`)
     }
 
     const decideTheIcon = useCallback(() => {
@@ -80,7 +80,7 @@ const SingleTotpItem = (props) => {
         <motion.div
             style={style}
             ref={setNodeRef}
-            key={props.item._id}
+            key={props.item.id}
             whileHover={{ scale: 1.03 }}
             className="relative border-2 border-internalCardBorder bg-internalCardBg text-internalCardText pt-10 pb-10 rounded-xl shadow-md h-80" >
             {showDeleteConfirmation ? (

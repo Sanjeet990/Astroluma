@@ -62,7 +62,7 @@ const CategoryListing = () => {
 
     useEffect(() => {
         if (breadcrumbList.length > 0) {
-            setActiveRoute(`/c/${breadcrumbList[0]?._id}`);
+            setActiveRoute(`/c/${breadcrumbList[0]?.id}`);
         } else {
             if (listingId) setActiveRoute(`/c/${listingId}`);
             else setActiveRoute("/");
@@ -114,7 +114,7 @@ const CategoryListing = () => {
                                             animate={{ opacity: 1, x: 0 }}
                                             exit={{ opacity: 0, x: -20 }}
                                             transition={{ duration: 0.3, delay: index * 0.1 }}
-                                            key={item._id}
+                                            key={item.id}
                                         >
                                             <SingleListingInFront item={item} />
                                         </motion.div>

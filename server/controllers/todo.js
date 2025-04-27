@@ -16,7 +16,7 @@ exports.saveTodo = async (req, res) => {
     try {
         if (todoId) {
             // Update existing todo
-            const [updatedRowCount, [updatedTodo]] = await Todo.update({
+            const updatedRowCount = await Todo.update({
                 todoItem: todoName,
                 dueDate,
                 priority
@@ -24,8 +24,7 @@ exports.saveTodo = async (req, res) => {
                 where: {
                     id: todoId,
                     userId
-                },
-                returning: true
+                }
             });
 
             if (updatedRowCount === 0) {

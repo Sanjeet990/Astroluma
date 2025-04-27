@@ -1,10 +1,7 @@
-const Authenticator = require('../models/Authenticator');
-const User = require('../models/User');
-const GlobalSetting = require('../models/GlobalSetting');
-const Listing = require('../models/Listing');
+const { Authenticator, User, GlobalSetting, Listing, IconPack } = require('../models');
 const axios = require('axios');
-const IconPack = require('../models/IconPack');
 const { isHostMode } = require('../utils/apiutils');
+const { Op } = require('sequelize');
 
 // Method to fetch and return dashboard data for the authenticated user
 /**
@@ -18,22 +15,22 @@ const { isHostMode } = require('../utils/apiutils');
  */
 exports.dashboard = async (req, res) => {
     const userData = req.user; // Extract the authenticated user's data
-    const userId = userData?._id; // Extract the user ID from the user data
+    const userId = userData?.id; // Extract the user ID from the user data
 
     try {
         // Fetch authenticators, sidebar items, and homepage items concurrently
         const [authenticators, sidebarItems, homepageItems, iconPacks] = await Promise.all([
-            Authenticator.find({ userId }).sort({ sortOrder: 1 }), // Fetch authenticators sorted by sortOrder
-            Listing.find({ userId, inSidebar: true }).sort({ listingName: 1 }), // Sidebar items sorted by listingName
-            Listing.find({ userId, parentId: null }).sort({ listingName: 1 }), // Homepage items sorted by listingName
-            IconPack.find({ $or: [{ userId: userId }, { userId: null }] }) // Icon packs of the user
+            Authenticator.findAll({ where: { userId }, order: [['sortOrder', 'ASC']] }), // Fetch authenticators sorted by sortOrder
+            Listing.findAll({ where: { userId, inSidebar: true }, order: [['listingName', 'ASC']] }), // Sidebar items sorted by listingName
+            Listing.findAll({ where: { userId, parentId: null }, order: [['listingName', 'ASC']] }), // Homepage items sorted by listingName
+            IconPack.findAll({ where: { [Op.or]: [{ userId: userId }, { userId: null }] } }) // Icon packs of the user
         ]);
 
         userData.password = undefined; // Remove the password from the user data
 
         // Add a default "Home" item to the sidebar
         sidebarItems.unshift({
-            _id: null,
+            id: null,
             listingName: "Featured",
             listingIcon: "<FaHome />", // Assuming FaHome is a React component, consider handling this differently in the frontend
             listingType: "link",
@@ -157,7 +154,7 @@ exports.weatherData = async (req, res) => {
  */
 exports.saveSettings = async (req, res) => {
     // Extract user ID from the request object.
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     // Extract settings fields from the request body.
     const { siteName, siteLogo, authenticator, camerafeed, networkdevices, todolist, snippetmanager, linksalwaysnewtab, foldersalwaysnewtab } = req.body;
@@ -180,9 +177,19 @@ exports.saveSettings = async (req, res) => {
 
     try {
         // Update user settings in the database.
-        await User.updateOne(
-            { _id: userId },
-            { siteName, siteLogo, authenticator, camerafeed, networkdevices: networkdevices && isHostMode(), todolist, snippetmanager, linksalwaysnewtab, foldersalwaysnewtab }
+        const [updatedRows] = await User.update(
+            { 
+                siteName, 
+                siteLogo, 
+                authenticator, 
+                camerafeed, 
+                networkdevices: networkdevices && isHostMode(), 
+                todolist, 
+                snippetmanager, 
+                linksalwaysnewtab, 
+                foldersalwaysnewtab 
+            },
+            { where: { id: userId } }
         );
 
         // Return a success response.
@@ -214,7 +221,7 @@ exports.saveSettings = async (req, res) => {
  * @param {Object} res - The response object to send status and messages.
  */
 exports.saveThemeSettings = async (req, res) => {
-    const userId = req.user?._id; // Extract the user ID from the authenticated request
+    const userId = req.user?.id; // Extract the user ID from the authenticated request
     const { colorTheme } = req.body; // Extract the color theme from the request body
 
     // Check if the colorTheme is provided in the request
@@ -226,17 +233,17 @@ exports.saveThemeSettings = async (req, res) => {
     }
 
     try {
-        // Update the user's color theme in the database
-        const updateResult = await User.updateOne(
-            { _id: userId },
-            { colorTheme }
+        // Update the user's color theme in the database using Sequelize
+        const [updatedCount] = await User.update(
+            { colorTheme },
+            { where: { id: userId } }
         );
 
-        // Check if any document was actually updated
-        if (updateResult.modifiedCount === 0) {
+        // Check if any record was actually updated
+        if (updatedCount === 0) {
             return res.status(400).json({
                 error: true,
-                message: "No changes made to theme settings." // No update if no document was modified
+                message: "No changes made to theme settings." // No update if no record was modified
             });
         }
 
@@ -248,6 +255,7 @@ exports.saveThemeSettings = async (req, res) => {
 
     } catch (err) {
         // Handle any errors during the update operation
+        console.error("Error updating theme settings:", err);
         return res.status(500).json({
             error: true,
             message: "An error occurred while saving the theme settings." // General error message
@@ -265,7 +273,7 @@ exports.saveThemeSettings = async (req, res) => {
  * @param {Object} res - The response object to send status and messages.
  */
 exports.saveWeatherSettings = async (req, res) => {
-    const userId = req.user?._id; // Extract the user ID from the authenticated request
+    const userId = req.user?.id; // Extract the user ID from the authenticated request
     const { location, unit } = req.body; // Extract the location and unit from the request body
 
     // Check if the required fields are provided
@@ -286,19 +294,19 @@ exports.saveWeatherSettings = async (req, res) => {
     }
 
     try {
-        // Update the user's weather settings in the database
-        const updateResult = await User.updateOne(
-            { _id: userId },
+        // Update the user's weather settings in the database using Sequelize
+        const [updatedCount] = await User.update(
             {
                 location: location?.location,
                 longitude: location?.longitude,
                 latitude: location?.latitude,
                 unit
-            }
+            },
+            { where: { id: userId } }
         );
 
-        // Check if the document was actually updated
-        if (updateResult.modifiedCount === 0) {
+        // Check if any record was actually updated
+        if (updatedCount === 0) {
             return res.status(400).json({
                 error: true,
                 message: "No changes made to weather settings." // Specific message when no changes are made
@@ -312,6 +320,7 @@ exports.saveWeatherSettings = async (req, res) => {
         });
 
     } catch (err) {
+        console.error("Error updating weather settings:", err);
         // Handle any errors during the update operation
         return res.status(500).json({
             error: true,
@@ -330,7 +339,7 @@ exports.saveWeatherSettings = async (req, res) => {
  * @param {Object} res - The response object to send status and messages.
  */
 exports.getSetting = async (req, res) => {
-    const userId = req.user?._id; // Extract user ID from the authenticated request
+    const userId = req.user?.id; // Extract user ID from the authenticated request
 
     // Ensure the user ID exists
     if (!userId) {
@@ -342,7 +351,7 @@ exports.getSetting = async (req, res) => {
 
     try {
         // Fetch the user's settings from the database
-        const user = await User.findOne({ _id: userId }).exec();
+        const user = await User.findByPk(userId);
 
         // Check if the user exists
         if (!user) {
@@ -368,6 +377,7 @@ exports.getSetting = async (req, res) => {
             }
         });
     } catch (err) {
+        console.error("Error fetching user settings:", err);
         // Handle any unexpected errors during the database operation
         return res.status(500).json({
             error: true,
@@ -380,7 +390,7 @@ exports.getSetting = async (req, res) => {
 exports.oidcSettings = async (req, res) => {
     const user = req.user;
 
-    //if the user is not admin
+    // If the user is not admin
     if (!user?.isSuperAdmin) {
         return res.status(401).json({
             error: true,
@@ -413,14 +423,21 @@ exports.oidcSettings = async (req, res) => {
             autoProvisioning: autoUserProvisioning
         };
 
-        const existingSettings = await GlobalSetting.findOne({});
+        // Find the global settings or create if not exists
+        const [settings, created] = await GlobalSetting.findOrCreate({
+            where: {},
+            defaults: {
+                oidcConfig: oidcSettings,
+                oidcEnabled: enableOidcAuth
+            }
+        });
 
-        if (existingSettings) {
-            existingSettings.oidcConfig = oidcSettings;
-            existingSettings.oidcEnabled = enableOidcAuth;
-            await existingSettings.save();
-        } else {
-            await GlobalSetting.create({ oidcConfig: oidcSettings, oidcEnabled: enableOidcAuth });
+        if (!created) {
+            // If settings already existed, update them
+            await settings.update({
+                oidcConfig: oidcSettings,
+                oidcEnabled: enableOidcAuth
+            });
         }
 
         return res.status(200).json({
@@ -434,13 +451,12 @@ exports.oidcSettings = async (req, res) => {
             message: "An error occurred while saving OIDC settings."
         });
     }
-
-}
+};
 
 exports.getOidcSettings = async (req, res) => {
     const user = req.user;
 
-    //if the user is not admin
+    // If the user is not admin
     if (!user?.isSuperAdmin) {
         return res.status(401).json({
             error: true,
@@ -449,7 +465,7 @@ exports.getOidcSettings = async (req, res) => {
     }
 
     try {
-        const settings = await GlobalSetting.findOne({});
+        const settings = await GlobalSetting.findOne();
 
         let oidcConfig = null;
         if (settings?.oidcConfig) {
@@ -468,8 +484,7 @@ exports.getOidcSettings = async (req, res) => {
                 autoUserProvisioning: settings.oidcConfig.autoProvisioning,
                 userIdentifier: settings.oidcConfig.userIdentifier,
                 enableOidcAuth: settings.oidcEnabled
-            }
-            //console.log("OIDC settings fetched:", oidcConfig);
+            };
         } else {
             oidcConfig = {
                 issuerUrl: "",
@@ -492,7 +507,6 @@ exports.getOidcSettings = async (req, res) => {
             error: false,
             message: oidcConfig
         });
-
     } catch (err) {
         console.error("Error fetching OIDC settings:", err);
         return res.status(500).json({
@@ -500,4 +514,4 @@ exports.getOidcSettings = async (req, res) => {
             message: "An error occurred while fetching OIDC settings."
         });
     }
-}
+};

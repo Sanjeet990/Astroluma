@@ -22,7 +22,7 @@ const DeleteCodeItemModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/snippet/${modalState.data?.snippetId}/delete/${modalState.data?.snippetItem?._id}`, loginData?.token, navigate)
+    ApiService.get(`/api/v1/snippet/${modalState.data?.snippetId}/delete/${modalState.data?.snippetItem?.id}`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Code item deleted.");
         emitter.emit(RELOAD_CODE_SNIPPET);

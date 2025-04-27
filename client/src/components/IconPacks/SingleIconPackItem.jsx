@@ -75,7 +75,7 @@ const SingleIconPackItem = ({ iconPack, deleteListener }) => {
     e.preventDefault();
     e.stopPropagation();
     setLoading(true);
-    ApiService.get(`/api/v1/iconpack/delete/${iconPack?._id}`, loginData?.token, navigate)
+    ApiService.get(`/api/v1/iconpack/delete/${iconPack?.id}`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Icon pack deleted successfully.");
         deleteListener(iconPack);

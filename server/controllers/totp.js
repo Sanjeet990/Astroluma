@@ -1,7 +1,7 @@
-const Authenticator = require("../models/Authenticator");
+const { Authenticator } = require("../models");
 
 exports.saveTotp = async (req, res) => {
-    const userId = req.user?._id;
+    const userId = req.user?.id;
     const { serviceIcon, serviceName, secret, accountName, authId } = req.body;
 
     // Do error handling
@@ -17,7 +17,9 @@ exports.saveTotp = async (req, res) => {
 
         if (authId) {
             // If authId is provided, update the existing authenticator
-            authenticator = await Authenticator.findOne({ _id: authId, userId });
+            authenticator = await Authenticator.findOne({
+                where: { id: authId, userId }
+            });
 
             if (!authenticator) {
                 return res.status(404).json({
@@ -26,12 +28,13 @@ exports.saveTotp = async (req, res) => {
                 });
             }
 
-            authenticator.serviceIcon = serviceIcon;
-            authenticator.serviceName = serviceName;
-            //authenticator.secretKey = secret; No need to update the secretKey
-            authenticator.accountName = accountName;
+            // Update the authenticator
+            await authenticator.update({
+                serviceIcon,
+                serviceName,
+                accountName
+            });
 
-            await authenticator.save();
             return res.status(200).json({
                 error: false,
                 message: "Authenticator updated successfully.",
@@ -39,7 +42,9 @@ exports.saveTotp = async (req, res) => {
             });
         } else {
             // Check if the same secretKey exists for the same userId
-            authenticator = await Authenticator.findOne({ userId, secretKey: secret });
+            authenticator = await Authenticator.findOne({ 
+                where: { userId, secretKey: secret }
+            });
 
             if (authenticator) {
                 return res.status(400).json({
@@ -49,15 +54,15 @@ exports.saveTotp = async (req, res) => {
             }
 
             // If authId is not provided, create a new authenticator
-            authenticator = new Authenticator({
+            authenticator = await Authenticator.create({
                 userId,
                 serviceIcon,
                 serviceName,
                 secretKey: secret,
                 accountName,
+                sortOrder: 9999
             });
 
-            await authenticator.save();
             return res.status(200).json({
                 error: false,
                 message: "Authenticator added successfully.",
@@ -74,16 +79,20 @@ exports.saveTotp = async (req, res) => {
 };
 
 exports.listTotp = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     try {
-        const items = await Authenticator.find({ userId }).sort({ sortOrder: 1 });
+        const items = await Authenticator.findAll({
+            where: { userId },
+            order: [['sortOrder', 'ASC']]
+        });
 
         return res.status(200).json({
             error: false,
             message: { items }
         });
     } catch (err) {
+        console.error('Error listing authenticators:', err);
         return res.status(400).json({
             error: true,
             message: "Error fetching devices."
@@ -92,7 +101,7 @@ exports.listTotp = async (req, res) => {
 }
 
 exports.deleteTotp = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const authId = req.params.authId;
 
     // Return error if authId is not provided
@@ -104,12 +113,14 @@ exports.deleteTotp = async (req, res) => {
     }
 
     try {
-        const result = await Authenticator.deleteOne({
-            _id: authId,
-            userId
+        const rowsDeleted = await Authenticator.destroy({
+            where: {
+                id: authId,
+                userId
+            }
         });
 
-        if (result.deletedCount === 0) {
+        if (rowsDeleted === 0) {
             return res.status(400).json({
                 error: true,
                 message: "Totp not found"
@@ -121,6 +132,7 @@ exports.deleteTotp = async (req, res) => {
             message: "Totp deleted"
         });
     } catch (err) {
+        console.error('Error deleting authenticator:', err);
         return res.status(500).json({
             error: true,
             message: "Error deleting totp"
@@ -129,7 +141,7 @@ exports.deleteTotp = async (req, res) => {
 }
 
 exports.totpDetails = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const authId = req.params.authId || null;
 
     try {
@@ -137,14 +149,16 @@ exports.totpDetails = async (req, res) => {
 
         if (authId) {
             totpData = await Authenticator.findOne({
-                _id: authId,
-                userId
+                where: {
+                    id: authId,
+                    userId
+                }
             });
 
             if (totpData) {
+                // Mask the secret key for security
                 totpData.secretKey = "************************";
             }
-            
         }
 
         return res.status(200).json({
@@ -152,6 +166,7 @@ exports.totpDetails = async (req, res) => {
             message: totpData
         });
     } catch (err) {
+        console.error('Error fetching authenticator details:', err);
         return res.status(500).json({
             error: true,
             message: "Error fetching totp details."
@@ -160,24 +175,33 @@ exports.totpDetails = async (req, res) => {
 }
 
 exports.reorderTotp = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const items = req.body.items;
 
     try {
-        const bulkOps = items.map((itemId, index) => ({
-            updateOne: {
-                filter: { _id: itemId, userId },
-                update: { sortOrder: index }
+        // Using Sequelize transaction to ensure all updates succeed or fail together
+        await Authenticator.sequelize.transaction(async (transaction) => {
+            // Process each item in the array
+            for (let i = 0; i < items.length; i++) {
+                await Authenticator.update(
+                    { sortOrder: i },
+                    { 
+                        where: { 
+                            id: items[i], 
+                            userId 
+                        },
+                        transaction
+                    }
+                );
             }
-        }));
-
-        await Authenticator.bulkWrite(bulkOps);
+        });
 
         return res.status(200).json({
             error: false,
             message: "Items reordered successfully"
         });
     } catch (error) {
+        console.error('Error reordering authenticators:', error);
         return res.status(400).json({
             error: true,
             message: "Error reordering items"

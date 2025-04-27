@@ -1,8 +1,7 @@
 const WebSocket = require('ws');
 const { spawn } = require('child_process');
 const ping = require('ping');
-const Listing = require('./models/Listing');
-const NetworkDevice = require("./models/NetworkDevice");
+const { Listing, NetworkDevice } = require('./models');
 const wss = new WebSocket.Server({ noServer: true });
 const wssPing = new WebSocket.Server({ noServer: true });
 const url = require('url');
@@ -124,7 +123,9 @@ wssPing.on('connection', (ws) => {
         if (receivedText.startsWith('instant')) {
             const deviceId = receivedText.split('-')[1];
             try {
-                const deviceData = await NetworkDevice.findById(deviceId);
+                const deviceData = await NetworkDevice.findOne({
+                    where: { id: deviceId }
+                });
 
                 if (!deviceData || !deviceData.deviceIp) {
                     ws.send('No IP address provided');
@@ -138,8 +139,7 @@ wssPing.on('connection', (ws) => {
                     min_reply: 2
                 });
 
-                deviceData.isAlive = result.alive;
-                await deviceData.save();
+                await deviceData.update({ isAlive: result.alive });
 
                 const response = {
                     deviceIp: ipAddress,
@@ -157,7 +157,9 @@ wssPing.on('connection', (ws) => {
             const deviceId = receivedText;
 
             try {
-                const deviceData = await NetworkDevice.findById(deviceId);
+                const deviceData = await NetworkDevice.findOne({
+                    where: { id: deviceId }
+                });
 
                 if (!deviceData || !deviceData.deviceIp) {
                     ws.send('No IP address provided');
@@ -184,8 +186,7 @@ wssPing.on('connection', (ws) => {
                             min_reply: 2
                         });
 
-                        deviceData.isAlive = result.alive;
-                        await deviceData.save();
+                        await deviceData.update({ isAlive: result.alive });
 
                         const responseData = {
                             deviceIp: ipAddress,
@@ -223,7 +224,9 @@ const handleUpgrade = async (request, socket, head) => {
 
         if (videoId) {
             try {
-                const listing = await Listing.findById(videoId);
+                const listing = await Listing.findOne({
+                    where: { id: videoId }
+                });
 
                 if (!listing) {
                     console.log(`Listing not found: ${videoId}`);

@@ -67,8 +67,8 @@ const AuthenticatorListing = () => {
         }
 
         if (active.id !== over.id) {
-            const oldIndex = itemList.findIndex(item => item._id === active.id);
-            const newIndex = itemList.findIndex(item => item._id === over.id);
+            const oldIndex = itemList.findIndex(item => item.id === active.id);
+            const newIndex = itemList.findIndex(item => item.id === over.id);
             const reorderedArray = arrayMove(itemList, oldIndex, newIndex);
 
             // Update the state with the reordered array
@@ -79,7 +79,7 @@ const AuthenticatorListing = () => {
 
     const updateReorderStatusOnServer = (reorderedArray) => {
         setLoading(true);
-        ApiService.post("/api/v1/totp/reorder", { items: reorderedArray.map(item => item._id) }, loginData?.token, navigate)
+        ApiService.post("/api/v1/totp/reorder", { items: reorderedArray.map(item => item.id) }, loginData?.token, navigate)
             .then(data => {
                 setReloadData(true);
                 setReloadDashboardData(true);
@@ -111,7 +111,7 @@ const AuthenticatorListing = () => {
 
         ApiService.get(`/api/v1/totp/delete/${id}`, loginData?.token, navigate)
             .then(() => {
-                setItemList(itemList.filter(item => item._id !== id));
+                setItemList(itemList.filter(item => item.id !== id));
                 makeToast("success", "Selected item deleted successfully.");
                 setReloadData(true);
                 setReloadDashboardData(true);
@@ -156,7 +156,7 @@ const AuthenticatorListing = () => {
                                     {
                                         itemList.map((item) => {
                                             return (
-                                                <SingleTotpItem key={item._id} id={item._id} handle item={item} deleteTotpItem={deleteTotpItem} />
+                                                <SingleTotpItem key={item.id} id={item.id} handle item={item} deleteTotpItem={deleteTotpItem} />
                                             );
                                         })
                                     }

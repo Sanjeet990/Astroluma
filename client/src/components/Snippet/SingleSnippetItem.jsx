@@ -24,7 +24,7 @@ const SingleSnippetItem = ({ snippet }) => {
 
     const reloadCodeSnippets = useCallback(() => {
         setLoading(true);
-        ApiService.get(`/api/v1/snippet/list/${snippet?._id}`, loginData?.token, navigate)
+        ApiService.get(`/api/v1/snippet/list/${snippet?.id}`, loginData?.token, navigate)
             .then(data => {
                 setFileList(data.message.snippetItems);
             })
@@ -46,15 +46,15 @@ const SingleSnippetItem = ({ snippet }) => {
     }, [snippet, reloadCodeSnippets]);
 
     const addNewFile = () => {
-        setModalState({ isOpen: true, data: { snippetId: snippet?._id } })
+        setModalState({ isOpen: true, data: { snippetId: snippet?.id } })
     }
 
     const editCodeFile = (file) => {
-        setModalState({ isOpen: true, data: { snippetId: snippet?._id, snippetItem: file } })
+        setModalState({ isOpen: true, data: { snippetId: snippet?.id, snippetItem: file } })
     }
 
     const deleteCodeFile = (file) => {
-        setDeleteModalState({ isOpen: true, data: { snippetId: snippet?._id, snippetItem: file } })
+        setDeleteModalState({ isOpen: true, data: { snippetId: snippet?.id, snippetItem: file } })
     }
 
     return (
@@ -81,7 +81,7 @@ const SingleSnippetItem = ({ snippet }) => {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                                key={file._id}
+                                key={file.id}
                             >
                                 <SingleCodeItem key={index} snippet={file} editCodeFile={() => editCodeFile(file)} deleteCodeFile={() => deleteCodeFile(file)} />
                             </motion.div>

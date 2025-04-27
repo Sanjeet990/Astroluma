@@ -46,7 +46,7 @@ const SingleDeviceItemFront = (props) => {
             const ws = new WebSocket(`${host}?token=${loginData?.token}`);
 
             ws.onopen = () => {
-                ws.send(`instant-${props.item._id}`);
+                ws.send(`instant-${props.item.id}`);
             };
 
             ws.onmessage = (event) => {
@@ -86,7 +86,7 @@ const SingleDeviceItemFront = (props) => {
     return (
         <div
             role='button'
-            key={props.item._id}
+            key={props.item.id}
             onClick={handleDeviceWakeUp}
             className="relative">
             <motion.div whileHover={{ scale: 1.03 }} className={`${props.item.supportsWol && 'cursor-pointer'} relative border-2 border-itemCardBorder bg-itemCardBg text-itemCardText hover:border-itemCardHoverBorder hover:bg-itemCardHoverBg hover:text-itemCardHoverText pt-10 pb-10 rounded-xl shadow-md h-80 transition-all duration-300`} style={{ overflow: 'hidden' }} >

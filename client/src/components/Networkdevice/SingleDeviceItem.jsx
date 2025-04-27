@@ -57,12 +57,12 @@ const SingleDeviceItem = (props) => {
     };
 
     const handleDelete = () => {
-        props.deleteNetworkDevice(props.item._id)
+        props.deleteNetworkDevice(props.item.id)
     }
 
     const doEdit = (e) => {
         e.preventDefault();
-        navigate(`/manage/networkdevices/save/${props.item._id}`)
+        navigate(`/manage/networkdevices/save/${props.item.id}`)
     }
 
     const decideTheIcon = useCallback(() => {
@@ -80,7 +80,7 @@ const SingleDeviceItem = (props) => {
         <motion.div
             style={style}
             ref={setNodeRef}
-            key={props.item._id}
+            key={props.item.id}
             whileHover={{ scale: 1.03 }}
             className="relative border-2 border-internalCardBorder bg-internalCardBg text-internalCardText pt-10 pb-10 rounded-xl shadow-md h-80" >
             {

@@ -87,7 +87,7 @@ const PageList = () => {
             <>
               {
                 pageList.map(page => (
-                  <SinglePageItem key={page._id} page={page} deletePage={deletePage} managePublish={managePublish} />
+                  <SinglePageItem key={page.id} page={page} deletePage={deletePage} managePublish={managePublish} />
                 ))
               }
             </>

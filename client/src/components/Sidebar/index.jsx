@@ -80,11 +80,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     let url = singleItem.listingUrl;
 
     if (singleItem.listingType === "category") {
-      url = `/c/${singleItem._id}`;
+      url = `/c/${singleItem.id}`;
     } else if (singleItem.listingType === "todo") {
-      url = `/t/${singleItem._id}`;
+      url = `/t/${singleItem.id}`;
     } else if (singleItem.listingType === "snippet") {
-      url = `/s/${singleItem._id}`;
+      url = `/s/${singleItem.id}`;
     } else {
       if (isLocal(hostname)) {
         url = singleItem.localUrl || singleItem.listingUrl;
@@ -177,7 +177,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         const isActive = route === activeRoute ? true : false;
                         const icon = route === "/" ? <FaHome /> : <BsAppIndicator />;
                         return <SidebarLinkItem
-                          key={singleItem?._id}
+                          key={singleItem?.id}
                           active={isActive}
                           icon={icon}
                           text={singleItem?.listingName}

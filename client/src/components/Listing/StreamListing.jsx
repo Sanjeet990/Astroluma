@@ -86,7 +86,7 @@ const StreamListing = () => {
                                             animate={{ opacity: 1, x: 0 }}
                                             exit={{ opacity: 0, x: -20 }}
                                             transition={{ duration: 0.3, delay: index * 0.1 }}
-                                            key={item._id}
+                                            key={item.id}
                                         >
                                             <SingleFeed videoItem={item} />
                                         </motion.div>

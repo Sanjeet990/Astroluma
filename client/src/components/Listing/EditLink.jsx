@@ -85,7 +85,7 @@ const EditLink = () => {
 
                     if (data?.message?.listing?.listingUrl?.startsWith("/p/") && !data?.message?.listing?.localUrl) {
                         const pid = data?.message?.listing?.listingUrl?.split("/")[2];
-                        if (data?.message?.pages?.find(page => page._id === pid)) {
+                        if (data?.message?.pages?.find(page => page.id === pid)) {
                             setSelectedPage(pid);
                             setHaveRemoteUrl(false);
                         }
@@ -312,7 +312,7 @@ const EditLink = () => {
                                 >
                                     <option value="">Select a page</option>
                                     {pageList?.map((page, index) => (
-                                        <option key={index} value={page?._id}>{page.pageTitle}</option>
+                                        <option key={index} value={page?.id}>{page.pageTitle}</option>
                                     ))}
                                 </select>
                             </div>

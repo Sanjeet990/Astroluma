@@ -32,7 +32,7 @@ const EditUser = () => {
     const [rpassword, setRPassword] = useState("");
     const [siteName, setSiteName] = useState("");
 
-    const isSuperAdmin = userData?._id?.toString() === userId ? false : userData?.isSuperAdmin;
+    const isSuperAdmin = userData?.id?.toString() === userId ? false : userData?.isSuperAdmin;
 
     useDynamicFilter(false);
     useCurrentRoute("/manage/accounts");

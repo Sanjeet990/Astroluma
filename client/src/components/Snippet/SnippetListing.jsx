@@ -83,7 +83,7 @@ const SnippetListing = () => {
     useEffect(() => {
         if (deletedSnippet) {
             setSnippets(prevSnippets =>
-                prevSnippets.filter(snippet => snippet._id !== deletedSnippet._id)
+                prevSnippets.filter(snippet => snippet.id !== deletedSnippet.id)
             );
             setSelectedSnippet(null);
         }
@@ -102,7 +102,7 @@ const SnippetListing = () => {
             } else {
                 setSnippets(prevSnippets =>
                     prevSnippets.map(snippet =>
-                        snippet._id === savedSnippet.snippet._id ? savedSnippet.snippet : snippet
+                        snippet.id === savedSnippet.snippet.id ? savedSnippet.snippet : snippet
                     )
                 );
             }
@@ -171,11 +171,11 @@ const SnippetListing = () => {
                                 ) : (
                                     snippets.map((snippet, index) => (
                                         <motion.tr
-                                            key={`${snippet._id}-${index}`}
+                                            key={`${snippet.id}-${index}`}
                                             variants={itemVariants}
                                             onClick={() => handleSnippetClick(snippet)}
                                         >
-                                            <td className={`py-2 px-4 cursor-pointer border-t ${selectedSnippet?._id === snippet._id ? 'bg-snippetSingleItemSelectedBg border-snippetSingleItemSelectedBorder text-snippetSingleItemSelectedText' : 'border-snippetSingleItemBorder hover:bg-snippetSingleItemHoverBg hover:text-snippetSingleItemHoverText hover:border-snippetSingleItemHoverBorder'} flex items-center justify-between transition-colors`}>
+                                            <td className={`py-2 px-4 cursor-pointer border-t ${selectedSnippet?.id === snippet.id ? 'bg-snippetSingleItemSelectedBg border-snippetSingleItemSelectedBorder text-snippetSingleItemSelectedText' : 'border-snippetSingleItemBorder hover:bg-snippetSingleItemHoverBg hover:text-snippetSingleItemHoverText hover:border-snippetSingleItemHoverBorder'} flex items-center justify-between transition-colors`}>
                                                 <SingleSnippetHeaderItem snippet={snippet} listingId={parentId} />
                                             </td>
                                         </motion.tr>

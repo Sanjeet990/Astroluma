@@ -33,14 +33,14 @@ const SingleTodoItem = ({ listingId, todo }) => {
     const [isDeleted, setIsdeleted] = useState(false);
 
     useEffect(() => {
-        if (editedTodo?._id === todoItem?._id) {
+        if (editedTodo?.id === todoItem?.id) {
             setTodoItem(editedTodo);
             setEditedTodo(null);
         }
     }, [editedTodo, setEditedTodo, todoItem]);
 
     useEffect(() => {
-        if (deletedTodo?._id === todoItem?._id) {
+        if (deletedTodo?.id === todoItem?.id) {
             setIsdeleted(true);
             setDeletedTodo(null);
         }
@@ -48,7 +48,7 @@ const SingleTodoItem = ({ listingId, todo }) => {
 
     const manageCompleted = () => {
         setLoading(true);
-        ApiService.get(`/api/v1/todo/completion/${todo?._id}`, loginData?.token, navigate)
+        ApiService.get(`/api/v1/todo/completion/${todo?.id}`, loginData?.token, navigate)
             .then(data => {
                 setTodoItem(data?.message);
                 makeToast("success", "Status changed successfully.");

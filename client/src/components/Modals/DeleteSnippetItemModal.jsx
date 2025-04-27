@@ -22,7 +22,7 @@ const DeleteSnippetItemModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/snippet/${modalState.data?.snippetItem._id}/delete`, loginData?.token, navigate)
+    ApiService.get(`/api/v1/snippet/${modalState.data?.snippetItem.id}/delete`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Snippet deleted.");
         setDeletedSnippet(modalState.data?.snippetItem);

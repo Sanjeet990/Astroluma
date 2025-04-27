@@ -73,7 +73,7 @@ const MyIconsSection = ({ onSelectImage }) => {
     
                 setImageList(prev => {
                     const newImages = data.filter(newImg =>
-                        !prev.some(existingImg => existingImg._id === newImg._id)
+                        !prev.some(existingImg => existingImg.id === newImg.id)
                     );
                     return [...prev, ...newImages];
                 });
@@ -130,7 +130,7 @@ const MyIconsSection = ({ onSelectImage }) => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4 overflow-auto max-h-64 place-items-center">
             {imageList.map((image) => (
                 <motion.div
-                    key={image._id}
+                    key={image.id}
                     whileHover={{ scale: 0.92 }}
                     onClick={() => handleSelectIcon(image)}
                     className="w-18 h-18 p-1 border border-imageSelectionBorder hover:border-imageSelectionHoverBorder bg-imageSelectionBg hover:bg-imageSelectionHoverBg rounded-lg flex justify-center items-center cursor-pointer transition-all duration-300"

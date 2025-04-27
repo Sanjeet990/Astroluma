@@ -101,7 +101,7 @@ const AccountList = () => {
       ApiService.post(`/api/v1/accounts/avatar/${selectedImage?.data}`, { avatar: selectedImage?.image }, loginData?.token, navigate)
         .then(() => {
           //Reload it admin is changing their own avatar
-          if (selectedImage?.data.toString() === userData?._id.toString()) {
+          if (selectedImage?.data.toString() === userData?.id.toString()) {
             setReloadData(true);
           }
 
@@ -115,7 +115,7 @@ const AccountList = () => {
           setSelectedImage(null);
         });
     }
-  }, [loginData?.token, setLoading, navigate, selectedImage, isInitialMount, setSelectedImage, setReloadData, userData?._id]);
+  }, [loginData?.token, setLoading, navigate, selectedImage, isInitialMount, setSelectedImage, setReloadData, userData?.id]);
 
   const deleteUser = (userId) => {
     setUserDelete({ isOpen: true, data: { userId } });
@@ -182,10 +182,10 @@ const AccountList = () => {
           ) : (
             userList?.map(user => (
               <motion.li
-                key={user._id}
+                key={user.id}
                 initial={{ x: -100, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.2 * user._id }}
+                transition={{ delay: 0.2 * user.id }}
                 className="border-internalCardBorder bg-internalCardBg text-internalCardText shadow-md rounded-lg p-2 relative flex items-center w-full"
               >
                 <div className="flex-1 min-w-0">
@@ -197,21 +197,21 @@ const AccountList = () => {
 
                 <div className="flex items-center ml-4 relative">
                   {
-                    (userData?._id?.toString() !== user?._id?.toString()) && <>
+                    (userData?.id?.toString() !== user?.id?.toString()) && <>
                       <button
-                        onClick={() => setOpenMenuId(openMenuId === user._id ? null : user._id)}
+                        onClick={() => setOpenMenuId(openMenuId === user.id ? null : user.id)}
                         className="p-2 rounded-full hover:bg-white/40"
                       >
                         <BsThreeDots />
                       </button>
                       <DropdownMenu
-                        isOpen={openMenuId === user._id}
+                        isOpen={openMenuId === user.id}
                         onClose={() => setOpenMenuId(null)}
-                        onEdit={() => handleEdit(user._id)}
-                        onDelete={() => deleteUser(user._id)}
-                        onChangePassword={() => changePassword(user._id)}
-                        onChangeAvatar={() => changeAvatar(user._id)}
-                        userId={user._id}
+                        onEdit={() => handleEdit(user.id)}
+                        onDelete={() => deleteUser(user.id)}
+                        onChangePassword={() => changePassword(user.id)}
+                        onChangeAvatar={() => changeAvatar(user.id)}
+                        userId={user.id}
                         isSuperAdmin={user.isSuperAdmin}
                       />
                     </>

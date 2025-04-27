@@ -51,7 +51,7 @@ const NewSnippetItemModal = () => {
 
     const newSnippetItem = {
       listingId: modalState.data?.listingId,
-      snippetId: modalState.data?.snippetItem ? modalState.data?.snippetItem._id : null,
+      snippetId: modalState.data?.snippetItem ? modalState.data?.snippetItem.id : null,
       snippetCode: modalState.data?.snippetItem ? null : snippetCode,
       snippetTitle,
       language

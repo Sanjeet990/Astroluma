@@ -76,7 +76,7 @@ const Listings = ({ type }) => {
 
     const updateReorderStatusOnServer = useCallback(async (reorderedArray) => {
         setLoading(true);
-        ApiService.post(`/api/v1/listing/folder/${listingId}/reorder`, { items: reorderedArray.map(item => item._id) }, loginData?.token, navigate)
+        ApiService.post(`/api/v1/listing/folder/${listingId}/reorder`, { items: reorderedArray.map(item => item.id) }, loginData?.token, navigate)
             .then(data => {
                 makeToast("success", String(data?.message));
             })
@@ -92,8 +92,8 @@ const Listings = ({ type }) => {
         const { active, over } = event;
 
         if (active.id !== over.id) {
-            const oldIndex = itemList.findIndex(item => item._id === active.id);
-            const newIndex = itemList.findIndex(item => item._id === over.id);
+            const oldIndex = itemList.findIndex(item => item.id === active.id);
+            const newIndex = itemList.findIndex(item => item.id === over.id);
             const reorderedArray = arrayMove(itemList, oldIndex, newIndex);
             setItemList(reorderedArray);
             updateReorderStatusOnServer(reorderedArray);
@@ -104,7 +104,7 @@ const Listings = ({ type }) => {
         if (!moveItem) return;
 
         setLoading(true);
-        ApiService.get(`/api/v1/listing/move/${moveItem?._id}/to/${listingId}`, loginData?.token, navigate)
+        ApiService.get(`/api/v1/listing/move/${moveItem?.id}/to/${listingId}`, loginData?.token, navigate)
             .then(() => {
                 setMoveItem(null);
                 setReloadData(true);
@@ -126,7 +126,7 @@ const Listings = ({ type }) => {
         setLoading(true);
         ApiService.get(`/api/v1/listing/delete/${id}`, loginData?.token, navigate)
             .then(() => {
-                setItemList(prev => prev.filter(item => item._id !== id));
+                setItemList(prev => prev.filter(item => item.id !== id));
                 makeToast("success", "Selected Item deleted successfully.");
             })
             .catch((error) => {
@@ -202,25 +202,25 @@ const Listings = ({ type }) => {
                             <NiceLink
                                 label="Add Folder"
                                 className="bg-buttonGeneric text-buttonText"
-                                to={`/manage/listing/${parentFolder ? `${parentFolder?._id}/` : ""}save/folder`}
+                                to={`/manage/listing/${parentFolder ? `${parentFolder?.id}/` : ""}save/folder`}
                             />
                             <NiceLink
                                 label="Add Link"
                                 className="bg-buttonGeneric text-buttonText"
-                                to={`/manage/listing/${parentFolder ? `${parentFolder?._id}/` : ""}save/link`}
+                                to={`/manage/listing/${parentFolder ? `${parentFolder?.id}/` : ""}save/link`}
                             />
                             {userData?.todolist && (
                                 <NiceLink
                                     label="Add Todo"
                                     className="bg-buttonGeneric text-buttonText"
-                                    to={`/manage/listing/${parentFolder ? `${parentFolder?._id}/` : ""}save/todo`}
+                                    to={`/manage/listing/${parentFolder ? `${parentFolder?.id}/` : ""}save/todo`}
                                 />
                             )}
                             {userData?.snippetmanager && (
                                 <NiceLink
                                     label="Add Snippet"
                                     className="bg-buttonGeneric text-buttonText"
-                                    to={`/manage/listing/${parentFolder ? `${parentFolder?._id}/` : ""}save/snippet`}
+                                    to={`/manage/listing/${parentFolder ? `${parentFolder?.id}/` : ""}save/snippet`}
                                 />
                             )}
                         </>
@@ -228,7 +228,7 @@ const Listings = ({ type }) => {
                         <NiceLink
                             label="Add RTSP Stream"
                             className="bg-buttonGeneric text-buttonText"
-                            to={`/manage/listing/${parentFolder ? `${parentFolder?._id}/` : ""}save/stream`}
+                            to={`/manage/listing/${parentFolder ? `${parentFolder?.id}/` : ""}save/stream`}
                         />
                     )
                 )}
@@ -283,8 +283,8 @@ const Listings = ({ type }) => {
                             <SortableContext items={filteredItems} strategy={rectSortingStrategy}>
                                 {filteredItems.map((item) => (
                                     <SingleListing
-                                        key={item._id}
-                                        id={item._id}
+                                        key={item.id}
+                                        id={item.id}
                                         handle
                                         item={item}
                                         deleteListing={deleteListing}

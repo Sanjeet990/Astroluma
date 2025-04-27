@@ -567,14 +567,25 @@ exports.deleteListing = async (req, res) => {
             });
         }
 
-        if (listingInfo.userId !== userId) {
-            return res.status(400).json({
-                error: true,
-                message: "You are not authorized to delete this listing."
+        // Recursive function to delete children
+        const deleteChildren = async (parentId) => {
+            const children = await Listing.findAll({
+                where: { parentId }
             });
-        }
-
-        await Listing.deleteWithChildren(listingId);
+            
+            for (const child of children) {
+                // Recursively delete this child's children
+                await deleteChildren(child.id);
+                // Then delete the child itself
+                await child.destroy();
+            }
+        };
+        
+        // Delete all children first
+        await deleteChildren(listingId);
+        
+        // Then delete the parent listing
+        await listingInfo.destroy();
 
         return res.status(200).json({
             error: false,

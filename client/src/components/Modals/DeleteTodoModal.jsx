@@ -22,7 +22,7 @@ const DeleteTodoModal = () => {
   const confirmDelete = () => {
     setLoading(true);
 
-    ApiService.get(`/api/v1/todo/${modalState.data?.listingId}/delete/${modalState.data?.todoItem?._id}`, loginData?.token, navigate)
+    ApiService.get(`/api/v1/todo/${modalState.data?.listingId}/delete/${modalState.data?.todoItem?.id}`, loginData?.token, navigate)
       .then(() => {
         makeToast("success", "Todo item deleted.");
         setDeletedTodo(modalState.data?.todoItem);

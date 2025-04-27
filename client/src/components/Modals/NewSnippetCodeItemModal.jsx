@@ -23,7 +23,7 @@ const NewSnippetCodeItemModal = () => {
 
   useEffect(() => {
     if (modalState.data?.snippetItem) {
-      setCodeId(modalState.data?.snippetItem._id);
+      setCodeId(modalState.data?.snippetItem.id);
       setFileName(modalState.data?.snippetItem.snippetFilename);
       setSnippetCode(modalState.data?.snippetItem.snippetCode);
       setLanguage(modalState.data?.snippetItem.snippetLanguage);

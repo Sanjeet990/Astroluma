@@ -54,11 +54,11 @@ const SingleListingInFront = (props) => {
         let url = props.item.listingUrl;
 
         if (props.item.listingType === "category") {
-            url = `/c/${props.item._id}`;
+            url = `/c/${props.item.id}`;
         } else if (props.item.listingType === "todo") {
-            url = `/t/${props.item._id}`;
+            url = `/t/${props.item.id}`;
         } else if (props.item.listingType === "snippet") {
-            url = `/s/${props.item._id}`;
+            url = `/s/${props.item.id}`;
         } else {
             if (isLocal(hostname)) {
                 url = `${props.item.localUrl ? props.item.localUrl : props.item.listingUrl}`;
@@ -132,7 +132,7 @@ const SingleListingInFront = (props) => {
         const fetchData = () => {
             //console.log("Running Integration: ", props?.item?.integration);
             if (props.item.integration) {
-                ApiService.get(`/api/v1/app/run/${props.item._id}/${props?.item?.integration?._id}`, loginData?.token)
+                ApiService.get(`/api/v1/app/run/${props.item.id}/${props?.item?.integration?.id}`, loginData?.token)
                     .then(data => {
                         setHtmlData(data?.html);
                         setFullHtmlData(data?.fullHtml);

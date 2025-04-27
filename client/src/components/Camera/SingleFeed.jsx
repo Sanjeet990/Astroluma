@@ -18,12 +18,12 @@ const SingleFeed = ({ videoItem }) => {
   const [quickPreviewStream, setQuickPreviewStream] = useRecoilState(quickPreviewStreamState);
   const [selectedStreams, setSelectedStreams] = useRecoilState(selectedStreamsState);
 
-  const isSelected = selectedStreams.find(item => item._id === videoItem._id);
+  const isSelected = selectedStreams.find(item => item.id === videoItem.id);
 
   const loadImagePreview = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await ApiService.getImage(`/api/v1/listing/stream/preview/${videoItem._id}`, loginData?.token);
+      const data = await ApiService.getImage(`/api/v1/listing/stream/preview/${videoItem.id}`, loginData?.token);
 
       if (!data || data === "data:image/jpeg;base64,") {
         setImagePreview("/nopreview.png");
@@ -53,15 +53,15 @@ const SingleFeed = ({ videoItem }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [videoItem._id, loginData?.token, retryCount]);
+  }, [videoItem.id, loginData?.token, retryCount]);
 
   useEffect(() => {
-    if (quickPreviewStream === videoItem._id) {
+    if (quickPreviewStream === videoItem.id) {
       setTempPreview(true);
     } else {
       setTempPreview(false);
     }
-  }, [quickPreviewStream, videoItem._id]);
+  }, [quickPreviewStream, videoItem.id]);
 
   useEffect(() => {
     loadImagePreview();
@@ -70,11 +70,11 @@ const SingleFeed = ({ videoItem }) => {
   const manageSelection = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const isCurrentlySelected = selectedStreams.some(item => item._id === videoItem._id);
+    const isCurrentlySelected = selectedStreams.some(item => item.id === videoItem.id);
 
     if (isCurrentlySelected) {
       // Remove the item if it's already selected
-      setSelectedStreams(selectedStreams.filter(item => item._id !== videoItem._id));
+      setSelectedStreams(selectedStreams.filter(item => item.id !== videoItem.id));
     } else {
       if (selectedStreams.length < 4) {
         // If less than 3 items, just add the new item
@@ -91,13 +91,13 @@ const SingleFeed = ({ videoItem }) => {
   const clickedForPreview = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setQuickPreviewStream(videoItem._id);
+    setQuickPreviewStream(videoItem.id);
   }
 
   return (
     <div
       role='button'
-      key={videoItem._id}
+      key={videoItem.id}
       className="relative cursor-pointer"
       onClick={clickedForPreview}
     >
@@ -132,7 +132,7 @@ const SingleFeed = ({ videoItem }) => {
                   )}
                 </div>
               ) : (
-                <RTSPPlayer videoId={videoItem._id} />
+                <RTSPPlayer videoId={videoItem.id} />
               )}
 
               <div className="absolute top-3 right-2 flex justify-center items-center bg-red-600 py-0.5 px-1 text-xs rounded-md z-5">

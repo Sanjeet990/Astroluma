@@ -22,7 +22,7 @@ const ConfirmPacketSendModal = () => {
   const sendPacketNow = () => {
     setIsSending(true);
 
-    ApiService.get(`/api/v1/networkdevices/wake/${modalState.data._id}`, loginData?.token, navigate)
+    ApiService.get(`/api/v1/networkdevices/wake/${modalState.data.id}`, loginData?.token, navigate)
       .then(data => {
         makeToast("success", String(data?.message));
       })

@@ -118,19 +118,19 @@ const UserProfile = () => {
     }
 
     const changeAvatar = () => {
-        setChangeAvatar({ isOpen: true, title: "Select Avatar", data: userData?._id?.toString() });
+        setChangeAvatar({ isOpen: true, title: "Select Avatar", data: userData?.id?.toString() });
     }
 
     const changePassword = () => {
-        setChangePassword({ isOpen: true, data: { userId: userData?._id } });
+        setChangePassword({ isOpen: true, data: { userId: userData?.id } });
     }
 
     const editProfile = () => {
-        navigate(`/manage/accounts/${userData?._id}`);
+        navigate(`/manage/accounts/${userData?.id}`);
     }
 
     const removeBranding = () => {
-        //setChangePassword({ isOpen: true, data: { userId: userData?._id } });
+        //setChangePassword({ isOpen: true, data: { userId: userData?.id } });
         setRemoveBranding({ isOpen: true });
     }
 

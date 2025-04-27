@@ -70,11 +70,11 @@ const SingleListing = ({ item, deleteListing, id }) => {
         const type = LISTING_TYPES[item.listingType] || LISTING_TYPES.link;
         const baseUrl = '/manage/listing';
         return edit
-            ? `${baseUrl}/save/${type.path}/${item._id}`
+            ? `${baseUrl}/save/${type.path}/${item.id}`
             : item.listingType === 'category'
-                ? `${baseUrl}/${item._id}`
-                : `${baseUrl}/save/${type.path}/${item._id}`;
-    }, [item._id, item.listingType]);
+                ? `${baseUrl}/${item.id}`
+                : `${baseUrl}/save/${type.path}/${item.id}`;
+    }, [item.id, item.listingType]);
 
     const decideTheIcon = useCallback(() => {
         const iconObject = item?.listingIcon;
@@ -94,7 +94,7 @@ const SingleListing = ({ item, deleteListing, id }) => {
 
     const handleConfirmDelete = (e) => {
         e.preventDefault();
-        deleteListing(item._id);
+        deleteListing(item.id);
         setShowDeleteConfirmation(false);
     };
 
@@ -110,7 +110,7 @@ const SingleListing = ({ item, deleteListing, id }) => {
 
     const handleMove = (e) => {
         e.preventDefault();
-        if (moveItem?._id === item._id) {
+        if (moveItem?.id === item.id) {
             setMoveItem(null);
         } else {
             setMoveItem(item);
@@ -200,7 +200,7 @@ const SingleListing = ({ item, deleteListing, id }) => {
                         title="Move"
                         role="button"
                         onClick={handleMove}
-                        className={`absolute top-0 right-16 p-2 cursor-pointer opacity-50 m-2 transition-opacity hover:opacity-100 ${moveItem?._id === item._id
+                        className={`absolute top-0 right-16 p-2 cursor-pointer opacity-50 m-2 transition-opacity hover:opacity-100 ${moveItem?.id === item.id
                             ? 'rounded-full bg-internalCardIconSelectedBg text-internalCardIconSelectedColor'
                             : 'text-internalCardIconColor hover:text-internalCardIconHoverColor'
                             }`}
@@ -216,7 +216,7 @@ const SingleListing = ({ item, deleteListing, id }) => {
         <Link
             style={style}
             ref={setNodeRef}
-            to={showDeleteConfirmation || moveItem?._id === item._id ? null : decideLink()}
+            to={showDeleteConfirmation || moveItem?.id === item.id ? null : decideLink()}
             className="relative"
         >
             <motion.div

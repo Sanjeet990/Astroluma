@@ -59,7 +59,7 @@ const NewTodoItemModal = () => {
 
     const newTodoItem = {
       listingId: modalState.data?.listingId,
-      todoId: modalState.data?.todoItem ? modalState.data?.todoItem._id : null,
+      todoId: modalState.data?.todoItem ? modalState.data?.todoItem.id : null,
       todoName,
       priority,
       dueDate: enableDueDate ? dueDate : null,
