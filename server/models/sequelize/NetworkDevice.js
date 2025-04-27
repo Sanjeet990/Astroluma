@@ -1,7 +1,12 @@
-const { DataTypes } = require('sequelize');
+'use strict';
 
-module.exports = (sequelize) => {
+module.exports = (sequelize, DataTypes) => {
   const NetworkDevice = sequelize.define('NetworkDevice', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
     deviceMac: {
       type: DataTypes.STRING,
       allowNull: true,
@@ -12,9 +17,16 @@ module.exports = (sequelize) => {
       allowNull: false
     },
     deviceIcon: {
-      type: DataTypes.JSON,
+      type: DataTypes.TEXT,
       allowNull: true,
-      defaultValue: null
+      defaultValue: null,
+      get() {
+        const value = this.getDataValue('deviceIcon');
+        return value ? JSON.parse(value) : null;
+      },
+      set(value) {
+        this.setDataValue('deviceIcon', value ? JSON.stringify(value) : null);
+      }
     },
     broadcastAddress: {
       type: DataTypes.STRING,
@@ -61,7 +73,8 @@ module.exports = (sequelize) => {
     timestamps: true
   });
 
-  NetworkDevice.associate = (models) => {
+  // Define the association with User model
+  NetworkDevice.associate = function(models) {
     NetworkDevice.belongsTo(models.User, { foreignKey: 'userId' });
   };
 

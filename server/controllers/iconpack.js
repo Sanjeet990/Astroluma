@@ -1,11 +1,19 @@
-const IconPack = require("../models/IconPack");
+const { IconPack } = require("../models");
+const { Op } = require("sequelize");
 const axios = require("axios");
 
 exports.listIconPacks = async (req, res) => {
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     try {
-        const iconPacks = await IconPack.find({ $or: [{ userId: userId }, { userId: null }] });
+        const iconPacks = await IconPack.findAll({ 
+            where: { 
+                [Op.or]: [
+                    { userId: userId }, 
+                    { userId: null }
+                ] 
+            }
+        });
 
         return res.status(200).json({
             error: false,
@@ -13,6 +21,7 @@ exports.listIconPacks = async (req, res) => {
         });
 
     } catch (err) {
+        console.error("Error:", err);
         return res.status(500).json({
             error: true,
             message: err.message
@@ -22,7 +31,7 @@ exports.listIconPacks = async (req, res) => {
 
 exports.addiconpack = async (req, res) => {
     const { iconpackUrl } = req.body;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     if (!iconpackUrl) {
         return res.status(500).json({
@@ -59,7 +68,13 @@ exports.addiconpack = async (req, res) => {
             }
 
             // Check if icon pack already exists
-            const existingIconPack = await IconPack.findOne({ iconProvider: data?.iconProvider, userId: userId });
+            const existingIconPack = await IconPack.findOne({
+                where: { 
+                    iconProvider: data?.iconProvider, 
+                    userId: userId 
+                }
+            });
+            
             if (existingIconPack) {
                 return res.status(400).json({
                     error: true,
@@ -67,23 +82,23 @@ exports.addiconpack = async (req, res) => {
                 });
             }
 
-            const IconPackInstance = new IconPack({
-                iconProvider: data?.iconProvider,
-                iconName: data?.iconPack,
-                iconPackVersion: data?.iconPackVersion,
-                jsonUrl: iconpackUrl,
-                packDeveloper: data?.packDeveloper,
-                credit: data?.credit,
-                userId: userId
-            });
-
             try {
-                const savedIconPack = await IconPackInstance.save();
+                const savedIconPack = await IconPack.create({
+                    iconProvider: data?.iconProvider,
+                    iconName: data?.iconPack,
+                    iconPackVersion: data?.iconPackVersion,
+                    jsonUrl: iconpackUrl,
+                    packDeveloper: data?.packDeveloper,
+                    credit: data?.credit,
+                    userId: userId
+                });
+                
                 return res.status(200).json({
                     error: false,
                     message: savedIconPack
                 });
             } catch (err) {
+                console.error("Error:", err);
                 return res.status(500).json({
                     error: true,
                     message: err.message
@@ -91,6 +106,7 @@ exports.addiconpack = async (req, res) => {
             }
         }
     } catch (err) {
+        console.error("Error:", err);
         return res.status(500).json({
             error: true,
             message: err.message
@@ -100,10 +116,15 @@ exports.addiconpack = async (req, res) => {
 
 exports.deleteIconPack = async (req, res) => {
     const iconPackId = req.params.id;
-    const userId = req.user?._id;
+    const userId = req.user?.id;
 
     try {
-        const iconPack = await IconPack.findOne({ _id: iconPackId, userId: userId });
+        const iconPack = await IconPack.findOne({ 
+            where: { 
+                id: iconPackId, 
+                userId: userId 
+            }
+        });
 
         if (!iconPack) {
             return res.status(404).json({
@@ -112,7 +133,12 @@ exports.deleteIconPack = async (req, res) => {
             });
         }
 
-        await IconPack.deleteOne({ _id: iconPackId, userId: userId });
+        await IconPack.destroy({ 
+            where: { 
+                id: iconPackId, 
+                userId: userId 
+            }
+        });
 
         return res.status(200).json({
             error: false,
@@ -120,6 +146,7 @@ exports.deleteIconPack = async (req, res) => {
         });
 
     } catch (err) {
+        console.error("Error:", err);
         return res.status(500).json({
             error: true,
             message: err.message

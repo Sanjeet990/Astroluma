@@ -1,15 +1,13 @@
-const Listing = require("../models/Listing");
-const App = require("../models/App");
+const { Listing, App, Page } = require("../models");
 const stream = require('stream');
 const { spawn } = require('child_process');
-const Page = require("../models/Page");
-const mongoose = require('mongoose');
+const { Op } = require('sequelize');
 const { isValidStream } = require("../utils/apiutils");
 const fs = require('fs');
 const path = require('path');
 
 exports.saveFolder = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     let { parentId, listingId, folderName, folderIcon, folderURL, showInSidebar, showOnFeatured } = req.body;
 
     if (listingId === 'undefined') listingId = null;
@@ -25,19 +23,20 @@ exports.saveFolder = async (req, res) => {
     try {
         if (listingId) {
             // If folder exists, update the folder
-            const parentFolder = await Listing.findOne({
-                _id: listingId,
-                userId
+            const [updatedCount] = await Listing.update({
+                listingName: folderName,
+                listingIcon: folderIcon,
+                listingUrl: folderURL,
+                inSidebar: showInSidebar,
+                onFeatured: showOnFeatured
+            }, {
+                where: {
+                    id: listingId,
+                    userId
+                }
             });
 
-            if (parentFolder) {
-                parentFolder.listingName = folderName;
-                parentFolder.listingIcon = folderIcon;
-                parentFolder.listingUrl = folderURL;
-                parentFolder.inSidebar = showInSidebar;
-                parentFolder.onFeatured = showOnFeatured;
-
-                await parentFolder.save();
+            if (updatedCount > 0) {
                 return res.status(200).json({
                     error: false,
                     message: "Folder updated"
@@ -50,7 +49,7 @@ exports.saveFolder = async (req, res) => {
             }
         } else {
             // Add the new folder
-            const newFolder = new Listing({
+            const newFolder = await Listing.create({
                 listingName: folderName,
                 listingIcon: folderIcon,
                 listingUrl: folderURL,
@@ -60,8 +59,6 @@ exports.saveFolder = async (req, res) => {
                 inSidebar: showInSidebar,
                 userId
             });
-
-            await newFolder.save();
 
             return res.status(200).json({
                 error: false,
@@ -79,7 +76,7 @@ exports.saveFolder = async (req, res) => {
 };
 
 exports.listingDetails = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     let listingId = req.params.listingId;
 
     if (!listingId || listingId === 'undefined') listingId = null;
@@ -90,19 +87,27 @@ exports.listingDetails = async (req, res) => {
         if (listingId) {
             // Fetch listing details
             listing = await Listing.findOne({
-                _id: listingId,
-                userId
+                where: {
+                    id: listingId,
+                    userId
+                }
             });
         }
 
         // Find pages
-        const pages = await Page.find({
-            userId,
-            isPublished: true
-        }).select('-pageContent'); // Exclude pageContent field
+        const pages = await Page.findAll({
+            where: {
+                userId,
+                isPublished: true
+            },
+            attributes: { exclude: ['pageContent'] } // Exclude pageContent field
+        });
 
         //select apps from the db
-        const appList = await App.find({ npmInstalled: 1 }).sort({ appName: 1 });
+        const appList = await App.findAll({
+            where: { npmInstalled: 1 },
+            order: [['appName', 'ASC']]
+        });
 
         const appsDir = path.join(__dirname, '../../storage/apps'); // Path to the apps directory
 
@@ -152,9 +157,7 @@ exports.generatePreview = async (req, res) => {
 
     try {
         // Fetch listing details
-        const listing = await Listing.findOne({
-            _id: listingId
-        });
+        const listing = await Listing.findByPk(listingId);
 
         if (!listing) {
             return res.status(404).json({
@@ -213,28 +216,43 @@ exports.generatePreview = async (req, res) => {
 
 const getBreadcrumb = async (listingId, userId) => {
     try {
+        // Initialize breadcrumb array
+        const breadcrumb = [];
+        
+        // If no listing ID, return empty breadcrumb
+        if (!listingId) {
+            return breadcrumb;
+        }
+
         // Fetch initial listing details
         const listing = await Listing.findOne({
-            _id: listingId,
-            userId
+            where: {
+                id: listingId,
+                userId
+            }
         });
 
         if (!listing) {
-            return []; // Return empty array if listing not found
+            return breadcrumb; // Return empty array if listing not found
         }
-
-        // Initialize breadcrumb array
-        const breadcrumb = [];
-
+        
         // Recursive function to fetch breadcrumb
         const fetchBreadcrumb = async (currentId) => {
+            if (!currentId) return;
+            
             const parentListing = await Listing.findOne({
-                _id: currentId,
-                userId
+                where: {
+                    id: currentId,
+                    userId
+                }
             });
 
             if (parentListing) {
-                breadcrumb.unshift({ id: parentListing._id, listingName: parentListing.listingName });
+                breadcrumb.unshift({ 
+                    id: parentListing.id, 
+                    listingName: parentListing.listingName 
+                });
+                
                 if (parentListing.parentId) {
                     await fetchBreadcrumb(parentListing.parentId); // Recursively fetch parent breadcrumb
                 }
@@ -254,67 +272,82 @@ const getBreadcrumb = async (listingId, userId) => {
 }
 
 exports.listItems = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     let listingId = req.params.listingId;
 
     if (!listingId || listingId === 'undefined') listingId = null;
 
-    let query;
-    if (!listingId) {
-        // If parentId is null, select records where parentId=null, onFeatured is true, and userId is userId
-        query = {
-            parent: null,
-            onFeatured: true,
-            userId,
-            listingType: { $ne: "stream" }
-        };
-    } else {
-        listingId = new mongoose.Types.ObjectId(req.params.listingId);
-        // If parentId is not null, select records where parentId=parentId and userId is userId
-        query = {
-            parentId: listingId,
-            userId,
-            listingType: { $ne: "stream" }
-        };
-    }
-
-    const [items, parentFolder, breadcrumb] = await Promise.all([
-        // list all items of this listing id
-        Listing.find(query).sort({ sortOrder: 'asc' }),
-
-        // find listing details
-        Listing.findOne({
-            _id: listingId,
-            userId
-        }),
-        getBreadcrumb(listingId, userId)
-    ]);
-
-
-    //return details
-    return res.status(200).json({
-        error: false,
-        message: {
-            items,
-            parentFolder,
-            breadcrumb
+    try {
+        let query;
+        if (!listingId) {
+            // If parentId is null, select records where parentId=null, onFeatured is true, and userId is userId
+            query = {
+                parentId: null,
+                onFeatured: true,
+                userId,
+                listingType: {
+                    [Op.ne]: "stream"
+                }
+            };
+        } else {
+            // If parentId is not null, select records where parentId=parentId and userId is userId
+            query = {
+                parentId: listingId,
+                userId,
+                listingType: {
+                    [Op.ne]: "stream"
+                }
+            };
         }
-    });
-}
+
+        // Get items, parent folder and breadcrumb in parallel
+        const [items, parentFolder, breadcrumb] = await Promise.all([
+            // list all items of this listing id
+            Listing.findAll({
+                where: query,
+                order: [['sortOrder', 'ASC']]
+            }),
+
+            // find listing details
+            listingId ? Listing.findOne({
+                where: {
+                    id: listingId,
+                    userId
+                }
+            }) : null,
+            
+            getBreadcrumb(listingId, userId)
+        ]);
+
+        //return details
+        return res.status(200).json({
+            error: false,
+            message: {
+                items,
+                parentFolder,
+                breadcrumb
+            }
+        });
+    } catch (error) {
+        console.error('Error listing items:', error);
+        return res.status(400).json({
+            error: true,
+            message: "Error listing items"
+        });
+    }
+};
 
 exports.listStreams = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     try {
-        const items = await Listing.find({
-            parentId: null,
-            userId,
-            listingType: 'stream'
-        }).sort({ sortOrder: 1 }).populate('_id');
-
-        const parentFolder = await Listing.findOne({
-            _id: null,
-            userId
+        const items = await Listing.findAll({
+            where: {
+                parentId: null,
+                userId,
+                listingType: 'stream'
+            },
+            order: [['sortOrder', 'ASC']]
         });
 
         const breadcrumb = await getBreadcrumb(null, userId);
@@ -323,7 +356,7 @@ exports.listStreams = async (req, res) => {
             error: false,
             message: {
                 items,
-                parentFolder,
+                parentFolder: null,
                 breadcrumb
             }
         });
@@ -337,7 +370,7 @@ exports.listStreams = async (req, res) => {
 };
 
 exports.manageListItems = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     let listingId = req.params.listingId;
     const type = req.params.type || 'listing';
 
@@ -346,15 +379,28 @@ exports.manageListItems = async (req, res) => {
     try {
         const query = {
             parentId: listingId,
-            userId,
-            listingType: type === 'streaming' ? 'stream' : { $ne: 'stream' }
+            userId
         };
+        
+        // Handle streaming vs non-streaming types
+        if (type === 'streaming') {
+            query.listingType = 'stream';
+        } else {
+            query.listingType = {
+                [Op.ne]: 'stream'
+            };
+        }
 
-        const items = await Listing.find(query).sort({ sortOrder: 1 });
+        const items = await Listing.findAll({
+            where: query,
+            order: [['sortOrder', 'ASC']]
+        });
 
         const parentFolder = await Listing.findOne({
-            _id: listingId,
-            userId
+            where: {
+                id: listingId,
+                userId
+            }
         });
 
         const breadcrumb = await getBreadcrumb(listingId, userId);
@@ -377,14 +423,13 @@ exports.manageListItems = async (req, res) => {
 };
 
 exports.saveLink = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { parentId, listingId, linkName, linkIcon, linkURL, localUrl, showInSidebar, showOnFeatured } = req.body;
     let integration = req.body.integration;
 
     if (!integration || integration === 'undefined' || integration === 'null') integration = null;
 
     if (!linkName || !linkIcon || (!linkURL && !localUrl)) {
-
         return res.status(400).json({
             error: true,
             message: "All fields are required"
@@ -414,21 +459,23 @@ exports.saveLink = async (req, res) => {
 
     try {
         if (listingId) {
-            const updatedLink = await Listing.findOneAndUpdate(
-                { _id: listingId, userId },
-                {
-                    listingName: linkName,
-                    listingIcon: linkIcon,
-                    listingUrl: linkURL,
-                    localUrl,
-                    onFeatured: showOnFeatured,
-                    inSidebar: showInSidebar,
-                    integration: integrationData
-                },
-                { new: true }
-            );
+            // Update existing link
+            const [updatedRowCount] = await Listing.update({
+                listingName: linkName,
+                listingIcon: linkIcon,
+                listingUrl: linkURL,
+                localUrl,
+                onFeatured: showOnFeatured,
+                inSidebar: showInSidebar,
+                integration: integrationData
+            }, {
+                where: { 
+                    id: listingId, 
+                    userId 
+                }
+            });
 
-            if (updatedLink) {
+            if (updatedRowCount > 0) {
                 return res.status(200).json({
                     error: false,
                     message: "Link updated"
@@ -440,6 +487,7 @@ exports.saveLink = async (req, res) => {
                 });
             }
         } else {
+            // Create new link
             await Listing.create({
                 listingName: linkName,
                 listingIcon: linkIcon,
@@ -468,15 +516,15 @@ exports.saveLink = async (req, res) => {
 };
 
 exports.reOrder = async (req, res) => {
-
     const items = req.body.items;
 
     try {
         await Promise.all(items.map(async (itemId, index) => {
-            await Listing.findByIdAndUpdate(
-                itemId,
+            await Listing.update(
                 { sortOrder: index },
-                { new: true, runValidators: true }
+                { 
+                    where: { id: itemId }
+                }
             );
         }));
 
@@ -494,7 +542,7 @@ exports.reOrder = async (req, res) => {
 };
 
 exports.deleteListing = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const listingId = req.params.listingId;
 
     if (!listingId || listingId === 'undefined' || listingId === 'null') {
@@ -505,9 +553,21 @@ exports.deleteListing = async (req, res) => {
     }
 
     try {
-        const listingInfo = await Listing.findOne({ _id: listingId, userId });
+        const listingInfo = await Listing.findOne({ 
+            where: { 
+                id: listingId, 
+                userId 
+            } 
+        });
 
-        if (listingInfo.userId.toString() !== userId.toString()) {
+        if (!listingInfo) {
+            return res.status(404).json({
+                error: true,
+                message: "Listing not found"
+            });
+        }
+
+        if (listingInfo.userId !== userId) {
             return res.status(400).json({
                 error: true,
                 message: "You are not authorized to delete this listing."
@@ -530,7 +590,7 @@ exports.deleteListing = async (req, res) => {
 };
 
 exports.saveTodo = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { parentId, listingId, todoName, todoIcon, showInSidebar, showOnFeatured } = req.body;
 
     try {
@@ -542,22 +602,21 @@ exports.saveTodo = async (req, res) => {
             });
         }
 
-        let todo;
-
         if (listingId) {
             // Update existing todo
-            const updatedTodo = await Listing.findOneAndUpdate(
-                { _id: listingId, userId },
-                {
-                    listingName: todoName,
-                    listingIcon: todoIcon,
-                    inSidebar: showInSidebar,
-                    onFeatured: showOnFeatured
-                },
-                { new: true } // Return the updated document
-            );
+            const [updatedRowCount] = await Listing.update({
+                listingName: todoName,
+                listingIcon: todoIcon,
+                inSidebar: showInSidebar,
+                onFeatured: showOnFeatured
+            }, {
+                where: { 
+                    id: listingId, 
+                    userId 
+                }
+            });
 
-            if (updatedTodo) {
+            if (updatedRowCount > 0) {
                 return res.status(200).json({
                     error: false,
                     message: "Todo updated"
@@ -570,7 +629,7 @@ exports.saveTodo = async (req, res) => {
             }
         } else {
             // Add new todo
-            todo = new Listing({
+            await Listing.create({
                 listingName: todoName,
                 listingIcon: todoIcon,
                 listingType: "todo",
@@ -579,8 +638,6 @@ exports.saveTodo = async (req, res) => {
                 inSidebar: showInSidebar,
                 userId
             });
-
-            await todo.save();
 
             return res.status(200).json({
                 error: false,
@@ -597,7 +654,7 @@ exports.saveTodo = async (req, res) => {
 };
 
 exports.saveSnippet = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const { parentId, listingId, snippetName, snippetIcon, showInSidebar, showOnFeatured } = req.body;
 
     try {
@@ -609,22 +666,21 @@ exports.saveSnippet = async (req, res) => {
             });
         }
 
-        let snippet;
-
         if (listingId) {
             // Update existing snippet
-            const updatedSnippet = await Listing.findOneAndUpdate(
-                { _id: listingId, userId },
-                {
-                    listingName: snippetName,
-                    listingIcon: snippetIcon,
-                    inSidebar: showInSidebar,
-                    onFeatured: showOnFeatured
-                },
-                { new: true } // Return the updated document
-            );
+            const [updatedRowCount] = await Listing.update({
+                listingName: snippetName,
+                listingIcon: snippetIcon,
+                inSidebar: showInSidebar,
+                onFeatured: showOnFeatured
+            }, {
+                where: { 
+                    id: listingId, 
+                    userId 
+                }
+            });
 
-            if (updatedSnippet) {
+            if (updatedRowCount > 0) {
                 return res.status(200).json({
                     error: false,
                     message: "Snippet list updated"
@@ -637,7 +693,7 @@ exports.saveSnippet = async (req, res) => {
             }
         } else {
             // Add new snippet
-            snippet = new Listing({
+            await Listing.create({
                 listingName: snippetName,
                 listingIcon: snippetIcon,
                 listingType: "snippet",
@@ -646,8 +702,6 @@ exports.saveSnippet = async (req, res) => {
                 inSidebar: showInSidebar,
                 userId
             });
-
-            await snippet.save();
 
             return res.status(200).json({
                 error: false,
@@ -664,7 +718,7 @@ exports.saveSnippet = async (req, res) => {
 };
 
 exports.saveStream = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     let { parentId, listingId, linkName, linkURL } = req.body;
 
     if (!listingId || listingId === 'undefined') listingId = null;
@@ -689,16 +743,17 @@ exports.saveStream = async (req, res) => {
 
         if (listingId) {
             // Update existing stream
-            const updatedStream = await Listing.findOneAndUpdate(
-                { _id: listingId, userId },
-                {
-                    listingName: linkName,
-                    listingUrl: linkURL
-                },
-                { new: true } // Return the updated document
-            );
+            const [updatedRowCount] = await Listing.update({
+                listingName: linkName,
+                listingUrl: linkURL
+            }, {
+                where: { 
+                    id: listingId, 
+                    userId 
+                }
+            });
 
-            if (updatedStream) {
+            if (updatedRowCount > 0) {
                 return res.status(200).json({
                     error: false,
                     message: "Stream updated"
@@ -711,15 +766,13 @@ exports.saveStream = async (req, res) => {
             }
         } else {
             // Add new stream
-            const streamListing = new Listing({
+            await Listing.create({
                 listingName: linkName,
                 listingUrl: linkURL,
                 listingType: "stream",
                 parentId,
                 userId
             });
-
-            await streamListing.save();
 
             return res.status(200).json({
                 error: false,
@@ -736,7 +789,7 @@ exports.saveStream = async (req, res) => {
 };
 
 exports.moveListingTo = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const listingId = req.params.listingId;
     let parentId = req.params.parentId;
 
@@ -752,46 +805,63 @@ exports.moveListingTo = async (req, res) => {
         });
     }
 
-    // First verify that the listing exists and belongs to the user
-    const sourceListing = await Listing.findOne({ _id: listingId, userId });
-    if (!sourceListing) {
-        return res.status(404).json({
-            error: true,
-            message: "Listing not found or access denied"
+    try {
+        // First verify that the listing exists and belongs to the user
+        const sourceListing = await Listing.findOne({ 
+            where: { 
+                id: listingId, 
+                userId 
+            } 
         });
-    }
-
-    // If parentId is provided, verify it exists and belongs to the user
-    if (parentId) {
-        const parentListing = await Listing.findOne({ _id: parentId, userId });
-        if (!parentListing) {
+        
+        if (!sourceListing) {
             return res.status(404).json({
                 error: true,
-                message: "Parent listing not found or access denied"
+                message: "Listing not found or access denied"
             });
         }
-    }
 
-    // Check recursively if the target parent is a descendant of the listing being moved
-    const isListingInParentTree = async (currentId, targetParentId) => {
-        // Base cases
-        if (!currentId || !targetParentId) return false;
-        if (currentId.toString() === targetParentId.toString()) return true;
-
-        // Get all direct children of the current listing
-        const children = await Listing.find({ parentId: currentId, userId });
-
-        // Recursively check each child
-        for (const child of children) {
-            if (await isListingInParentTree(child._id, targetParentId)) {
-                return true;
+        // If parentId is provided, verify it exists and belongs to the user
+        if (parentId) {
+            const parentListing = await Listing.findOne({ 
+                where: { 
+                    id: parentId, 
+                    userId 
+                } 
+            });
+            
+            if (!parentListing) {
+                return res.status(404).json({
+                    error: true,
+                    message: "Parent listing not found or access denied"
+                });
             }
         }
 
-        return false;
-    };
+        // Check recursively if the target parent is a descendant of the listing being moved
+        const isListingInParentTree = async (currentId, targetParentId) => {
+            // Base cases
+            if (!currentId || !targetParentId) return false;
+            if (currentId === targetParentId) return true;
 
-    try {
+            // Get all direct children of the current listing
+            const children = await Listing.findAll({ 
+                where: { 
+                    parentId: currentId, 
+                    userId 
+                } 
+            });
+
+            // Recursively check each child
+            for (const child of children) {
+                if (await isListingInParentTree(child.id, targetParentId)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
         // Check if the move would create a circular reference
         if (parentId && await isListingInParentTree(listingId, parentId)) {
             return res.status(400).json({
@@ -801,18 +871,25 @@ exports.moveListingTo = async (req, res) => {
         }
 
         // Perform the move
-        const updatedListing = await Listing.findOneAndUpdate(
-            { _id: listingId, userId },
+        const [updatedRowCount] = await Listing.update(
             { parentId },
-            { new: true }
+            { 
+                where: { 
+                    id: listingId, 
+                    userId 
+                } 
+            }
         );
 
-        if (!updatedListing) {
+        if (updatedRowCount === 0) {
             return res.status(404).json({
                 error: true,
                 message: "Failed to update listing"
             });
         }
+
+        // Get the updated listing to return
+        const updatedListing = await Listing.findByPk(listingId);
 
         return res.status(200).json({
             error: false,

@@ -1,111 +1,127 @@
 'use strict';
-const { Model, DataTypes } = require('sequelize');
 
-module.exports = (sequelize) => {
-  class User extends Model {
-    static associate(models) {
-      // define associations here if needed
-    }
-  }
-
-  User.init({
+module.exports = (sequelize, DataTypes) => {
+  const User = sequelize.define('User', {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true
+    },
     username: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: true
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: true,
+      allowNull: true
     },
     fullName: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: false
     },
     siteName: {
       type: DataTypes.STRING,
-      defaultValue: "Astroluma",
+      defaultValue: "Astroluma"
     },
     colorTheme: {
       type: DataTypes.STRING,
-      defaultValue: "dark",
+      defaultValue: "dark"
     },
     userAvatar: {
-      type: DataTypes.JSON,
-      defaultValue: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: JSON.stringify({
         iconUrl: "defaultuser",
         iconUrlLight: null,
         iconProvider: 'com.astroluma.self'
+      }),
+      get() {
+        const value = this.getDataValue('userAvatar');
+        return value ? JSON.parse(value) : null;
       },
+      set(value) {
+        this.setDataValue('userAvatar', JSON.stringify(value));
+      }
     },
     siteLogo: {
-      type: DataTypes.JSON,
-      defaultValue: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: JSON.stringify({
         iconUrl: "astroluma",
         iconUrlLight: null,
         iconProvider: 'com.astroluma.self'
+      }),
+      get() {
+        const value = this.getDataValue('siteLogo');
+        return value ? JSON.parse(value) : null;
       },
+      set(value) {
+        this.setDataValue('siteLogo', JSON.stringify(value));
+      }
     },
     isSuperAdmin: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: false
     },
     hideBranding: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: false
     },
     location: {
       type: DataTypes.STRING,
       defaultValue: 'India',
+      allowNull: true
     },
     unit: {
       type: DataTypes.STRING,
       defaultValue: 'metric',
+      allowNull: true
     },
     longitude: {
       type: DataTypes.STRING,
       defaultValue: '77.216721',
+      allowNull: true
     },
     latitude: {
       type: DataTypes.STRING,
       defaultValue: '28.644800',
+      allowNull: true
     },
     camerafeed: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: false
     },
     networkdevices: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: false
     },
     todolist: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: false
     },
     snippetmanager: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: false
     },
     authenticator: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: false
     },
     linksalwaysnewtab: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: false
     },
     foldersalwaysnewtab: {
       type: DataTypes.BOOLEAN,
-      defaultValue: false,
+      defaultValue: false
     },
     provider: {
       type: DataTypes.STRING,
-      defaultValue: "local",
-    },
+      defaultValue: "local"
+    }
   }, {
-    sequelize,
-    modelName: 'User',
-    timestamps: true,
+    timestamps: true
   });
 
   return User;

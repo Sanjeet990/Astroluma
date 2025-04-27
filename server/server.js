@@ -5,6 +5,8 @@ const cors = require("cors");
 const path = require('path');
 const mongoose = require('mongoose');
 const { handleUpgrade } = require('./websocket.js');
+// Add Sequelize import
+const { sequelize } = require('./models/sequelize');
 
 //INIT APP
 const app = express();
@@ -18,29 +20,43 @@ const PORT = process.env.PORT || 8000;
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
-// Variable to track MongoDB connection status
-let isDbConnected = false;
+// Variables to track database connection status
+let isMongoDbConnected = false;
+let isSequelizeConnected = false;
 
 //CONNECT TO MONGODB
 mongoose.connect(MONGODB_URI, {})
     .then(() => {
-        isDbConnected = true;
+        isMongoDbConnected = true;
+        console.log('Connected to MongoDB');
     })
     .catch(err => {
-        isDbConnected = false;
+        console.error('MongoDB connection error:', err);
+        isMongoDbConnected = false;
     });
 
 // Listen for MongoDB connection errors after initial connection
 mongoose.connection.on('error', err => {
     console.error('MongoDB connection error:', err);
-    isDbConnected = false;
+    isMongoDbConnected = false;
 });
 
 // Listen for MongoDB reconnection
 mongoose.connection.on('connected', () => {
     console.log('Connected to MongoDB');
-    isDbConnected = true;
+    isMongoDbConnected = true;
 });
+
+// Connect to SQLite using Sequelize
+sequelize.authenticate()
+    .then(() => {
+        console.log('Connected to SQLite via Sequelize');
+        isSequelizeConnected = true;
+    })
+    .catch(err => {
+        console.error('SQLite connection error:', err);
+        isSequelizeConnected = false;
+    });
 
 server.on('upgrade', handleUpgrade);
 
@@ -49,7 +65,7 @@ server.on('upgrade', handleUpgrade);
 
 app.use(cors({
     origin: '*',
-    exposedHeaders: ['X-Database-Status'],
+    exposedHeaders: ['X-Database-Status', 'X-Sequelize-Status'],
 }));
 
 //app.use(cors({
@@ -60,17 +76,19 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Middleware to check MongoDB connection status
+// Middleware to check database connection status
 app.use((req, res, next) => {
     if (req.path.startsWith('/api/v1/')) {
-        if (!isDbConnected) {
-            res.setHeader('X-Database-Status', 'NOT_CONNECTED');
+        // Set headers for both database connections
+        res.setHeader('X-Database-Status', isMongoDbConnected ? 'CONNECTED' : 'NOT_CONNECTED');
+        res.setHeader('X-Sequelize-Status', isSequelizeConnected ? 'CONNECTED' : 'NOT_CONNECTED');
+        
+        // For now, only require MongoDB connection
+        if (!isMongoDbConnected) {
             return res.status(500).json({
                 error: true,
                 message: 'Unable to connect to the database. Verify the connection string and restart the server.'
             });
-        } else {
-            res.setHeader('X-Database-Status', 'CONNECTED');
         }
     }
     next();

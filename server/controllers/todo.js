@@ -1,9 +1,9 @@
-const Listing = require("../models/Listing");
-const Todo = require("../models/Todo");
+const { Listing, Todo } = require("../models");
+const { Op } = require("sequelize");
 
 // Save or update a Todo
 exports.saveTodo = async (req, res) => {
-    const userId = req.user?._id;
+    const userId = req.user?.id;
     const { listingId, todoName, dueDate, todoId, priority } = req.body;
 
     if (!todoName || !userId) {
@@ -14,27 +14,29 @@ exports.saveTodo = async (req, res) => {
     }
 
     try {
-        let todo;
-
         if (todoId) {
             // Update existing todo
-            todo = await Todo.findOne({
-                _id: todoId,
-                userId
+            const [updatedRowCount, [updatedTodo]] = await Todo.update({
+                todoItem: todoName,
+                dueDate,
+                priority
+            }, {
+                where: {
+                    id: todoId,
+                    userId
+                },
+                returning: true
             });
 
-            if (!todo) {
+            if (updatedRowCount === 0) {
                 return res.status(404).json({
                     error: true,
                     message: "Todo not found."
                 });
             }
 
-            todo.todoItem = todoName;
-            todo.dueDate = dueDate;
-            todo.priority = priority;
-
-            await todo.save();
+            // Get the updated todo to return
+            const todo = await Todo.findByPk(todoId);
 
             return res.status(200).json({
                 error: false,
@@ -42,11 +44,10 @@ exports.saveTodo = async (req, res) => {
             });
         } else {
             // Add new todo
-            todo = await Todo.create({
-                listingId,
+            const todo = await Todo.create({
+                parent: listingId,
                 todoItem: todoName,
                 dueDate,
-                parent: listingId,
                 priority,
                 userId
             });
@@ -68,18 +69,25 @@ exports.saveTodo = async (req, res) => {
 // Get breadcrumb for a listing
 const getBreadcrumb = async(listingId, userId) => {
     try {
+        // Initialize breadcrumb array
+        const breadcrumb = [];
+        
+        // If no listing ID, return empty breadcrumb
+        if (!listingId) {
+            return breadcrumb;
+        }
+
         // Find the listing with the given listingId and userId
         const listing = await Listing.findOne({
-            _id: listingId,
-            userId
+            where: {
+                id: listingId,
+                userId
+            }
         });
 
         if (!listing) {
-            return []; // Return empty array if listing is not found
+            return breadcrumb; // Return empty array if listing is not found
         }
-
-        // Initialize an array to store the breadcrumb
-        const breadcrumb = [];
 
         // Start with the current listing
         let currentListing = listing;
@@ -88,14 +96,16 @@ const getBreadcrumb = async(listingId, userId) => {
         while (currentListing.parentId) {
             // Fetch parent listing
             const parentListing = await Listing.findOne({
-                _id: currentListing.parentId,
-                userId
+                where: {
+                    id: currentListing.parentId,
+                    userId
+                }
             });
 
             // If parent listing is found, add it to breadcrumb
             if (parentListing) {
                 breadcrumb.push({
-                    id: parentListing._id,
+                    id: parentListing.id,
                     listingName: parentListing.listingName,
                     depth: breadcrumb.length + 1 // Calculate depth based on position in breadcrumb
                 });
@@ -119,7 +129,7 @@ const getBreadcrumb = async(listingId, userId) => {
 
 // List todos
 exports.listTodo = async (req, res) => {
-    const userId = req.user?._id;
+    const userId = req.user?.id;
     const todoId = req.params.todoId;
 
     if (todoId && todoId === "undefined") {
@@ -152,27 +162,47 @@ exports.listTodo = async (req, res) => {
         where.completed = false;
     }
 
-    // Prepare a sort object
-    const order = {};
+    // Prepare order options
+    let order = [];
     if (filter === "highToLow") {
-        order.priority = 1; // descending
+        order.push(['priority', 'ASC']); // Lower number = higher priority
     } else if (filter === "lowToHigh") {
-        order.priority = -1; // ascending
+        order.push(['priority', 'DESC']); // Higher number = lower priority
     } else if (filter === "dueDate") {
-        order.dueDate = -1; // descending
+        order.push(['dueDate', 'ASC']); // Sort by due date ascending
     } else {
-        order.createdAt = -1; // descending
+        order.push(['createdAt', 'DESC']); // Sort by creation date descending
     }
 
     try {
-        const todo = todoId ? await Listing.findOne({ _id: todoId, userId }) : null;
-        const todoItems = await Todo.find(where)
-            .populate('parent')
-            .sort(order)
-            .skip(offset)
-            .limit(limit);
-        const totalItems = await Todo.countDocuments(where);
-        const breadcrumb = todoId ? await getBreadcrumb(todoId, userId) : [];
+        // Get todo list, count, and breadcrumb in parallel
+        const [todo, todoItems, totalItems, breadcrumb] = await Promise.all([
+            // Get the todo listing if todoId is provided
+            todoId ? Listing.findOne({
+                where: {
+                    id: todoId,
+                    userId
+                }
+            }) : null,
+            
+            // Get todo items with pagination and sorting
+            Todo.findAll({
+                where,
+                order,
+                limit,
+                offset,
+                include: [{
+                    model: Listing,
+                    as: 'parentListing'
+                }]
+            }),
+            
+            // Count total items for pagination
+            Todo.count({ where }),
+            
+            // Get breadcrumb if todoId is provided
+            todoId ? getBreadcrumb(todoId, userId) : []
+        ]);
 
         const totalPages = Math.ceil(totalItems / limit);
 
@@ -200,7 +230,7 @@ exports.listTodo = async (req, res) => {
 
 // Complete or uncomplete a todo
 exports.completeTodo = async (req, res) => {
-    const userId = req?.user?._id;
+    const userId = req?.user?.id;
     const todoId = req.params.todoId;
 
     if (!todoId) {
@@ -211,11 +241,17 @@ exports.completeTodo = async (req, res) => {
     }
 
     try {
-        // Find out the current status of the todo
+        // Find the todo item
         const todo = await Todo.findOne({
-            _id: todoId,
-            userId
-        }).populate('parent');
+            where: {
+                id: todoId,
+                userId
+            },
+            include: [{
+                model: Listing,
+                as: 'parentListing'
+            }]
+        });
 
         if (!todo) {
             return res.status(404).json({
@@ -224,13 +260,35 @@ exports.completeTodo = async (req, res) => {
             });
         }
 
-        todo.completed = !todo.completed;
-        await todo.save();
+        // Toggle completion status
+        const completed = !todo.completed;
+        
+        // Update the todo item
+        await Todo.update({
+            completed
+        }, {
+            where: {
+                id: todoId,
+                userId
+            }
+        });
+        
+        // Get the updated todo to return
+        const updatedTodo = await Todo.findOne({
+            where: {
+                id: todoId,
+                userId
+            },
+            include: [{
+                model: Listing,
+                as: 'parentListing'
+            }]
+        });
 
         // Respond with the updated status of the todo
         return res.status(200).json({
             error: false,
-            message: todo
+            message: updatedTodo
         });
     } catch (error) {
         console.error("Error:", error);
@@ -243,7 +301,7 @@ exports.completeTodo = async (req, res) => {
 
 // Delete a todo
 exports.deleteTodo = async (req, res) => {
-    const userId = req?.user?._id;
+    const userId = req?.user?.id;
     const itemId = req.params.itemId;
 
     if (!itemId) {
@@ -254,10 +312,12 @@ exports.deleteTodo = async (req, res) => {
     }
 
     try {
-        // Find out the current status of the todo
+        // Check if todo exists
         const todo = await Todo.findOne({
-            _id: itemId,
-            userId
+            where: {
+                id: itemId,
+                userId
+            }
         });
 
         if (!todo) {
@@ -268,9 +328,11 @@ exports.deleteTodo = async (req, res) => {
         }
 
         // Delete the todo
-        await Todo.deleteOne({
-            _id: itemId,
-            userId
+        await Todo.destroy({
+            where: {
+                id: itemId,
+                userId
+            }
         });
 
         // Respond with a success message

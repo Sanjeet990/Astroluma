@@ -1,5 +1,6 @@
 const md5 = require('md5');
-const User = require('../models/User');
+const { User } = require('../models');
+const { Op } = require('sequelize');
 
 // Save or update user account
 exports.saveAccount = async (req, res) => {
@@ -8,7 +9,7 @@ exports.saveAccount = async (req, res) => {
     let userId = req.body.userId;
 
     if (loggedinuser.isSuperAdmin === false) {
-        userId = loggedinuser._id;
+        userId = loggedinuser.id;
     }
 
     const { fullName, username, password, siteName } = req.body;
@@ -30,7 +31,11 @@ exports.saveAccount = async (req, res) => {
     try {
         if (!userId) {
             // Check if username exists
-            const existingUser = await User.findOne({ username: new RegExp(`^${username}$`, 'i') });
+            const existingUser = await User.findOne({ 
+                where: { 
+                    username: { [Op.iLike]: username } 
+                } 
+            });
 
             if (existingUser) {
                 return res.status(400).json({
@@ -40,7 +45,7 @@ exports.saveAccount = async (req, res) => {
             }
 
             // Create a new user
-            const newUser = new User({
+            await User.create({
                 fullName,
                 username: username.toLowerCase(),
                 password: md5(password),
@@ -52,7 +57,6 @@ exports.saveAccount = async (req, res) => {
                 profilePicture: "Default",
                 isSuperAdmin: false
             });
-            await newUser.save();
 
             return res.status(200).json({
                 error: false,
@@ -60,12 +64,18 @@ exports.saveAccount = async (req, res) => {
             });
         } else {
             // Update existing user
-            const result = await User.updateOne(
-                { _id: userId },
-                { $set: { fullName, username: username.toLowerCase(), siteName } }
+            const updatedRows = await User.update(
+                { 
+                    fullName, 
+                    username: username.toLowerCase(), 
+                    siteName 
+                },
+                { 
+                    where: { id: userId }
+                }
             );
 
-            if (result.nModified === 0) {
+            if (updatedRows[0] === 0) {
                 return res.status(400).json({
                     error: true,
                     message: "User not found or no changes made."
@@ -97,7 +107,10 @@ exports.userList = async (req, res) => {
     }
 
     try {
-        const users = await User.find({}, { password: 0 }); // Exclude password field
+        const users = await User.findAll({
+            attributes: { exclude: ['password'] }
+        });
+        
         return res.status(200).json({
             error: false,
             message: users
@@ -132,9 +145,9 @@ exports.updateAvatar = async (req, res) => {
     }
 
     try {
-        await User.updateOne(
-            { _id: userId },
-            { $set: { userAvatar: avatar } }
+        const updatedRows = await User.update(
+            { userAvatar: avatar },
+            { where: { id: userId } }
         );
 
         return res.status(200).json({
@@ -152,7 +165,7 @@ exports.updateAvatar = async (req, res) => {
 exports.updateOwnAvatar = async (req, res) => {
     const loggedinuser = req.user;
 
-    const userId = loggedinuser?._id;
+    const userId = loggedinuser?.id;
     const { avatar } = req.body;
 
     if (!avatar) {
@@ -163,9 +176,9 @@ exports.updateOwnAvatar = async (req, res) => {
     }
 
     try {
-        await User.updateOne(
-            { _id: userId },
-            { $set: { userAvatar: avatar } }
+        await User.update(
+            { userAvatar: avatar },
+            { where: { id: userId } }
         );
 
         return res.status(200).json({
@@ -183,12 +196,12 @@ exports.updateOwnAvatar = async (req, res) => {
 exports.doDebrand = async (req, res) => {
     const loggedinuser = req.user;
 
-    const userId = loggedinuser?._id;
+    const userId = loggedinuser?.id;
     
     try {
-        await User.updateOne(
-            { _id: userId },
-            { $set: { hideBranding: true } }
+        await User.update(
+            { hideBranding: true },
+            { where: { id: userId } }
         );
 
         return res.status(200).json({
@@ -206,12 +219,12 @@ exports.doDebrand = async (req, res) => {
 exports.doRebrand = async (req, res) => {
     const loggedinuser = req.user;
 
-    const userId = loggedinuser?._id;
+    const userId = loggedinuser?.id;
     
     try {
-        await User.updateOne(
-            { _id: userId },
-            { $set: { hideBranding: false } }
+        await User.update(
+            { hideBranding: false },
+            { where: { id: userId } }
         );
 
         return res.status(200).json({
@@ -233,11 +246,14 @@ exports.accountInfo = async (req, res) => {
     let userId = req.params.userId;
 
     if (loggedinuser.isSuperAdmin === false) {
-        userId = loggedinuser._id;
+        userId = loggedinuser.id;
     }
 
     try {
-        const user = await User.findOne({ _id: userId }, { password: 0 }); // Exclude password field
+        const user = await User.findOne({ 
+            where: { id: userId },
+            attributes: { exclude: ['password'] }
+        });
 
         if (!user) {
             return res.status(400).json({
@@ -272,12 +288,14 @@ exports.deleteUser = async (req, res) => {
     const userId = req.params.userId;
 
     try {
-        const result = await User.deleteOne({
-            _id: userId,
-            isSuperAdmin: false
+        const deletedRows = await User.destroy({
+            where: {
+                id: userId,
+                isSuperAdmin: false
+            }
         });
 
-        if (result.deletedCount === 0) {
+        if (deletedRows === 0) {
             return res.status(400).json({
                 error: true,
                 message: "User not found or is a super admin."
@@ -304,7 +322,7 @@ exports.changePassword = async (req, res) => {
     const { password } = req.body;
 
     if (!loggedinuser.isSuperAdmin) {
-        if (loggedinuser._id.toString() !== userId) {
+        if (loggedinuser.id !== parseInt(userId)) {
             return res.status(400).json({
                 error: true,
                 message: "You are not authorized to change passwords."
@@ -320,9 +338,9 @@ exports.changePassword = async (req, res) => {
     }
 
     try {
-        await User.updateOne(
-            { _id: userId },
-            { $set: { password: md5(password) } }
+        await User.update(
+            { password: md5(password) },
+            { where: { id: userId } }
         );
 
         return res.status(200).json({

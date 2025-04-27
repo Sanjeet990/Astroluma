@@ -1,81 +1,82 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const GlobalSetting = require('../models/GlobalSetting');
 const axios = require('axios');
-const murmurhash = require('murmurhash');
+const { Op } = require('sequelize');
+const { User, GlobalSetting } = require('../models');
 
-
+// Login handler
 exports.doLogin = async (req, res) => {
-    let error = "";
+    const { username, password } = req.body;
 
-    const username = req?.body?.username?.toLowerCase();
-    const password = req?.body?.password;
-
-    if (!username || !password) {
-        error = "Username and/or password must not be empty.";
-    }
-
-    if (!error) {
-        try {
-            // Find the user by username
-            const user = await User.findOne({ username: new RegExp(`^${username}$`, 'i') });
-
-            if (user) {
-                // Check if the password matches
-                if (password === user.password) {
-                    const payload = {
-                        userId: user._id, // Use user._id for user ID
-                        username: user.username,
-                        role: user.isSuperAdmin ? 'admin' : 'user',
-                    };
-
-                    // Create the JWT token
-                    const token = jwt.sign(payload, process.env.SECRET || "SomeRandomStringSecret", {});
-
-                    return res.status(200).json({
-                        error: false,
-                        message: {
-                            token,
-                            role: user.isSuperAdmin ? 'admin' : 'user',
-                            fullName: user.fullName,
-                            colorTheme: user.colorTheme || "light",
-                            avatar: user.profilePicture
-                        }
-                    });
-                }
-            }
-            error = "Invalid username and/or password";
-        } catch (err) {
-            error = "An error occurred during authentication";
+    try {
+        // Validate input
+        if (!username || !password) {
+            return res.status(400).json({
+                error: true,
+                message: "Username and password must be provided."
+            });
         }
+
+        // Find user
+        const userData = await User.findOne({
+            where: {
+                username: username.toLowerCase()
+            }
+        });
+
+        // Verify credentials
+        if (userData && userData.password === password) {
+            const payload = {
+                userId: userData.id,
+                username: userData.username,
+                fullName: userData.fullName,
+                isSuperAdmin: userData.isSuperAdmin,
+            };
+
+            const token = jwt.sign(payload, process.env.SECRET || "SomeRandomStringSecret", {});
+
+            return res.status(200).json({
+                error: false,
+                message: {
+                    token,
+                    role: userData.isSuperAdmin ? 'admin' : 'user',
+                    fullName: userData.fullName,
+                    colorTheme: userData.colorTheme || "light",
+                    avatar: userData.userAvatar
+                }
+            });
+        }
+
+        return res.status(401).json({
+            error: true,
+            message: "Invalid credentials."
+        });
     }
+    catch (error) {
+        return res.status(400).json({
+            error: true,
+            message: "Login failed."
+        });
+    }
+};
 
-    return res.status(400).json({
-        error: true,
-        message: error
-    });
-}
-
+// Get available authentication methods
 exports.authMethods = async (req, res) => {
-    //fetch oidc settings
-    let globalSettings = await GlobalSetting.findOne({});
-
+    const globalSettings = await GlobalSetting.findOne();
 
     return res.status(200).json({
         error: false,
         message: {
-            oidc: {
-                enabled: globalSettings?.oidcEnabled || false,
-                config: {
-                    authorizationEndpoint: globalSettings?.oidcConfig?.authorizationEndpoint,
-                    clientId: globalSettings?.oidcConfig?.clientId,
-                    redirectUri: globalSettings?.oidcConfig?.redirectUri,
-                    scope: globalSettings?.oidcConfig?.scope
-                }
+            oidc: globalSettings?.oidcEnabled ? {
+                enabled: true,
+                clientId: globalSettings?.oidcConfig?.clientId,
+                redirectUri: globalSettings?.oidcConfig?.redirectUri,
+                scope: globalSettings?.oidcConfig?.scope
+            } : {
+                enabled: false
             }
         }
     });
-}
+};
 
 exports.validateOIDCCode = async (req, res) => {
     const code = req?.body?.code;
@@ -86,14 +87,13 @@ exports.validateOIDCCode = async (req, res) => {
         error = "Code must not be empty.";
     }
 
-    //find the global settings
-    let globalSettings = await GlobalSetting.findOne({});
+    // Find the global settings
+    let globalSettings = await GlobalSetting.findOne();
     if (!globalSettings?.oidcConfig) {
         error = "OIDC settings not found.";
     }
 
     const oidcConfig = globalSettings?.oidcConfig;
-
     const decodedSecret = oidcConfig.clientSecret;
 
     if (!error) {
@@ -106,103 +106,130 @@ exports.validateOIDCCode = async (req, res) => {
                 grant_type: "authorization_code",
                 code: code,
             }),
-            { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+            {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+            }
         );
 
-        console.log(tokenResponse.data, oidcConfig?.userinfoEndpoint);
+        if (tokenResponse?.status !== 200 || !tokenResponse?.data?.access_token) {
+            return res.status(400).json({
+                error: true,
+                message: "Cannot get valid token."
+            });
+        }
 
-        const { access_token } = tokenResponse.data;
+        try {
+            const tokenData = tokenResponse?.data;
+            const idToken = tokenData?.id_token;
 
-        const userResponse = await axios.get(oidcConfig?.userinfoEndpoint, {
-            headers: { Authorization: `Bearer ${access_token}` },
-        });
-
-        const user = userResponse.data;
-        
-        const userIdentifier = user[oidcConfig?.userIdentifier];
-
-        const username = userIdentifier;
-
-        //Search if this exists in the users collection
-        const userData = await User
-            .findOne({ username: username });
-
-        if (userData) {
-            //First update the logout URL
-            userData.logoutUrl = oidcConfig?.logoutUri;
-
-            userData.save();
-
-            const payload = {
-                userId: userData._id, // Use user._id for user ID
-                username: userData.username,
-                role: userData.isSuperAdmin ? 'admin' : 'user',
-            };
-
-            // Create the JWT token
-            const token = jwt.sign(payload, process.env.SECRET || "SomeRandomStringSecret", {});
-
-            return res.status(200).json({
-                error: false,
-                message: {
-                    token,
-                    role: userData.isSuperAdmin ? 'admin' : 'user',
-                    fullName: userData.fullName,
-                    colorTheme: userData.colorTheme || "light",
-                    avatar: userData.profilePicture
+            // Get userinfo
+            const userinfo = await axios.get(oidcConfig?.userinfoEndpoint, {
+                headers: {
+                    Authorization: `Bearer ${tokenData.access_token}`
                 }
             });
 
-        } else {
-            if (oidcConfig?.autoProvisioning) {
-                //create a new user
-                const newUser = new User({
-                    username: username,
-                    fullName: user.name,
-                    siteName: "Astroluma",
-                    isSuperAdmin: false,
-                    colorTheme: "dark",
-                    profilePicture: user?.picture || "Astroluma",
-                    authenticator: false,
-                    camerafeed: false,
-                    networkdevices: false,
-                    provider: "oidc",
-                    logoutUrl: oidcConfig?.logoutUri,
+            if (userinfo?.status !== 200) {
+                return res.status(400).json({
+                    error: true,
+                    message: "Cannot get userinfo."
                 });
+            }
 
-                await newUser.save();
+            const user = userinfo?.data;
+            const username = user[oidcConfig?.userIdentifier];
 
+            let userData = await User.findOne({
+                where: {
+                    username: { [Op.iLike]: username },
+                    provider: "oidc"
+                }
+            });
+
+            if (userData) {
                 const payload = {
-                    userId: newUser._id, // Use user._id for user ID
-                    username: newUser.username,
-                    role: newUser.isSuperAdmin ? 'admin' : 'user',
+                    userId: userData.id,
+                    username: userData.username,
+                    fullName: userData.fullName,
+                    isSuperAdmin: userData.isSuperAdmin,
                 };
 
-                // Create the JWT token
                 const token = jwt.sign(payload, process.env.SECRET || "SomeRandomStringSecret", {});
 
                 return res.status(200).json({
                     error: false,
                     message: {
                         token,
-                        role: newUser.isSuperAdmin ? 'admin' : 'user',
-                        fullName: newUser.fullName,
-                        colorTheme: newUser.colorTheme || "light",
-                        avatar: newUser.profilePicture
+                        role: userData.isSuperAdmin ? 'admin' : 'user',
+                        fullName: userData.fullName,
+                        colorTheme: userData.colorTheme || "light",
+                        avatar: userData.userAvatar
                     }
                 });
             } else {
-                return res.status(400).json({
-                    error: true,
-                    message: "User not found and automatic user provisioning is not enabled."
-                });
-            }
-        }
+                if (oidcConfig?.autoProvisioning) {
+                    // Create a new user
+                    const newUser = await User.create({
+                        username: username,
+                        fullName: user.name,
+                        siteName: "Astroluma",
+                        isSuperAdmin: false,
+                        colorTheme: "dark",
+                        userAvatar: user?.picture ? {
+                            iconUrl: user?.picture,
+                            iconUrlLight: null,
+                            iconProvider: 'external'
+                        } : {
+                            iconUrl: "Astroluma",
+                            iconUrlLight: null,
+                            iconProvider: 'com.astroluma.self'
+                        },
+                        authenticator: false,
+                        camerafeed: false,
+                        networkdevices: false,
+                        provider: "oidc",
+                        logoutUrl: oidcConfig?.logoutUri,
+                    });
 
+                    const payload = {
+                        userId: newUser.id,
+                        username: newUser.username,
+                        fullName: newUser.fullName,
+                        isSuperAdmin: newUser.isSuperAdmin,
+                    };
+
+                    const token = jwt.sign(payload, process.env.SECRET || "SomeRandomStringSecret", {});
+
+                    return res.status(200).json({
+                        error: false,
+                        message: {
+                            token,
+                            role: newUser.isSuperAdmin ? 'admin' : 'user',
+                            fullName: newUser.fullName,
+                            colorTheme: newUser.colorTheme || "light",
+                            avatar: newUser.userAvatar
+                        }
+                    });
+                } else {
+                    return res.status(400).json({
+                        error: true,
+                        message: "User not exists. And auto provisioning is disabled."
+                    });
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            return res.status(400).json({
+                error: true,
+                message: "Cannot validate token."
+            });
+        }
     } else {
         return res.status(400).json({
             error: true,
             message: error
         });
     }
-}
+};

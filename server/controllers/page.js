@@ -1,4 +1,4 @@
-const Page = require('../models/Page');
+const { Page } = require('../models');
 
 exports.savePage = async (req, res) => {
     const loggedinuser = req.user;
@@ -14,25 +14,33 @@ exports.savePage = async (req, res) => {
     try {
         if (!pageId) {
             // Create a new page
-            const page = new Page({
+            await Page.create({
                 pageTitle,
                 pageContent,
                 isPublished: publish,
-                userId: loggedinuser?._id
+                userId: loggedinuser?.id
             });
-            await page.save();
             return res.status(200).json({
                 error: false,
                 message: "Page created successfully."
             });
         } else {
             // Update an existing page
-            const result = await Page.updateOne(
-                { _id: pageId, userId: loggedinuser?._id },
-                { pageTitle, pageContent, isPublished: publish }
+            const [updatedRows] = await Page.update(
+                { 
+                    pageTitle, 
+                    pageContent, 
+                    isPublished: publish 
+                },
+                {
+                    where: { 
+                        id: pageId, 
+                        userId: loggedinuser?.id 
+                    }
+                }
             );
             
-            if (result.nModified === 0) {
+            if (updatedRows === 0) {
                 return res.status(400).json({
                     error: true,
                     message: "Page not found or no changes made."
@@ -45,6 +53,7 @@ exports.savePage = async (req, res) => {
             });
         }
     } catch (error) {
+        console.error("Error:", error);
         return res.status(400).json({
             error: true,
             message: "Error in adding or updating page."
@@ -56,18 +65,22 @@ exports.pageList = async (req, res) => {
     const loggedinuser = req.user;
     const active = req.params.active;
 
-    const query = { userId: loggedinuser?._id };
+    const where = { userId: loggedinuser?.id };
     if (active) {
-        query.isPublished = true;
+        where.isPublished = true;
     }
 
     try {
-        const pages = await Page.find(query).select('-pageContent');
+        const pages = await Page.findAll({
+            where,
+            attributes: ['id', 'pageTitle', 'isPublished', 'createdAt', 'updatedAt'] // Exclude pageContent
+        });
         return res.status(200).json({
             error: false,
             message: pages
         });
     } catch (error) {
+        console.error("Error:", error);
         return res.status(400).json({
             error: true,
             message: "Error fetching pages."
@@ -80,14 +93,18 @@ exports.pageInfo = async (req, res) => {
     const pageId = req.params.pageId;
     const active = req.params.active;
 
-    const query = {
-        _id: pageId,
-        userId: loggedinuser?._id,
-        ...(active && { isPublished: true }) // Add isPublished: true if active is truthy
+    const where = {
+        id: pageId,
+        userId: loggedinuser?.id
     };
+    
+    // Add isPublished: true if active is truthy
+    if (active) {
+        where.isPublished = true;
+    }
 
     try {
-        const page = await Page.findOne(query);
+        const page = await Page.findOne({ where });
         if (!page) {
             return res.status(400).json({
                 error: true,
@@ -99,6 +116,7 @@ exports.pageInfo = async (req, res) => {
             message: page
         });
     } catch (error) {
+        console.error("Error:", error);
         return res.status(400).json({
             error: true,
             message: "Error fetching page information."
@@ -111,12 +129,14 @@ exports.deletePage = async (req, res) => {
     const pageId = req.params.pageId;
 
     try {
-        const result = await Page.deleteOne({
-            _id: pageId,
-            userId: loggedinuser?._id
+        const deletedRows = await Page.destroy({
+            where: {
+                id: pageId,
+                userId: loggedinuser?.id
+            }
         });
 
-        if (result.deletedCount === 0) {
+        if (deletedRows === 0) {
             return res.status(400).json({
                 error: true,
                 message: "Page not found."
@@ -128,6 +148,7 @@ exports.deletePage = async (req, res) => {
             message: "Page deleted successfully."
         });
     } catch (error) {
+        console.error("Error:", error);
         return res.status(400).json({
             error: true,
             message: "Error in deleting page."
@@ -148,12 +169,17 @@ exports.managePage = async (req, res) => {
     }
 
     try {
-        const result = await Page.updateOne(
-            { _id: pageId, userId: loggedinuser?._id },
-            { isPublished: action === "publish" ? true : false }
+        const [updatedRows] = await Page.update(
+            { isPublished: action === "publish" },
+            { 
+                where: { 
+                    id: pageId, 
+                    userId: loggedinuser?.id 
+                }
+            }
         );
 
-        if (result.nModified === 0) {
+        if (updatedRows === 0) {
             return res.status(400).json({
                 error: true,
                 message: "Page not found or no changes made."
@@ -165,6 +191,7 @@ exports.managePage = async (req, res) => {
             message: "Page status changed successfully."
         });
     } catch (error) {
+        console.error("Error:", error);
         return res.status(400).json({
             error: true,
             message: "Error in changing page status."

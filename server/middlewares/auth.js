@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const { User } = require('../models');
+const { Op } = require('sequelize');
 
 exports.verifyToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -23,11 +24,17 @@ exports.verifyToken = async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, process.env.SECRET || "SomeRandomStringSecret");
 
-        // Find user by username
-        const user = await User.findOne({ username: new RegExp(`^${decoded.username}$`, 'i') }).exec();
+        // Find user by username (case insensitive) using Sequelize
+        const user = await User.findOne({
+            where: {
+                username: {
+                    [Op.like]: decoded.username
+                }
+            }
+        });
 
         if (user) {
-            // Records found, handle the result
+            // User found, attach to request
             req.user = user;
 
             // Proceed to the next middleware or endpoint

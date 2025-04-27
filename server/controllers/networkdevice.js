@@ -1,5 +1,5 @@
-
-const NetworkDevice = require("../models/NetworkDevice");
+const { NetworkDevice } = require("../models");
+const { Op } = require("sequelize");
 const wol = require('wake_on_lan');
 
 const os = require('os');
@@ -152,7 +152,7 @@ const scanNetwork = async () => {
 }
 
 exports.saveDevice = async (req, res) => {
-    const userId = req.user?._id;
+    const userId = req.user?.id;
     const {
         deviceId,
         deviceMac,
@@ -173,11 +173,14 @@ exports.saveDevice = async (req, res) => {
     }
 
     try {
-        let device;
-
         if (deviceId) {
             // Update existing device
-            device = await NetworkDevice.findOne({ _id: deviceId, userId });
+            const device = await NetworkDevice.findOne({ 
+                where: { 
+                    id: deviceId, 
+                    userId 
+                }
+            });
 
             if (!device) {
                 return res.status(400).json({
@@ -186,7 +189,7 @@ exports.saveDevice = async (req, res) => {
                 });
             }
 
-            Object.assign(device, {
+            await NetworkDevice.update({
                 deviceName,
                 deviceMac,
                 broadcastAddress,
@@ -195,16 +198,17 @@ exports.saveDevice = async (req, res) => {
                 deviceIp,
                 supportsWol,
                 virtualDevice
+            }, {
+                where: { id: deviceId, userId }
             });
 
-            await device.save();
             return res.status(200).json({
                 error: false,
                 message: "Device updated"
             });
         } else {
             // Add new device
-            device = new NetworkDevice({
+            await NetworkDevice.create({
                 deviceName,
                 deviceMac,
                 broadcastAddress,
@@ -216,13 +220,13 @@ exports.saveDevice = async (req, res) => {
                 virtualDevice
             });
 
-            await device.save();
             return res.status(200).json({
                 error: false,
                 message: "Device saved"
             });
         }
     } catch (error) {
+        console.error("Error:", error);
         return res.status(500).json({
             error: true,
             message: "Error saving device"
@@ -231,19 +235,20 @@ exports.saveDevice = async (req, res) => {
 };
 
 exports.listDevices = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     try {
         const { scannedDevices, broadcastAddress } = await scanNetwork();
 
         const scannedMacAddresses = scannedDevices.map(device => device.mac);
 
-        const dbDevices = await NetworkDevice.find({
-            userId
-        }).sort({ sortOrder: 1 });
+        const dbDevices = await NetworkDevice.findAll({
+            where: { userId },
+            order: [['sortOrder', 'ASC']]
+        });
 
         const insertOrUpdatePromises = scannedDevices.map(async (scannedDevice) => {
-            const existingDevice = await dbDevices.find(device => device.deviceMac === scannedDevice.mac);
+            const existingDevice = dbDevices.find(device => device.deviceMac === scannedDevice.mac);
             if (!existingDevice) {
                 return NetworkDevice.create({
                     deviceName: `${scannedDevice.ip} - ${scannedDevice.mac}`,
@@ -259,12 +264,14 @@ exports.listDevices = async (req, res) => {
                     isAlive: true
                 });
             } else {
-                return NetworkDevice.updateOne({
-                    deviceMac: scannedDevice.mac,
-                    userId
-                }, {
+                return NetworkDevice.update({
                     deviceIp: scannedDevice.ip,
                     isAlive: true
+                }, {
+                    where: {
+                        deviceMac: scannedDevice.mac,
+                        userId
+                    }
                 });
             }
         });
@@ -272,19 +279,22 @@ exports.listDevices = async (req, res) => {
         const devicesToUpdate = dbDevices.filter(device => !scannedMacAddresses.includes(device.deviceMac));
 
         const updatePromises = devicesToUpdate.map(device =>
-            NetworkDevice.updateOne({
-                deviceMac: device.deviceMac,
-                userId
-            }, {
+            NetworkDevice.update({
                 isAlive: false
+            }, {
+                where: {
+                    deviceMac: device.deviceMac,
+                    userId
+                }
             })
         );
 
         await Promise.all([...insertOrUpdatePromises, ...updatePromises]);
 
-        const updatedDevices = await NetworkDevice.find({
-            userId
-        }).sort({ sortOrder: 1 });
+        const updatedDevices = await NetworkDevice.findAll({
+            where: { userId },
+            order: [['sortOrder', 'ASC']]
+        });
 
         return res.status(200).json({
             error: false,
@@ -303,16 +313,20 @@ exports.listDevices = async (req, res) => {
 };
 
 exports.listDbDevices = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
 
     try {
-        const items = await NetworkDevice.find({ userId }).sort({ sortOrder: 1 });
+        const items = await NetworkDevice.findAll({
+            where: { userId },
+            order: [['sortOrder', 'ASC']]
+        });
 
         return res.status(200).json({
             error: false,
             message: { items }
         });
     } catch (err) {
+        console.error("Error:", err);
         return res.status(400).json({
             error: true,
             message: "Error fetching devices."
@@ -321,7 +335,7 @@ exports.listDbDevices = async (req, res) => {
 };
 
 exports.deleteDevice = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const deviceId = req.params.deviceId;
 
     if (!deviceId) {
@@ -332,9 +346,14 @@ exports.deleteDevice = async (req, res) => {
     }
 
     try {
-        const result = await NetworkDevice.deleteOne({ _id: deviceId, userId });
+        const result = await NetworkDevice.destroy({ 
+            where: { 
+                id: deviceId, 
+                userId 
+            }
+        });
 
-        if (result.deletedCount === 0) {
+        if (result === 0) {
             return res.status(400).json({
                 error: true,
                 message: "Device not found"
@@ -346,6 +365,7 @@ exports.deleteDevice = async (req, res) => {
             message: "Device deleted"
         });
     } catch (err) {
+        console.error("Error:", err);
         return res.status(500).json({
             error: true,
             message: "Error deleting device"
@@ -354,7 +374,7 @@ exports.deleteDevice = async (req, res) => {
 };
 
 exports.deviceDetails = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     let deviceId = req.params.deviceId;
 
     if (deviceId === 'undefined') deviceId = null;
@@ -363,7 +383,12 @@ exports.deviceDetails = async (req, res) => {
         let networkDeviceData = null;
 
         if (deviceId) {
-            networkDeviceData = await NetworkDevice.findOne({ _id: deviceId, userId });
+            networkDeviceData = await NetworkDevice.findOne({ 
+                where: { 
+                    id: deviceId, 
+                    userId 
+                }
+            });
         }
 
         return res.status(200).json({
@@ -371,7 +396,7 @@ exports.deviceDetails = async (req, res) => {
             message: networkDeviceData
         });
     } catch (err) {
-        console.log(err);
+        console.error("Error:", err);
         return res.status(400).json({
             error: true,
             message: "Error fetching device details."
@@ -380,26 +405,26 @@ exports.deviceDetails = async (req, res) => {
 };
 
 exports.reorderDevices = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const items = req.body.items || [];
 
     try {
-        // Construct bulk update operations
-        const bulkOps = items.map((itemId, index) => ({
-            updateOne: {
-                filter: { _id: itemId, userId },
-                update: { sortOrder: index }
-            }
-        }));
+        // Execute updates one by one using a transaction
+        const promises = items.map((itemId, index) => 
+            NetworkDevice.update(
+                { sortOrder: index },
+                { where: { id: itemId, userId } }
+            )
+        );
 
-        // Execute bulk update using bulkWrite
-        await NetworkDevice.bulkWrite(bulkOps);
+        await Promise.all(promises);
 
         return res.status(200).json({
             error: false,
             message: "Items reordered successfully"
         });
     } catch (error) {
+        console.error("Error:", error);
         return res.status(400).json({
             error: true,
             message: "Error reordering items"
@@ -408,11 +433,16 @@ exports.reorderDevices = async (req, res) => {
 };
 
 exports.wakeDevice = async (req, res) => {
-    const userId = req.user._id;
+    const userId = req.user.id;
     const deviceId = req.params.deviceId || null;
 
     try {
-        const networkDeviceData = await NetworkDevice.findOne({ _id: deviceId, userId });
+        const networkDeviceData = await NetworkDevice.findOne({ 
+            where: { 
+                id: deviceId, 
+                userId 
+            }
+        });
 
         if (!networkDeviceData) {
             return res.status(400).json({
@@ -441,6 +471,7 @@ exports.wakeDevice = async (req, res) => {
         });
 
     } catch (err) {
+        console.error("Error:", err);
         return res.status(500).json({
             error: true,
             message: "Error waking device."
