@@ -119,7 +119,7 @@ const ImageView = ({
           objectFit: 'cover'
         }}
         src={currentSrc}
-        alt={alt}
+        alt={`img_${alt}`}
         onError={() => {
           // Only fall back to error source if we're not already using it
           if (errorSrc && currentSrc !== errorSrc) {

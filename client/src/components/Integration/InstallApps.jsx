@@ -38,7 +38,7 @@ const InstallApps = () => {
             .then(data => {
                 // Convert array to Map for easier lookup with version info
                 const appsMap = new Map(
-                    data.message?.appList.map(app => [app.appId, app.version])
+                    data.message?.map(app => [app.appId, app.version])
                 );
                 setInstalledApps(appsMap);
             })
