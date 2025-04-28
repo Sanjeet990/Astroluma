@@ -94,7 +94,7 @@ const SingleSnippetHeaderItem = React.memo(function SingleSnippetHeaderItem({ sn
 
 SingleSnippetHeaderItem.propTypes = {
     snippet: PropTypes.shape({
-        _id: PropTypes.string.isRequired,
+        id: PropTypes.number.isRequired,
         snippetTitle: PropTypes.string.isRequired,
         snippetLanguage: PropTypes.string.isRequired,
         languageName: PropTypes.string,
@@ -103,7 +103,7 @@ SingleSnippetHeaderItem.propTypes = {
             PropTypes.instanceOf(Date)
         ]).isRequired,
     }).isRequired,
-    listingId: PropTypes.string.isRequired,
+    listingid: PropTypes.number.isRequired,
 };
 
 export default SingleSnippetHeaderItem;

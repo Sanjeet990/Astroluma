@@ -139,7 +139,7 @@ const SingleTotpItem = (props) => {
 SingleTotpItem.propTypes = {
     item: PropTypes.object.isRequired,
     deleteTotpItem: PropTypes.func.isRequired,
-    id: PropTypes.string.isRequired
+    id: PropTypes.number.isRequired
 };
 
 const MemoizedComponent = React.memo(SingleTotpItem);

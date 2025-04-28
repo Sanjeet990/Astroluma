@@ -216,8 +216,8 @@ const SingleListing = ({ item, deleteListing, id }) => {
         <Link
             style={style}
             ref={setNodeRef}
-            to={showDeleteConfirmation || moveItem?.id === item.id ? null : decideLink()}
-            className="relative"
+            to={showDeleteConfirmation || moveItem?.id === item.id || (moveItem && item.listingType !== 'category') ? null : decideLink()}
+            className={`relative ${moveItem && item.listingType !== 'category' ? 'cursor-not-allowed' : ''}`}
         >
             <motion.div
                 whileHover={!moveItem ? { scale: 1.03 } : {}}
@@ -231,7 +231,9 @@ const SingleListing = ({ item, deleteListing, id }) => {
                         }
                     } 
                     : {}}
-                className="relative border-2 border-internalCardBorder bg-internalCardBg text-internalCardText pt-10 pb-10 rounded-xl shadow-md h-80"
+                className={`relative border-2 border-internalCardBorder bg-internalCardBg text-internalCardText pt-10 pb-10 rounded-xl shadow-md h-80 ${
+                    moveItem && item.listingType !== 'category' ? 'opacity-50 pointer-events-none' : ''
+                }`}
                 style={{ overflow: 'hidden' }}
             >
                 {showDeleteConfirmation ? renderDeleteConfirmation() : renderContent()}
@@ -243,14 +245,14 @@ const SingleListing = ({ item, deleteListing, id }) => {
 
 SingleListing.propTypes = {
     item: PropTypes.shape({
-        _id: PropTypes.string.isRequired,
+        id: PropTypes.number.isRequired,
         listingType: PropTypes.string.isRequired,
         listingName: PropTypes.string.isRequired,
         onFeatured: PropTypes.bool,
         listingIcon: PropTypes.object,
     }).isRequired,
     deleteListing: PropTypes.func.isRequired,
-    id: PropTypes.string.isRequired
+    id: PropTypes.number.isRequired
 };
 
 export default React.memo(SingleListing);

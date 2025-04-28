@@ -130,9 +130,9 @@ const SingleListingInFront = (props) => {
         let intervalId;
 
         const fetchData = () => {
-            //console.log("Running Integration: ", props?.item?.integration);
+            console.log("Running Integration: ", props?.item?.integration);
             if (props.item.integration) {
-                ApiService.get(`/api/v1/app/run/${props.item.id}/${props?.item?.integration?.id}`, loginData?.token)
+                ApiService.get(`/api/v1/app/run/${props.item.id}/${props?.item?.integration?.appId}`, loginData?.token)
                     .then(data => {
                         setHtmlData(data?.html);
                         setFullHtmlData(data?.fullHtml);

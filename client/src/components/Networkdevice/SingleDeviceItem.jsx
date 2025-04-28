@@ -140,7 +140,7 @@ const SingleDeviceItem = (props) => {
 SingleDeviceItem.propTypes = {
     item: PropTypes.object.isRequired,
     deleteNetworkDevice: PropTypes.func.isRequired,
-    id: PropTypes.string.isRequired
+    id: PropTypes.number.isRequired
 };
 
 const MemoizedComponent = React.memo(SingleDeviceItem);

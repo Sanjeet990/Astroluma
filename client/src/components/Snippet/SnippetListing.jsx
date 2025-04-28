@@ -230,7 +230,7 @@ const SnippetListing = () => {
 
 SnippetListing.propTypes = {
     snippet: PropTypes.shape({
-        _id: PropTypes.string.isRequired,
+        id: PropTypes.number.isRequired,
     }),
 };
 

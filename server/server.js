@@ -41,9 +41,9 @@ app.use(cors({
     exposedHeaders: ['X-Sequelize-Status'],
 }));
 
-//app.use(cors({
-//    origin: 'http://localhost:3000'
-//}));
+app.use(cors({
+    origin: 'http://localhost:3000'
+}));
 
 //USE JSON
 app.use(express.json());

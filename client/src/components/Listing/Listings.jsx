@@ -60,11 +60,9 @@ const Listings = ({ type }) => {
     );
 
     const filteredItems = useMemo(() => {
-        if (moveItem) {
-            return itemList.filter(item => item.listingType === 'category');
-        }
+        // Return all items regardless of move mode
         return itemList;
-    }, [itemList, moveItem]);
+    }, [itemList]);
 
     useEffect(() => {
         setActiveRoute(`/manage/${type}`);

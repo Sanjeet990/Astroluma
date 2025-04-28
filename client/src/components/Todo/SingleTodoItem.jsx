@@ -9,7 +9,7 @@ import makeToast from '../../utils/ToastUtils';
 import { useNavigate } from 'react-router-dom';
 
 const todoShape = PropTypes.shape({
-    _id: PropTypes.string.isRequired,
+    id: PropTypes.number.isRequired,
     todoItem: PropTypes.string.isRequired,
     completed: PropTypes.bool.isRequired,
     dueDate: PropTypes.string,
