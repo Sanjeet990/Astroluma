@@ -7,7 +7,8 @@ const {
     saveWeatherSettings,
     weatherData,
     oidcSettings,
-    getOidcSettings
+    getOidcSettings,
+    generateBackup
 } = require('../controllers/manage');
 const { verifyToken } = require('../middlewares/auth');
 
@@ -26,5 +27,6 @@ router.post('/settings/weather', verifyToken, saveWeatherSettings); // Save weat
 router.post('/settings/oidc', verifyToken, oidcSettings); // Save oidc settings
 router.get('/settings/oidc', verifyToken, getOidcSettings); // Get oidc settings
 router.get('/settings', verifyToken, getSetting); // Get current settings
+router.get('/settings/backup', verifyToken, generateBackup); // Generate and download backup
 
 module.exports = router;

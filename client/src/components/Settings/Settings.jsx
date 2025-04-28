@@ -1,18 +1,19 @@
 import React, { useCallback, useEffect } from 'react';
-import { useRecoilValue } from 'recoil';
-import { isHostModeState, userDataState } from '../../atoms';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { isHostModeState, loginState, userDataState, backupConfirmationModalState } from '../../atoms';
 import WelcomeUser from '../Misc/WelcomeUser';
 import { Helmet } from 'react-helmet';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import SingleSettingsItem from './SingleSettingsItem';
-import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdContactSupport } from "react-icons/md";
+import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdContactSupport, MdBackup } from "react-icons/md";
 import { FaCloudSunRain, FaTshirt, FaHome, FaIcons, FaUserCircle, FaCoffee } from "react-icons/fa";
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import { BsAppIndicator } from "react-icons/bs";
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CONSTANTS } from '../../utils/Constants';
+import BackupConfirmationModal from '../Modals/BackupConfirmationModal';
 
 const Settings = () => {
 
@@ -22,6 +23,8 @@ const Settings = () => {
     const setActiveRoute = useCurrentRoute();
 
     const isHostMode = useRecoilValue(isHostModeState);
+    const loginData = useRecoilValue(loginState);
+    const setBackupModal = useSetRecoilState(backupConfirmationModalState);
 
     useDynamicFilter(false);
 
@@ -150,10 +153,25 @@ const Settings = () => {
             show: true,
             route: CONSTANTS.BuyMeACoffee
         },
+        {
+            id: 16,
+            title: 'Backup',
+            description: 'Download a backup for migration to newer Astroluma versions',
+            icon: <MdBackup />,
+            show: userData?.isSuperAdmin,
+            action: 'backup'
+        },
     ]
 
+    const handleBackup = () => {
+        // Open the confirmation modal instead of using window.confirm
+        setBackupModal({ isOpen: true });
+    };
+
     const manageSelection = useCallback((Setting) => {
-        if (Setting?.route.startsWith('http')) {
+        if (Setting?.action === 'backup') {
+            handleBackup();
+        } else if (Setting?.route.startsWith('http')) {
             window.open(Setting?.route, '_blank');
         } else {
             navigate(Setting?.route);
@@ -165,6 +183,8 @@ const Settings = () => {
             <Helmet>
                 <title>Settings</title>
             </Helmet>
+
+            <BackupConfirmationModal />
 
             <div className="flex flex-row space-x-4">
                 <div className="w-full md:block">
