@@ -214,7 +214,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                       <SidebarLinkItem
                         icon={<MdListAlt />}
                         active={activeRoute === '/manage/listing'}
-                        text="Listings"
+                        text={<span className="flex items-center">Listings <span className="ml-2 bg-buttonSuccess text-white text-xs rounded-full px-2">Main</span></span>}
                         to="/manage/listing" />
 
                       <SidebarLinkItem
