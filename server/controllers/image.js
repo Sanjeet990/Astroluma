@@ -64,3 +64,44 @@ exports.listImages = async (req, res) => {
         });
     }
 }
+
+exports.showPreviewImage = async (req, res) => {
+
+    const userId = req.user?.id;
+
+    try {
+        //Get random 12 icons
+        const icons = await Icon.findAll({
+            where: {
+                [Icon.sequelize.Sequelize.Op.or]: [
+                    { userId },
+                    { userId: null }
+                ]
+            }
+        });
+
+        return res.status(200).json({
+            iconPack: "Astroluma Default",
+            iconPackVersion: "1.0.0",
+            iconProvider: "com.astroluma.self",
+            packDeveloper: "Sanjeet990",
+            baseUrl: "http://localhost:8000/images/",
+            baseUrlLight: null,
+            iconData: icons.map(icon => {
+                return {
+                    iconUrl: icon.iconPath,
+                    iconUrlLight: null,
+                    iconId: icon.id,
+                    iconName: icon.id
+                }
+            })
+        });
+
+    } catch (err) {
+        return res.status(400).json({
+            error: true,
+            message: "Failed to retrieve icon."
+        });
+    }
+
+}

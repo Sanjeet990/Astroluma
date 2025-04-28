@@ -39,7 +39,12 @@ const SingleIconPackItem = ({ iconPack, deleteListener }) => {
   const fetchIcons = useCallback(async () => {
     setLoading(true);
 
-    ApiService.get(iconPack?.jsonUrl)
+    let urlToCall = iconPack?.jsonUrl;
+    if (iconPack.iconProvider === "com.astroluma.self") {
+      urlToCall = "/api/v1/iconpack/preview";
+    }
+
+    ApiService.get(urlToCall, iconPack.iconProvider === "com.astroluma.self" ? loginData?.token : null, navigate)
       .then(data => {
         setIcons(data.iconData?.slice(0, 12));
         setBaseUrl(data?.baseUrl);
@@ -94,8 +99,14 @@ const SingleIconPackItem = ({ iconPack, deleteListener }) => {
     setShowDeleteConfirmation(false);
   }, []);
 
+  const onItemClicked = () => {
+    if (iconPack?.iconProvider === "com.astroluma.self") {
+
+    }
+  };
+
   return (
-    <div role="button" className={`relative cursor-pointer`}>
+    <div onClick={onItemClicked} role="button" className={`relative cursor-pointer`}>
       <motion.div whileHover={{ scale: 1.03 }} className="relative border-2 border-itemCardBorder bg-itemCardBg text-itemCardText pt-10 pb-10 rounded-xl shadow-md h-80 transition-all duration-300" style={{ overflow: 'hidden' }}>
         {
           showDeleteConfirmation ? (
@@ -120,7 +131,8 @@ const SingleIconPackItem = ({ iconPack, deleteListener }) => {
                 loading ? <div className="flex flex-col justify-center items-center h-full">
                   <NiceLoader className='text-loaderColor' />
                 </div> :
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 flex flex-col justify-center items-center">
+                  <div
+                    className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 flex flex-col justify-center items-center">
                     {
                       iconPack?.userId && <div
                         title="Delete"

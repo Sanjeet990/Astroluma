@@ -26,7 +26,6 @@ const ImageSelectorModal = () => {
       name: pack.iconProvider,
       label: pack.iconName
     }));
-    tempItemArray?.unshift({ name: 'com.astroluma.self', label: 'My Icons' });
     setTabConfig(tempItemArray);
   }, [allIconPacks]);
 
@@ -58,7 +57,7 @@ const ImageSelectorModal = () => {
             }
             {
               allIconPacks?.map(iconPack => (
-                iconPack.iconProvider === activeTab && (
+                (iconPack.iconProvider === activeTab && iconPack.iconProvider !== "com.astroluma.self") && (
                   <CustomIconPack key={iconPack.iconProvider} iconPack={iconPack} onSelectImage={handleSelectImage} />
                 )
               ))

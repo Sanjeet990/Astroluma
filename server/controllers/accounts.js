@@ -1,6 +1,6 @@
 const md5 = require('md5');
 const { User } = require('../models');
-const { Op } = require('sequelize');
+const { Op, Sequelize } = require('sequelize');
 
 // Save or update user account
 exports.saveAccount = async (req, res) => {
@@ -30,11 +30,13 @@ exports.saveAccount = async (req, res) => {
 
     try {
         if (!userId) {
-            // Check if username exists
+            // Check if username exists - using LOWER() for case-insensitive comparison in SQLite
             const existingUser = await User.findOne({ 
-                where: { 
-                    username: { [Op.iLike]: username } 
-                } 
+                where: 
+                    Sequelize.where(
+                        Sequelize.fn('LOWER', Sequelize.col('username')), 
+                        Sequelize.fn('LOWER', username)
+                    )
             });
 
             if (existingUser) {
@@ -88,6 +90,7 @@ exports.saveAccount = async (req, res) => {
             });
         }
     } catch (error) {
+        console.log(error);
         return res.status(400).json({
             error: true,
             message: "Error in adding or updating user."

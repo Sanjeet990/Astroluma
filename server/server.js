@@ -116,7 +116,16 @@ app.use('/api/v1/', totpRoute);
 app.use('/api/v1/', iconpackRoute);
 
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+    try{
+        // Check if the requested file exists in the dist folder
+        const filePath = path.join(__dirname, 'dist', req.path);
+        if (fs.existsSync(filePath)) {
+            return res.sendFile(filePath);
+        }
+    }
+    catch (err) {
+        res.status(404).send("File not found");
+    }
 });
 
 //use custom exception handler

@@ -92,32 +92,6 @@ module.exports = {
         console.log('Initial listings already exist, skipping creation');
       }
 
-      // Check if icon packs already exist before inserting
-      const existingSelfhstIconPack = await queryInterface.sequelize.query(
-        `SELECT id FROM IconPacks WHERE iconProvider = 'com.astroluma.selfh.st'`,
-        { type: queryInterface.sequelize.QueryTypes.SELECT }
-      );
-      
-      if (existingSelfhstIconPack.length === 0) {
-        // Seed the selfh.st icon pack
-        await queryInterface.bulkInsert('IconPacks', [{
-          iconProvider: 'com.astroluma.selfh.st',
-          iconName: 'Selfh.st',
-          iconPackVersion: '1.0.0',
-          jsonUrl: 'https://icons.getastroluma.com/selfh.st.json',
-          packDeveloper: 'Sanjeet990',
-          credit: JSON.stringify({
-            name: 'Selfh.st',
-            url: 'https://selfh.st'
-          }),
-          userId: null, // Default icon pack will have null in userId
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }]);
-      } else {
-        console.log('Selfh.st icon pack already exists, skipping creation');
-      }
-
       // Check if default icon pack already exists
       const existingDefaultIconPack = await queryInterface.sequelize.query(
         `SELECT id FROM IconPacks WHERE iconProvider = 'com.astroluma.self'`,
@@ -142,6 +116,32 @@ module.exports = {
         }]);
       } else {
         console.log('Default icon pack already exists, skipping creation');
+      }
+
+      // Check if icon packs already exist before inserting
+      const existingSelfhstIconPack = await queryInterface.sequelize.query(
+        `SELECT id FROM IconPacks WHERE iconProvider = 'com.astroluma.selfh.st'`,
+        { type: queryInterface.sequelize.QueryTypes.SELECT }
+      );
+      
+      if (existingSelfhstIconPack.length === 0) {
+        // Seed the selfh.st icon pack
+        await queryInterface.bulkInsert('IconPacks', [{
+          iconProvider: 'com.astroluma.selfh.st',
+          iconName: 'Selfh.st',
+          iconPackVersion: '1.0.0',
+          jsonUrl: 'https://icons.getastroluma.com/selfh.st.json',
+          packDeveloper: 'Sanjeet990',
+          credit: JSON.stringify({
+            name: 'Selfh.st',
+            url: 'https://selfh.st'
+          }),
+          userId: null, // Default icon pack will have null in userId
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }]);
+      } else {
+        console.log('Selfh.st icon pack already exists, skipping creation');
       }
       
       // Check if app integrations already exist
