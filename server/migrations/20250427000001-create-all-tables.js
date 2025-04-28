@@ -362,6 +362,11 @@ module.exports = {
         allowNull: true,
         defaultValue: null
       },
+      description: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        defaultValue: null
+      },
       inSidebar: {
         type: Sequelize.BOOLEAN,
         allowNull: false,

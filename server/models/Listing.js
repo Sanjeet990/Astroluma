@@ -42,6 +42,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true,
       defaultValue: null
     },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      defaultValue: null
+    },
     inSidebar: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

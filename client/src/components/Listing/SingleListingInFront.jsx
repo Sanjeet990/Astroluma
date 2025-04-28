@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ImageView from '../Misc/ImageView';
-import { FiCopy } from 'react-icons/fi';
+import { FiCopy, FiInfo } from 'react-icons/fi';
 import { isLocal } from '../../utils/Helper';
 import useSecurityCheck from "../../hooks/useSecurityCheck";
 import { ImNewTab } from "react-icons/im";
@@ -19,8 +19,8 @@ const SingleListingInFront = (props) => {
 
     const containerRef = useRef(null);
     const [width, setWidth] = useState(0);
-
     const [showLinkCopy, setShowLinkCopy] = useState(false);
+    const [showInfoPanel, setShowInfoPanel] = useState(false);
     const isSecure = useSecurityCheck();
     const totalTime = 15;
     const [timeLeft, setTimeLeft] = useState(0);
@@ -61,8 +61,8 @@ const SingleListingInFront = (props) => {
             url = `/s/${props.item.id}`;
         } else {
             if (isLocal(hostname)) {
-                url = `${props.item.localUrl ? props.item.localUrl : props.item.listingUrl}`;
-            } else {
+              url = `${props.item.localUrl ? props.item.localUrl : props.item.listingUrl}`;
+          ;  } else {
                 url = `${props.item.listingUrl ? props.item.listingUrl : props.item.localUrl}`;
             }
         }
@@ -125,7 +125,7 @@ const SingleListingInFront = (props) => {
             }
         };
     }, []);
-
+    
     useEffect(() => {
         let intervalId;
 
@@ -162,27 +162,34 @@ const SingleListingInFront = (props) => {
     useEffect(() => {
         let timer = null;
 
-        if ((showLinkCopy || showAppsDataForSmallerScreen) && timeLeft > 0) {
+        if ((showLinkCopy || showInfoPanel || showAppsDataForSmallerScreen) && timeLeft > 0) {
             timer = setInterval(() => {
                 setTimeLeft(time => time - 1);
             }, 1000);
-        } else if (!showLinkCopy || timeLeft === 0) {
+        } else if (timeLeft === 0) {
             clearInterval(timer);
             if (showLinkCopy) setShowLinkCopy(false);
+            else if (showInfoPanel) setShowInfoPanel(false);
             else if (showAppsDataForSmallerScreen) setShowAppsDataForSmallerScreen(false);
         }
 
         return () => clearInterval(timer); // This is the cleanup function
-    }, [showLinkCopy, showAppsDataForSmallerScreen, timeLeft]);
+    }, [showLinkCopy, showInfoPanel, showAppsDataForSmallerScreen, timeLeft]);
 
     const showCopyDisplays = () => {
         setShowLinkCopy(true);
         setTimeLeft(15);
     }
 
+    const toggleInfoPanel = () => {
+        setShowInfoPanel(true);
+        setTimeLeft(15);
+    }
+
     const handleViewClose = (e) => {
         e.preventDefault();
         if (showLinkCopy) setShowLinkCopy(false);
+        else if (showInfoPanel) setShowInfoPanel(false);
         else if (showAppsDataForSmallerScreen) setShowAppsDataForSmallerScreen(false);
     }
 
@@ -224,7 +231,7 @@ const SingleListingInFront = (props) => {
     return (
         <div
             className="relative">
-            <motion.div ref={containerRef} whileHover={{ scale: 1.03 }} className={`relative border-2 border-itemCardBorder bg-itemCardBg text-itemCardText ${(showLinkCopy || showAppsDataForSmallerScreen) ? '' : 'hover:border-itemCardHoverBorder hover:bg-itemCardHoverBg hover:text-itemCardHoverText'} pt-10 pb-10 rounded-xl shadow-md h-80 transition-all duration-300`} style={{ overflow: 'hidden' }} >
+            <motion.div ref={containerRef} whileHover={{ scale: 1.03 }} className={`relative border-2 border-itemCardBorder bg-itemCardBg text-itemCardText ${(showLinkCopy || showAppsDataForSmallerScreen || showInfoPanel) ? '' : 'hover:border-itemCardHoverBorder hover:bg-itemCardHoverBg hover:text-itemCardHoverText'} pt-10 pb-10 rounded-xl shadow-md h-80 transition-all duration-300`} style={{ overflow: 'hidden' }} >
 
                 {
                     (background && !showLinkCopy && !showAppsDataForSmallerScreen) && (
@@ -271,7 +278,25 @@ const SingleListingInFront = (props) => {
                                 <p className="mb-2 mt-4 text-center">Auto closes in <br />{timeLeft} seconds.</p>
                                 <NiceButton
                                     label="Close"
-                                    className="bg-itemCardButtonColor hover:bg-itemCardButtonHoverColor text-itemCardButtonTextColor hover:text-itemCardButtonHoverTextColor"
+                                    className="bg-itemCardButtonColor hover:bg-itemCardButtonHoverColor text-itemCardButtonTextColor hover:text-itemCardHoverTextColor"
+                                    onClick={handleViewClose}
+                                />
+                            </motion.div>
+                        ) : showInfoPanel ? (
+                            <motion.div className="absolute inset-0 h-full flex flex-col items-center justify-center p-4 bg-itemCardBg"
+                                initial="hidden"
+                                animate="visible"
+                                exit="exit"
+                                variants={linkCopyVariants}
+                            >
+                                <h3 className="text-lg font-semibold mb-4 text-itemCardText">Description</h3>
+                                <div className="overflow-auto text-xs max-h-48 mb-4 text-center text-itemCardText">
+                                    {props.item.description}
+                                </div>
+                                <p className="mb-2 mt-4 text-center text-itemCardText">Auto closes in <br />{timeLeft} seconds.</p>
+                                <NiceButton
+                                    label="Close"
+                                    className="bg-itemCardButtonColor hover:bg-itemCardButtonHoverColor text-itemCardButtonTextColor hover:text-itemCardHoverTextColor"
                                     onClick={handleViewClose}
                                 />
                             </motion.div>
@@ -301,7 +326,7 @@ const SingleListingInFront = (props) => {
                 </AnimatePresence>
                 <div className='absolute top-0 right-2 flex space-x-2 p-4'>
                     {
-                        (showLinkCopy || showAppsDataForSmallerScreen) && <span
+                        (showLinkCopy || showAppsDataForSmallerScreen || showInfoPanel) && <span
                             role="button"
                             onClick={handleViewClose}
                             className="cursor-pointer opacity-50 hover:opacity-100 text-itemCardIconColor hover:text-itemCardIconHoverColor transition-all duration-300"
@@ -310,7 +335,7 @@ const SingleListingInFront = (props) => {
                         </span>
                     }
                     {
-                        (!showLinkCopy && !showAppsDataForSmallerScreen && props.item.listingType === "link" && props.item.integration && fullHtmlData && (width < 286 || alwaysShowDetailedView)) && <span
+                        (!showLinkCopy && !showInfoPanel && !showAppsDataForSmallerScreen && props.item.listingType === "link" && props.item.integration && fullHtmlData && (width < 286 || alwaysShowDetailedView)) && <span
                             role="button"
                             onClick={showAppsData}
                             className="cursor-pointer opacity-50 hover:opacity-100 text-itemCardIconColor hover:text-itemCardIconHoverColor transition-all duration-300"
@@ -319,7 +344,16 @@ const SingleListingInFront = (props) => {
                         </span>
                     }
                     {
-                        (!showLinkCopy && !showAppsDataForSmallerScreen && props.item.listingType === "link") && <span
+                        (!showLinkCopy && !showInfoPanel && !showAppsDataForSmallerScreen && props.item.description) && <span
+                            role="button"
+                            onClick={toggleInfoPanel}
+                            className="cursor-pointer opacity-50 hover:opacity-100 text-itemCardIconColor hover:text-itemCardIconHoverColor transition-all duration-300"
+                        >
+                            <FiInfo size={20} />
+                        </span>
+                    }
+                    {
+                        (!showLinkCopy && !showInfoPanel && !showAppsDataForSmallerScreen && props.item.listingType === "link") && <span
                             role="button"
                             onClick={copyLinkTextToClipboard}
                             className="cursor-pointer opacity-50 hover:opacity-100 text-itemCardIconColor hover:text-itemCardIconHoverColor transition-all duration-300"
@@ -328,7 +362,7 @@ const SingleListingInFront = (props) => {
                         </span>
                     }
                     {
-                        (!showLinkCopy && !showAppsDataForSmallerScreen && shouldShowNewTabIcon) && <span
+                        (!showLinkCopy && !showInfoPanel && !showAppsDataForSmallerScreen && shouldShowNewTabIcon) && <span
                             role="button"
                             onClick={openThisLinkInNewTab}
                             className="cursor-pointer opacity-50 hover:opacity-100 text-itemCardIconColor hover:text-itemCardIconHoverColor transition-all duration-300"
@@ -338,10 +372,10 @@ const SingleListingInFront = (props) => {
                     }
                 </div>
                 {
-                    (showLinkCopy || showAppsDataForSmallerScreen) && <div style={{ width: `${((timeLeft) / totalTime) * 100}%`, transition: 'width 1s' }} className="absolute rounded bottom-0 left-0 bg-itemCardProgressColor h-2" />
+                    (showLinkCopy || showInfoPanel || showAppsDataForSmallerScreen) && <div style={{ width: `${((timeLeft) / totalTime) * 100}%`, transition: 'width 1s' }} className="absolute rounded bottom-0 left-0 bg-itemCardProgressColor h-2" />
                 }
                 {
-                    (!showLinkCopy && !showAppsDataForSmallerScreen && props.item.integration && htmlData && width > 286) && (
+                    (!showLinkCopy && !showInfoPanel && !showAppsDataForSmallerScreen && props.item.integration && htmlData && width > 286) && (
                         <Link
                             to={decideTheLink()}>
                             {/* skipcq: JS-0440 */}

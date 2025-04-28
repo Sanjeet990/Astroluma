@@ -424,7 +424,7 @@ exports.manageListItems = async (req, res) => {
 
 exports.saveLink = async (req, res) => {
     const userId = req.user.id;
-    const { parentId, listingId, linkName, linkIcon, linkURL, localUrl, showInSidebar, showOnFeatured } = req.body;
+    const { parentId, listingId, linkName, linkIcon, linkURL, localUrl, description, showInSidebar, showOnFeatured } = req.body;
     let integration = req.body.integration;
 
     if (!integration || integration === 'undefined' || integration === 'null') integration = null;
@@ -465,6 +465,7 @@ exports.saveLink = async (req, res) => {
                 listingIcon: linkIcon,
                 listingUrl: linkURL,
                 localUrl,
+                description,
                 onFeatured: showOnFeatured,
                 inSidebar: showInSidebar,
                 integration: integrationData
@@ -493,6 +494,7 @@ exports.saveLink = async (req, res) => {
                 listingIcon: linkIcon,
                 listingUrl: linkURL,
                 localUrl,
+                description,
                 listingType: 'link',
                 parentId,
                 onFeatured: showOnFeatured,

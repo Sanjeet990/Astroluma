@@ -32,6 +32,7 @@ const EditLink = () => {
     const [linkName, setLinkName] = useState("");
     const [linkURL, setLinkURL] = useState("");
     const [localUrl, setLocalUrl] = useState("");
+    const [description, setDescription] = useState("");
     const [showInSidebar, setShowInSidebar] = useState(false);
     const [showOnFeatured, setShowOnFeatured] = useState(!parentId ? true : false);
     const [integrationList, setIntegrationList] = useState([]);
@@ -61,6 +62,7 @@ const EditLink = () => {
                     setLinkName(data?.message?.listing?.listingName || "");
                     setLinkURL(data?.message?.listing?.listingUrl || "");
                     setLocalUrl(data?.message?.listing?.localUrl || "");
+                    setDescription(data?.message?.listing?.description || "");
                     setShowInSidebar(data?.message?.listing?.inSidebar);
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
                     //setDisabledFeatured(data?.message?.listing?.parentId ? false : true);
@@ -101,6 +103,7 @@ const EditLink = () => {
                     setLinkName("");
                     setLinkURL("");
                     setLocalUrl("");
+                    setDescription("");
                     setShowInSidebar(false);
                     setShowOnFeatured(!parentId ? true : false);
                     setFolderReloadStatus(true);
@@ -149,6 +152,7 @@ const EditLink = () => {
             linkIcon: selectedImage?.image,
             linkURL: tempLink,
             localUrl,
+            description,
             showInSidebar,
             showOnFeatured,
             integration: !selectedIntegration ? null : {
@@ -283,6 +287,16 @@ const EditLink = () => {
                                     placeholder="Select or upload icon"
                                 />
                             </div>
+                        </div>
+
+                        <div className="mt-4">
+                            <NiceInput
+                                label="Description (Optional - shown when hovering)"
+                                className='border bg-inputBg border-inputBorder text-inputText placeholder-inputPlaceholder'
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="Enter a description for this link"
+                            />
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
