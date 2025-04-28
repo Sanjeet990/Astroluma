@@ -101,7 +101,7 @@ const SingleIconPackItem = ({ iconPack, deleteListener }) => {
 
   const onItemClicked = () => {
     if (iconPack?.iconProvider === "com.astroluma.self") {
-
+      navigate(`/manage/iconpack/images`);
     }
   };
 

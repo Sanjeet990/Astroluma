@@ -1,4 +1,6 @@
-const { Icon } = require("../models");
+const path = require('path');
+const fs = require('fs');
+const { Icon } = require('../models');
 
 exports.uploadImage = async (req, res) => {
     const uploadedFile = req.localUrl;
@@ -105,3 +107,55 @@ exports.showPreviewImage = async (req, res) => {
     }
 
 }
+
+exports.deleteImage = async (req, res) => {
+    const loggedinuser = req.user;
+    const imageId = req.params.imageId;
+
+    try {
+        // Find the image first
+        const image = await Icon.findOne({
+            where: {
+                id: imageId,
+                userId: loggedinuser?.id
+            }
+        });
+
+        if (!image) {
+            return res.status(400).json({
+                error: true,
+                message: "Image not found or you don't have permission to delete it."
+            });
+        }
+
+        // Get the file path
+        const iconPath = image.iconPath;
+        const localFilePath = iconPath.startsWith('/uploads/') 
+            ? path.join(__dirname, '../public', iconPath) 
+            : null;
+
+        // Delete from database
+        await Icon.destroy({
+            where: {
+                id: imageId,
+                userId: loggedinuser?.id
+            }
+        });
+
+        // Delete physical file if it exists
+        if (localFilePath && fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+        }
+
+        return res.status(200).json({
+            error: false,
+            message: "Image deleted successfully."
+        });
+    } catch (error) {
+        console.error("Error:", error);
+        return res.status(500).json({
+            error: true,
+            message: "Error deleting image."
+        });
+    }
+};

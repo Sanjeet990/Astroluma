@@ -3,7 +3,7 @@ const { verifyToken } = require('../middlewares/auth');
 const multer = require('multer')
 const path = require('path');
 const fs = require('fs');
-const { uploadImage, listImages, showPreviewImage } = require('../controllers/image');
+const { uploadImage, listImages, showPreviewImage, deleteImage } = require('../controllers/image');
 const uploadToLocalFolder = require('../middlewares/uploadToLocalMiddleware');
 
 // Define the upload directory
@@ -52,5 +52,6 @@ const router = express.Router();
 router.post('/images/upload', verifyToken, upload.single('icon'), uploadToLocalFolder, uploadImage);
 router.get('/images', verifyToken, listImages);
 router.get('/iconpack/preview', verifyToken, showPreviewImage);
+router.get('/image/delete/:imageId', verifyToken, deleteImage);
 
 module.exports = router;

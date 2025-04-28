@@ -328,3 +328,16 @@ export const integrationConfigureModalState = atom({
     data: null,
   },
 });
+
+export const deleteImageModalState = atom({
+  key: 'deleteImageModalState',
+  default: {
+    isOpen: false,
+    data: null,
+  },
+});
+
+export const deletedImageState = atom({
+  key: 'deletedImageState',
+  default: null,
+});

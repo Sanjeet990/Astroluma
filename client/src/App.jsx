@@ -50,6 +50,7 @@ import SystemThemes from './utils/SystemThemes';
 import UserProfile from './components/Accounts/UserProfile';
 import OidcSetup from './components/Accounts/OidcSetup';
 import Logout from './components/Auth/Logout';
+import IconPackImages from './components/IconPacks/IconPackImages';
 
 const App = () => {
   const [themeType, setThemeType] = useState("dark");
@@ -167,6 +168,7 @@ const App = () => {
                             <Route key={Math.random()} path="/manage/theme" element={<ThemeList />} />
                             <Route key={Math.random()} path="/manage/iconpack" element={<IconPacks />} />
                             <Route key={Math.random()} path="/manage/iconpack/add" element={<AddIconPack />} />
+                            <Route key={Math.random()} path="/manage/iconpack/images" element={<IconPackImages />} />
                             <Route key={Math.random()} path="/manage/weather" element={<WeatherSettings />} />
                             <Route key={Math.random()} path="/manage/page/add" element={<EditPage />} />
                             <Route key={Math.random()} path="/manage/page/:pageId" element={<EditPage />} />
