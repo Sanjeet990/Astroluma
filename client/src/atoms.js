@@ -328,3 +328,11 @@ export const integrationConfigureModalState = atom({
     data: null,
   },
 });
+
+export const backupConfirmationModalState = atom({
+  key: 'backupConfirmationModalState',
+  default: {
+    isOpen: false,
+    data: null
+  }
+});

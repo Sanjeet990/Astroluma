@@ -1,10 +1,14 @@
 const Authenticator = require('../models/Authenticator');
 const User = require('../models/User');
 const GlobalSetting = require('../models/GlobalSetting');
+const App = require('../models/App');
+const Icon = require('../models/Icon');
 const Listing = require('../models/Listing');
 const axios = require('axios');
 const IconPack = require('../models/IconPack');
 const { isHostMode } = require('../utils/apiutils');
+const fs = require('fs').promises;
+const path = require('path');
 
 // Method to fetch and return dashboard data for the authenticated user
 /**
@@ -501,3 +505,306 @@ exports.getOidcSettings = async (req, res) => {
         });
     }
 }
+
+exports.generateBackup = async (req, res) => {
+    try {
+        // Create mapping for IDs
+        const idMappings = {
+            users: {},
+            listings: {}
+        };
+        
+        // Function to transform Mongoose data
+        const transformData = (data) => {
+            const transformed = JSON.parse(JSON.stringify(data));
+            
+            // Convert MongoDB _id to string id
+            if (transformed._id) {
+                transformed._id = transformed._id.toString();
+                delete transformed._id;
+            }
+            
+            // Remove Mongoose-specific fields
+            delete transformed.__v;
+            
+            return transformed;
+        };
+
+        // =============================================
+        // Users collection
+        // =============================================
+        const users = await User.find({}).lean();
+        
+        const transformedUsers = users.map((user, index) => {
+            const userId = index + 1;
+            idMappings.users[user._id.toString()] = userId;
+            
+            const transformedUser = transformData(user);
+            transformedUser.id = userId;
+            
+            if (transformedUser.userAvatar && typeof transformedUser.userAvatar === 'object') {
+                transformedUser.userAvatar = JSON.stringify(transformedUser.userAvatar);
+            }
+            
+            if (transformedUser.siteLogo && typeof transformedUser.siteLogo === 'object') {
+                transformedUser.siteLogo = JSON.stringify(transformedUser.siteLogo);
+            }
+            
+            return transformedUser;
+        });
+
+        // =============================================
+        // Apps collection
+        // =============================================
+        const apps = await App.find({}).lean();
+        
+        const transformedApps = apps.map((app, index) => {
+            const transformedApp = transformData(app);
+            transformedApp.id = index + 1;
+            return transformedApp;
+        });
+
+        // =============================================
+        // Global settings
+        // =============================================
+        const globalSettings = await GlobalSetting.find({}).lean();
+        
+        const transformedGlobalSettings = globalSettings.map((setting, index) => {
+            const transformedSetting = transformData(setting);
+            transformedSetting.id = index + 1;
+            
+            if (transformedSetting.oidcConfig && typeof transformedSetting.oidcConfig === 'object') {
+                transformedSetting.oidcConfig = JSON.stringify(transformedSetting.oidcConfig);
+            }
+            
+            return transformedSetting;
+        });
+
+        // =============================================
+        // Listings collection
+        // =============================================
+        const listings = await Listing.find({}).lean();
+        
+        listings.forEach((listing, index) => {
+            idMappings.listings[listing._id.toString()] = index + 1;
+        });
+        
+        const transformedListings = listings.map((listing, index) => {
+            const transformedListing = transformData(listing);
+            transformedListing.id = index + 1;
+            
+            if (transformedListing.listingIcon && typeof transformedListing.listingIcon === 'object') {
+                transformedListing.listingIcon = JSON.stringify(transformedListing.listingIcon);
+            }
+            
+            if (transformedListing.integration && typeof transformedListing.integration === 'object') {
+                transformedListing.integration = JSON.stringify(transformedListing.integration);
+            }
+            
+            // Replace MongoDB ObjectId references with SQLite integer IDs
+            if (transformedListing.userId) {
+                const mongoUserId = typeof transformedListing.userId === 'object' ? 
+                transformedListing.userId.toString() : transformedListing.userId;
+                transformedListing.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            // Handle parent listing references
+            if (transformedListing.parentId) {
+                const mongoParentId = typeof transformedListing.parentId === 'object' ? 
+                transformedListing.parentId.toString() : transformedListing.parentId;
+                transformedListing.parentId = idMappings.listings[mongoParentId] || null;
+            }
+            
+            return transformedListing;
+        });
+
+        // =============================================
+        // Authenticators collection
+        // =============================================
+        const authenticators = await Authenticator.find({}).lean();
+        
+        const transformedAuthenticators = authenticators.map((authenticator, index) => {
+            const transformedAuth = transformData(authenticator);
+            transformedAuth.id = index + 1;
+            
+            if (transformedAuth.serviceIcon && typeof transformedAuth.serviceIcon === 'object') {
+                transformedAuth.serviceIcon = JSON.stringify(transformedAuth.serviceIcon);
+            }
+            
+            if (transformedAuth.userId) {
+                const mongoUserId = typeof transformedAuth.userId === 'object' ? 
+                transformedAuth.userId.toString() : transformedAuth.userId;
+                transformedAuth.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            return transformedAuth;
+        });
+
+        // =============================================
+        // Icons collection
+        // =============================================
+        const icons = await Icon.find({}).lean();
+        
+        const transformedIcons = icons.map((icon, index) => {
+            const transformedIcon = transformData(icon);
+            transformedIcon.id = index + 1;
+            
+            if (transformedIcon.userId) {
+                const mongoUserId = typeof transformedIcon.userId === 'object' ? 
+                transformedIcon.userId.toString() : transformedIcon.userId;
+                transformedIcon.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            return transformedIcon;
+        });
+
+        // =============================================
+        // IconPacks collection
+        // =============================================
+        const iconPacks = await IconPack.find({}).lean();
+        
+        const transformedIconPacks = iconPacks.map((iconPack, index) => {
+            const transformedIconPack = transformData(iconPack);
+            transformedIconPack.id = index + 1;
+            
+            if (transformedIconPack.credit && typeof transformedIconPack.credit === 'object') {
+                transformedIconPack.credit = JSON.stringify(transformedIconPack.credit);
+            }
+            
+            if (transformedIconPack.userId) {
+                const mongoUserId = typeof transformedIconPack.userId === 'object' ? 
+                transformedIconPack.userId.toString() : transformedIconPack.userId;
+                transformedIconPack.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            return transformedIconPack;
+        });
+
+        // =============================================
+        // NetworkDevices collection
+        // =============================================
+        const NetworkDevice = require('../models/NetworkDevice');
+        const networkDevices = await NetworkDevice.find({}).lean();
+        
+        const transformedNetworkDevices = networkDevices.map((device, index) => {
+            const transformedDevice = transformData(device);
+            transformedDevice.id = index + 1;
+            
+            if (transformedDevice.deviceIcon && typeof transformedDevice.deviceIcon === 'object') {
+                transformedDevice.deviceIcon = JSON.stringify(transformedDevice.deviceIcon);
+            }
+            
+            if (transformedDevice.userId) {
+                const mongoUserId = typeof transformedDevice.userId === 'object' ? 
+                transformedDevice.userId.toString() : transformedDevice.userId;
+                transformedDevice.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            return transformedDevice;
+        });
+
+        // =============================================
+        // Pages collection
+        // =============================================
+        const Page = require('../models/Page');
+        const pages = await Page.find({}).lean();
+        
+        const transformedPages = pages.map((page, index) => {
+            const transformedPage = transformData(page);
+            transformedPage.id = index + 1;
+            
+            if (transformedPage.userId) {
+                const mongoUserId = typeof transformedPage.userId === 'object' ? 
+                transformedPage.userId.toString() : transformedPage.userId;
+                transformedPage.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            return transformedPage;
+        });
+
+        // =============================================
+        // Snippets collection
+        // =============================================
+        const Snippet = require('../models/Snippet');
+        const snippets = await Snippet.find({}).lean();
+        
+        const transformedSnippets = snippets.map((snippet, index) => {
+            const transformedSnippet = transformData(snippet);
+            transformedSnippet.id = index + 1;
+            
+            if (Array.isArray(transformedSnippet.snippetItems)) {
+                transformedSnippet.snippetItems = JSON.stringify(transformedSnippet.snippetItems);
+            } else if (transformedSnippet.snippetItems === null || transformedSnippet.snippetItems === undefined) {
+                transformedSnippet.snippetItems = '[]';
+            }
+            
+            if (transformedSnippet.userId) {
+                const mongoUserId = typeof transformedSnippet.userId === 'object' ? 
+                transformedSnippet.userId.toString() : transformedSnippet.userId;
+                transformedSnippet.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            if (transformedSnippet.parent) {
+                const mongoListingId = typeof transformedSnippet.parent === 'object' ? 
+                transformedSnippet.parent.toString() : transformedSnippet.parent;
+                transformedSnippet.parent = idMappings.listings[mongoListingId] || null;
+            }
+            
+            return transformedSnippet;
+        });
+
+        // =============================================
+        // Todos collection
+        // =============================================
+        const Todo = require('../models/Todo');
+        const todos = await Todo.find({}).lean();
+        
+        const transformedTodos = todos.map((todo, index) => {
+            const transformedTodo = transformData(todo);
+            transformedTodo.id = index + 1;
+            
+            if (transformedTodo.userId) {
+                const mongoUserId = typeof transformedTodo.userId === 'object' ? 
+                transformedTodo.userId.toString() : transformedTodo.userId;
+                transformedTodo.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            if (transformedTodo.parent) {
+                const mongoListingId = typeof transformedTodo.parent === 'object' ? 
+                transformedTodo.parent.toString() : transformedTodo.parent;
+                transformedTodo.parent = idMappings.listings[mongoListingId] || null;
+            }
+            
+            return transformedTodo;
+        });
+
+        // Combine all transformed data into the backup object
+        const backupData = {
+            Secret: process.env.SECRET_KEY || "hghjkuyhsjsghjsghsjsg", // Add the secret key from environment
+            Users: transformedUsers,
+            Apps: transformedApps,
+            GlobalSettings: transformedGlobalSettings,
+            IconPacks: transformedIconPacks,
+            Icons: transformedIcons,
+            Listings: transformedListings,
+            NetworkDevices: transformedNetworkDevices,
+            Pages: transformedPages,
+            Authenticators: transformedAuthenticators,
+            Snippets: transformedSnippets,
+            Todos: transformedTodos
+        };
+
+        // Return as a regular JSON response instead of setting download headers
+        return res.status(200).json({
+            error: false,
+            message: backupData
+        });
+        
+    } catch (error) {
+        console.error('Error generating backup:', error);
+        return res.status(500).json({
+            error: true,
+            message: "Error generating backup."
+        });
+    }
+};
