@@ -4,8 +4,10 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil';
 import { addedTodoState, contentLoadingState, loginState, newTodoModalState } from '../../atoms';
 import { useNavigate, useParams } from 'react-router-dom';
 import { LuListTodo } from "react-icons/lu";
+import { BsCalendarWeek, BsListUl } from "react-icons/bs";
 import ApiService from '../../utils/ApiService';
 import SingleTodoItem from './SingleTodoItem';
+import TodoCalendarView from './TodoCalendarView';
 import DeleteTodoModal from '../Modals/DeleteTodoModal';
 import SelectList from '../Misc/SelectList';
 import { Helmet } from 'react-helmet';
@@ -37,6 +39,7 @@ const TodoListing = () => {
     const [listingName, setListingName] = useState(listingId ? "Todo List" : "Tasks");
     const [breadcrumbList, setBreadcrumbList] = useState([]);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [viewMode, setViewMode] = useState("list"); // "list" or "calendar"
     const setActiveRoute = useCurrentRoute();
 
     const [localLoading, setLocalLoading] = useState(false);
@@ -160,6 +163,15 @@ const TodoListing = () => {
         }
     }, [addedTodo, fetchTodoItems]);
 
+    // Toggle between list and calendar views with data refresh
+    const toggleViewMode = (mode) => {
+        if (mode !== viewMode) {
+            setViewMode(mode);
+            setPage(1);
+            fetchTodoItems(1); // Refresh data when switching views
+        }
+    };
+
     return (
         <>
             <Helmet>
@@ -171,67 +183,125 @@ const TodoListing = () => {
 
             <Breadcrumb type="front" pageTitle={listingName} breadcrumbList={breadcrumbList} />
 
-            <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-                <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 w-full">
-                    <div className="text-left w-full md:w-auto" />
-                    <div className="relative w-full md:w-auto md:flex-row items-center md:justify-end space-y-4 md:space-y-0 md:space-x-4">
-                        <SelectList
-                            className="w-full md:w-auto"
-                            listItems={completeOptions}
-                            selected={selectedCompletedOption}
-                            onChange={(e) => setSelectedCompletedOption(e.target.value)}
-                        />
+            {/* View Controls - Minimalist Tab Design */}
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+                <div className="flex items-center mb-4 md:mb-0">
+                    {/* Minimal Tab-Style View Switcher */}
+                    <div className="flex border-cardBorder/30">
+                        <button 
+                            onClick={() => toggleViewMode("list")}
+                            className={`px-4 py-2 flex items-center space-x-2 ${
+                                viewMode === 'list' 
+                                ? 'border-b-4 border-buttonGeneric text-white' 
+                                : 'text-bodyText hover:text-white'
+                            }`}
+                        >
+                            <BsListUl size={16} />
+                            <span className="font-medium">List</span>
+                        </button>
+                        
+                        <button 
+                            onClick={() => toggleViewMode("calendar")}
+                            className={`px-4 py-2 flex items-center space-x-2 ${
+                                viewMode === 'calendar' 
+                                ? 'border-b-4 border-buttonGeneric text-white' 
+                                : 'text-bodyText hover:text-white'
+                            }`}
+                        >
+                            <BsCalendarWeek size={16} />
+                            <span className="font-medium">Calendar</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Filter and Action Controls */}
+                <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-3 items-center w-full md:w-auto">
+                    <SelectList
+                        className="w-full md:w-auto"
+                        listItems={completeOptions}
+                        selected={selectedCompletedOption}
+                        onChange={(e) => setSelectedCompletedOption(e.target.value)}
+                    />
+                    
+                    {/* Only show sort options in list view */}
+                    {viewMode === "list" && (
                         <SelectList
                             listItems={filterOptions}
                             selected={selectedFilterOption}
                             onChange={(e) => setSelectedFilterOption(e.target.value)}
                         />
-                        <NiceButton
-                            label='New Todo'
-                            className="bg-buttonGeneric text-buttonText"
-                            onClick={() => setModalState({ isOpen: true, data: { listingId, todoItem: null } })}
-                        />
-                    </div>
+                    )}
+                    
+                    <NiceButton
+                        label='New Todo'
+                        className="bg-buttonGeneric text-buttonText w-full md:w-auto"
+                        onClick={() => setModalState({ isOpen: true, data: { listingId, todoItem: null } })}
+                    />
                 </div>
             </div>
 
-            <div className="mb-4 mt-8">
+            <div className="mb-4">
                 {todoItems?.length > 0 ? (
                     <>
-                        <motion.div
-                            className="space-y-4"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="show"
-                        >
-                            {todoItems.map((todo, index) => (
+                        <AnimatePresence mode="wait">
+                            {viewMode === "list" ? (
                                 <motion.div
-                                    key={`${todo.id}-${index}`}
-                                    variants={itemVariants}>
-                                    <SingleTodoItem listingId={listingId} todo={todo} />
+                                    key="list-view"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <motion.div
+                                        className="space-y-4"
+                                        variants={containerVariants}
+                                        initial="hidden"
+                                        animate="show"
+                                    >
+                                        {todoItems.map((todo, index) => (
+                                            <motion.div
+                                                key={`${todo.id}-${index}`}
+                                                variants={itemVariants}>
+                                                <SingleTodoItem listingId={listingId} todo={todo} />
+                                            </motion.div>
+                                        ))}
+                                    </motion.div>
+
+                                    {localLoading && page > 1 && (
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            className="h-12 w-full flex items-center justify-center text-gray-500"
+                                        >
+                                            <div className="flex items-center space-x-2">
+                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500" />
+                                                <span>Loading more todos...</span>
+                                            </div>
+                                        </motion.div>
+                                    )}
+
+                                    {(!localLoading && page === totalPages) && (
+                                        <div className="h-12 w-full flex items-center justify-center text-gray-500">
+                                            <span>No more todos to load</span>
+                                        </div>
+                                    )}
                                 </motion.div>
-                            ))}
-                        </motion.div>
-
-                        {localLoading && page > 1 && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="h-12 w-full flex items-center justify-center text-gray-500"
-                            >
-                                <div className="flex items-center space-x-2">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500" />
-                                    <span>Loading more todos...</span>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {(!localLoading && page === totalPages) && (
-                            <div className="h-12 w-full flex items-center justify-center text-gray-500">
-                                <span>No more todos to load</span>
-                            </div>
-                        )}
+                            ) : (
+                                <motion.div
+                                    key="calendar-view"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <TodoCalendarView 
+                                        todoItems={todoItems} 
+                                        onSwitchToList={() => toggleViewMode("list")}
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         <AnimatePresence>
                             {selectedItem && (

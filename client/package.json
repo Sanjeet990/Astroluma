@@ -15,6 +15,7 @@
     "@dnd-kit/utilities": "2.0.0",
     "axios": "^1.7.4",
     "buffer": "^6.0.3",
+    "date-fns": "^4.1.0",
     "framer-motion": "^11.3.0",
     "jodit-react": "^4.1.2",
     "jsqr": "^1.4.0",
