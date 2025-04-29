@@ -1,7 +1,10 @@
-const { Authenticator, User, GlobalSetting, Listing, IconPack } = require('../models');
+const { Authenticator, User, GlobalSetting, Listing, IconPack, App, Icon, NetworkDevice, Page, Snippet, Todo, sequelize } = require('../models');
 const axios = require('axios');
 const { isHostMode } = require('../utils/apiutils');
 const { Op } = require('sequelize');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
 
 // Method to fetch and return dashboard data for the authenticated user
 /**
@@ -512,6 +515,181 @@ exports.getOidcSettings = async (req, res) => {
         return res.status(500).json({
             error: true,
             message: "An error occurred while fetching OIDC settings."
+        });
+    }
+};
+
+/**
+ * Imports migration data from a JSON file.
+ * 
+ * This function wipes existing data (except for default icon packs) and imports new data from a JSON file.
+ * Only users with superadmin privileges can perform this action.
+ * 
+ * @param {Object} req - The request object containing the JSON file and user data
+ * @param {Object} res - The response object to send the result
+ */
+exports.importMigration = async (req, res) => {
+    try {
+        const user = req.user;
+
+        // Check if the user is a superadmin
+        if (!user?.isSuperAdmin) {
+            return res.status(401).json({
+                error: true,
+                message: "Unauthorized: Admin access required for importing migration data."
+            });
+        }
+
+        // Check if file exists in the request
+        if (!req.file) {
+            return res.status(400).json({
+                error: true,
+                message: "No migration file uploaded."
+            });
+        }
+
+        // Parse the JSON data from the uploaded file
+        let migrationData;
+        try {
+            const fileContent = fs.readFileSync(req.file.path, 'utf8');
+            migrationData = JSON.parse(fileContent);
+            
+            // Remove the temporary file
+            fs.unlinkSync(req.file.path);
+        } catch (parseError) {
+            console.error("Error parsing migration file:", parseError);
+            return res.status(400).json({
+                error: true,
+                message: "Invalid JSON file format. Could not parse the file."
+            });
+        }
+
+        // Start a database transaction to ensure data consistency
+        const transaction = await sequelize.transaction();
+
+        try {
+            // Save the default icon pack ID to preserve it
+            const defaultIconPack = await IconPack.findOne({
+                where: { 
+                    iconProvider: 'com.astroluma.self' 
+                },
+                transaction
+            });
+
+            // Wipe all data except the default icon pack
+            await Promise.all([
+                User.destroy({ where: {}, transaction }),
+                App.destroy({ where: {}, transaction }),
+                Authenticator.destroy({ where: {}, transaction }),
+                GlobalSetting.destroy({ where: {}, transaction }),
+                Icon.destroy({ where: {}, transaction }),
+                // Only delete non-default icon packs
+                IconPack.destroy({ 
+                    where: { 
+                        iconProvider: { 
+                            [Op.ne]: 'com.astroluma.self' 
+                        } 
+                    }, 
+                    transaction 
+                }),
+                Listing.destroy({ where: {}, transaction }),
+                NetworkDevice.destroy({ where: {}, transaction }),
+                Page.destroy({ where: {}, transaction }),
+                Snippet.destroy({ where: {}, transaction }),
+                Todo.destroy({ where: {}, transaction })
+            ]);
+
+            // Import data in the order of dependencies
+            console.log('Importing Users...');
+            if (migrationData.Users && migrationData.Users.length > 0) {
+                await User.bulkCreate(migrationData.Users, { transaction });
+            }
+            
+            console.log('Importing Apps...');
+            if (migrationData.Apps && migrationData.Apps.length > 0) {
+                await App.bulkCreate(migrationData.Apps, { transaction });
+            }
+            
+            console.log('Importing GlobalSettings...');
+            if (migrationData.GlobalSettings && migrationData.GlobalSettings.length > 0) {
+                await GlobalSetting.bulkCreate(migrationData.GlobalSettings, { transaction });
+            }
+            
+            console.log('Importing IconPacks...');
+            if (migrationData.IconPacks && migrationData.IconPacks.length > 0) {
+                // Filter out any icon pack with the same iconProvider as the default one
+                const iconPacksToImport = migrationData.IconPacks.filter(
+                    iconPack => iconPack.iconProvider !== 'com.astroluma.self'
+                );
+                await IconPack.bulkCreate(iconPacksToImport, { transaction });
+            }
+            
+            console.log('Importing Icons...');
+            if (migrationData.Icons && migrationData.Icons.length > 0) {
+                await Icon.bulkCreate(migrationData.Icons, { transaction });
+            }
+            
+            console.log('Importing Listings...');
+            if (migrationData.Listings && migrationData.Listings.length > 0) {
+                // First import listings without parent references
+                const listingsWithoutParent = migrationData.Listings.filter(listing => !listing.parentId);
+                await Listing.bulkCreate(listingsWithoutParent, { transaction });
+                
+                // Then import listings with parent references
+                const listingsWithParent = migrationData.Listings.filter(listing => listing.parentId);
+                await Listing.bulkCreate(listingsWithParent, { transaction });
+            }
+            
+            console.log('Importing NetworkDevices...');
+            if (migrationData.NetworkDevices && migrationData.NetworkDevices.length > 0) {
+                await NetworkDevice.bulkCreate(migrationData.NetworkDevices, { transaction });
+            }
+            
+            console.log('Importing Pages...');
+            if (migrationData.Pages && migrationData.Pages.length > 0) {
+                await Page.bulkCreate(migrationData.Pages, { transaction });
+            }
+            
+            console.log('Importing Authenticators...');
+            if (migrationData.Authenticators && migrationData.Authenticators.length > 0) {
+                await Authenticator.bulkCreate(migrationData.Authenticators, { transaction });
+            }
+            
+            console.log('Importing Snippets...');
+            if (migrationData.Snippets && migrationData.Snippets.length > 0) {
+                await Snippet.bulkCreate(migrationData.Snippets, { transaction });
+            }
+            
+            console.log('Importing Todos...');
+            if (migrationData.Todos && migrationData.Todos.length > 0) {
+                await Todo.bulkCreate(migrationData.Todos, { transaction });
+            }
+
+            // Commit transaction if all operations succeed
+            await transaction.commit();
+            
+            console.log('Migration data import completed successfully!');
+            return res.status(200).json({
+                error: false,
+                message: "Migration data imported successfully."
+            });
+            
+        } catch (importError) {
+            console.error("Error during data import:", importError);
+            // Rollback transaction if any operation fails
+            await transaction.rollback();
+            
+            console.error("Error during data import:", importError);
+            return res.status(500).json({
+                error: true,
+                message: "Error importing migration data. Database has been rolled back to previous state."
+            });
+        }
+    } catch (error) {
+        console.error("Error handling migration import:", error);
+        return res.status(500).json({
+            error: true,
+            message: "Server error during migration import."
         });
     }
 };

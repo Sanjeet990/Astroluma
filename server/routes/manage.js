@@ -1,4 +1,6 @@
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
 const {
     dashboard,
     saveSettings,
@@ -7,11 +9,34 @@ const {
     saveWeatherSettings,
     weatherData,
     oidcSettings,
-    getOidcSettings
+    getOidcSettings,
+    importMigration
 } = require('../controllers/manage');
 const { verifyToken } = require('../middlewares/auth');
 
 const router = express.Router();
+
+// Configure multer storage for migration file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, '../temp')); // Store in temp directory
+    },
+    filename: function (req, file, cb) {
+        cb(null, 'migration-' + Date.now() + '.json'); // Generate unique filename
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // Limit to 10MB
+    fileFilter: function (req, file, cb) {
+        // Accept only JSON files
+        if (file.mimetype !== 'application/json') {
+            return cb(new Error('Only JSON files are allowed'), false);
+        }
+        cb(null, true);
+    }
+});
 
 // Dashboard route
 router.get('/dashboard', verifyToken, dashboard);
@@ -26,5 +51,8 @@ router.post('/settings/weather', verifyToken, saveWeatherSettings); // Save weat
 router.post('/settings/oidc', verifyToken, oidcSettings); // Save oidc settings
 router.get('/settings/oidc', verifyToken, getOidcSettings); // Get oidc settings
 router.get('/settings', verifyToken, getSetting); // Get current settings
+
+// Migration import route
+router.post('/settings/import-migration', verifyToken, upload.single('migrationFile'), importMigration);
 
 module.exports = router;

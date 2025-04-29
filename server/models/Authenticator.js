@@ -50,6 +50,20 @@ module.exports = (sequelize, DataTypes) => {
         } catch (error) {
           return encryptedValue; // Return original value if decryption fails
         }
+      },
+      set(value) {
+        if (!value) {
+          this.setDataValue('secretKey', null);
+          return;
+        }
+        
+        try {
+          const encrypted = CryptoJS.AES.encrypt(value, getSecretKey()).toString();
+          this.setDataValue('secretKey', encrypted);
+        } catch (error) {
+          // In case of encryption error, store the original value
+          this.setDataValue('secretKey', value);
+        }
       }
     },
     sortOrder: {
