@@ -7,6 +7,7 @@ const rimraf = require('rimraf');
 const vm = require('vm');
 const { Op } = require('sequelize');
 const { App, Listing, User } = require('../models');
+const allowedModules = require('../utils/allowedModules');
 
 // Helper functions - no changes needed to these utility functions
 const validateUser = (user) => {
@@ -783,7 +784,7 @@ exports.runIntegratedApp = async (req, res) => {
             sendError
         };
 
-        const allowedModules = ['axios', 'lodash', 'moment', 'crypto-js'];
+        //const allowedModules = ['axios', 'lodash', 'moment', 'crypto-js', 'md5', 'fs', 'path', 'vm', 'https', 'adm-zip', 'rimraf', 'buffer'];
 
         const pluginNodeModulesPath = path.join(__dirname, `../../storage/apps/${listing.integration.appId}/node_modules`);
 

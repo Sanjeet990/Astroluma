@@ -3,8 +3,7 @@ const axios = require('axios');
 const { isHostMode } = require('../utils/apiutils');
 const { Op } = require('sequelize');
 const fs = require('fs');
-const path = require('path');
-const multer = require('multer');
+const CryptoJS = require('crypto-js');
 
 // Method to fetch and return dashboard data for the authenticated user
 /**
@@ -631,10 +630,38 @@ exports.importMigration = async (req, res) => {
             
             console.log('Importing Listings...');
             if (migrationData.Listings && migrationData.Listings.length > 0) {
+                // Initialize SECRET_KEY for decryption
+                const SECRET_KEY = migrationData?.Secret;
+                
+                //First thing first, the integration field is a string, we need an object
+                migrationData.Listings.forEach(listing => {
+                    if (listing.integration) {
+                        try {
+                            const parsedValue = JSON.parse(listing.integration);
+                            listing.integration = parsedValue;
+                            
+                            // Decrypt integration.config if it exists
+                            if (parsedValue.config) {
+                              try {
+                                const bytes = CryptoJS.AES.decrypt(parsedValue.config, SECRET_KEY);
+                                const decryptedValue = bytes.toString(CryptoJS.enc.Utf8);
+                                parsedValue.config = JSON.parse(decryptedValue);
+                              } catch (error) {
+                                console.error('Error decrypting config:', error);
+                                //parsedValue.config = null;
+                              }
+                            }
+                        } catch (e) {
+                            console.error("Error parsing integration field:", e);
+                        }
+                    }
+                });
+
                 // First import listings without parent references
                 const listingsWithoutParent = migrationData.Listings.filter(listing => !listing.parentId);
                 await Listing.bulkCreate(listingsWithoutParent, { transaction });
-                
+                console.log(listingsWithoutParent);
+
                 // Then import listings with parent references
                 const listingsWithParent = migrationData.Listings.filter(listing => listing.parentId);
                 await Listing.bulkCreate(listingsWithParent, { transaction });

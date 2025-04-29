@@ -27,4 +27,5 @@ module.exports = [
     'winston',       // Versatile logging library
     'sharp',         // Image processing
     'md5',
+    'adm-zip'
 ];

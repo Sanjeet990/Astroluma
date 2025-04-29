@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const {
     dashboard,
     saveSettings,
@@ -16,10 +17,16 @@ const { verifyToken } = require('../middlewares/auth');
 
 const router = express.Router();
 
+// Ensure temp directory exists for migration file uploads
+const tempDir = path.join(__dirname, '../temp');
+if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+}
+
 // Configure multer storage for migration file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../temp')); // Store in temp directory
+        cb(null, tempDir); // Store in temp directory
     },
     filename: function (req, file, cb) {
         cb(null, 'migration-' + Date.now() + '.json'); // Generate unique filename
