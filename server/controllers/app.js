@@ -711,7 +711,7 @@ exports.runIntegratedApp = async (req, res) => {
             return res.status(400).send("Listing not found.");
         }
 
-        const modulePath = path.join(__dirname, `../../storage/apps/${listing.integration.appId}/app.js`);
+        const modulePath = path.join(__dirname, `../../storage/apps/${listing?.integration?.appId}/app.js`);
         const moduleCode = fs.readFileSync(modulePath, 'utf8');
 
         const decryptedConfig = listing.integration.config;

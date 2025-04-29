@@ -106,6 +106,7 @@ const AppConfigurator = ({ application, config, appConfigurationListener, connec
                                 className='border bg-inputBg border-inputBorder text-inputText placeholder-inputPlaceholder mb-0'
                                 onChange={handleChange}
                                 type={field.type}
+                                autocomplete='one-time-code'
                                 placeholder={field.placeholder}
                             />
                         )}

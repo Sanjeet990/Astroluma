@@ -291,7 +291,7 @@ const EditLink = () => {
 
                         <div className="mt-4">
                             <NiceInput
-                                label="Description (Optional - shown when hovering)"
+                                label="Description (Optional)"
                                 className='border bg-inputBg border-inputBorder text-inputText placeholder-inputPlaceholder'
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}

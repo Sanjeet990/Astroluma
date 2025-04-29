@@ -13,6 +13,7 @@ const NiceInput = ({
     min = "",
     max = "",
     error = "",
+    autocomplete = "",
     className = "" }) => {
 
     const [showPassword, setShowPassword] = useState(false);
@@ -47,6 +48,7 @@ const NiceInput = ({
                     disabled={disabled}
                     min={min}
                     max={max}
+                    autocomplete={autocomplete || "off"}
                     placeholder={placeholder || `Enter ${label}`}
                 />
                 {type === 'password' && (
