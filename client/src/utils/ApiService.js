@@ -139,6 +139,77 @@ class ApiService {
       }
     }
   }
+
+  async downloadFile(endpoint, filename, token = null, navigate = null) {
+    try {
+      const headers = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      let url = null;
+      if (endpoint.startsWith('http')) {
+        url = endpoint;
+      } else {
+        url = `${this.baseUrl}${endpoint}?t=${Math.random()}`;
+      }
+
+      // Request the file data as JSON response containing base64 data
+      const response = await axiosInstance.get(url, { headers });
+      
+      if (!response.data || response.data.error || !response.data.message) {
+        throw new Error("Invalid response format");
+      }
+      
+      // Extract file metadata and base64 data
+      const { filename: serverFilename, contentType, data: base64Data } = response.data.message;
+      
+      // Convert base64 to blob
+      const binaryData = atob(base64Data);
+      const bytes = new Uint8Array(binaryData.length);
+      for (let i = 0; i < binaryData.length; i++) {
+        bytes[i] = binaryData.charCodeAt(i);
+      }
+      
+      // Create blob from binary data
+      const blob = new Blob([bytes], { type: contentType || 'application/octet-stream' });
+      
+      // Create a URL for the blob
+      const downloadUrl = window.URL.createObjectURL(blob);
+      
+      // Determine final filename (prefer server provided or fallback to parameter)
+      const finalFilename = serverFilename || filename;
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = finalFilename;
+      link.style.display = 'none';
+      
+      // Append the link to the body, click it, and remove it
+      document.body.appendChild(link);
+      link.click();
+      
+      // Small delay before cleanup to ensure download starts
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      }, 100);
+      
+      return true;
+    } catch (error) {
+      console.error('Download Request Error:', error);
+
+      const ishandling = decideHandle(error);
+      if (ishandling) {
+        handleApiError(error, navigate);
+      }
+      throw {
+        ...error,
+        handled: ishandling ? true : false,
+      }
+    }
+  }
 }
 
 const isDatabaseError = (error) => {

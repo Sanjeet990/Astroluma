@@ -22,39 +22,14 @@ const BackupConfirmationModal = () => {
   const handleBackup = () => {
     setLoading(true);
     
-    // Use the ApiService to get the backup data
-    ApiService.get('/api/v1/settings/backup', loginData?.token, navigate)
-      .then(data => {
-        // Get the actual backup data from the response
-        const backupData = data.message;
-        
-        // Create a JSON string with pretty formatting
-        const jsonString = JSON.stringify(backupData, null, 2);
-        
-        // Create a blob from the JSON string
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        
-        // Create a URL for the blob
-        const url = URL.createObjectURL(blob);
-        
-        // Create a temporary link element
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'astroluma-backup.json';
-        
-        // Append the link to the body, click it, and remove it
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Release the blob URL
-        URL.revokeObjectURL(url);
-        
-        makeToast("success", "Backup file created successfully");
+    // Use the ApiService to download the backup zip file directly
+    ApiService.downloadFile('/api/v1/settings/backup', 'astroluma-backup.zip', loginData?.token, navigate)
+      .then(() => {
+        makeToast("success", "Backup file downloaded successfully");
       })
       .catch(error => {
         console.error('Backup failed:', error);
-        makeToast("error", "Failed to generate backup");
+        makeToast("error", "Failed to download backup");
       })
       .finally(() => {
         setLoading(false);
