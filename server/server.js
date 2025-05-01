@@ -136,9 +136,9 @@ app.use((req, res, next) => {
 });
 
 //PUBLIC STATIC FOLDER
-app.use(express.static('dist'));
-app.use('/public', express.static('public'));
-app.use('/images', express.static('../storage/uploads'));
+app.use(express.static(path.join(__dirname, 'dist')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, '../storage/uploads')));
 
 /* app.use((req, res, next) => {
     setTimeout(() => {

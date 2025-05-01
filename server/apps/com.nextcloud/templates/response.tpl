@@ -14,7 +14,7 @@
             </tr>
 
             <tr>
-                <td class="text-left w-1/2 text-itemCardText py-1 text-xs flex items-center">
+                <td class="text-left w-1/2 text-itemCardText pb-2 text-xs flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00aaff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2">
                         <rect x="3" y="3" width="18" height="18" rx="2"/>
                         <path d="M21 12H3"/>
@@ -22,7 +22,7 @@
                     </svg>
                     Total:
                 </td>
-                <td class="text-right w-1/2 text-itemCardText py-1 text-xs">{{total}}</td>
+                <td class="text-right w-1/2 text-itemCardText pb-2 text-xs">{{total}}</td>
             </tr>
         </tbody>
     </table>
@@ -39,7 +39,7 @@
             </tr>
             
             <tr>
-                <td class="text-left w-1/2 text-itemCardText py-1 text-xs flex items-center">
+                <td class="text-left w-1/2 text-itemCardText pb-2 text-xs flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00aaff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4 mr-2">
                         <line x1="18" y1="20" x2="18" y2="10"/>
                         <line x1="12" y1="20" x2="12" y2="4"/>
@@ -47,7 +47,7 @@
                     </svg>
                     Usage:
                 </td>
-                <td class="text-right w-1/2 text-itemCardText py-1 text-xs">{{usage}} %</td>
+                <td class="text-right w-1/2 text-itemCardText pb-2 text-xs">{{usage}} %</td>
             </tr>
         </tbody>
     </table>

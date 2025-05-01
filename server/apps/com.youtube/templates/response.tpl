@@ -11,22 +11,22 @@
                 <td class="text-right w-1/2 text-itemCardText pb-2 text-xs">{{views}}</td>
             </tr>
             <tr>
-                <td class="text-left w-1/2 text-itemCardText py-1 text-xs flex items-center">
+                <td class="text-left w-1/2 text-itemCardText pb-2 text-xs flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <path fill="#FF0000" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                     </svg>
                     Likes:
                 </td>
-                <td class="text-right w-1/2 text-itemCardText py-1 text-xs">{{likes}}</td>
+                <td class="text-right w-1/2 text-itemCardText pb-2 text-xs">{{likes}}</td>
             </tr>
             <tr>
-                <td class="text-left w-1/2 text-itemCardText pt-2 text-xs flex items-center">
+                <td class="text-left w-1/2 text-itemCardText pb-2 text-xs flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <path fill="#FF0000" d="M21 6h-2v12h2V6zm-4 0h-2v12h2V6zm-4 0h-2v12h2V6zm-4 0H7v12h2V6zm-4 0H3v12h2V6z"/>
                     </svg>
                     Comments:
                 </td>
-                <td class="text-right w-1/2 text-itemCardText pt-2 text-xs">{{comments}}</td>
+                <td class="text-right w-1/2 text-itemCardText pb-2 text-xs">{{comments}}</td>
             </tr>
         </tbody>
     </table>

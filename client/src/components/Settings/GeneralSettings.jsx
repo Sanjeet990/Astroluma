@@ -102,8 +102,8 @@ const GeneralSettings = () => {
         const file = event.target.files[0];
         if (!file) return;
 
-        if (file.type !== "application/json") {
-            makeToast("error", "Please select a valid JSON file");
+        if (file.type !== "application/zip" && file.type !== "application/x-zip-compressed") {
+            makeToast("error", "Please select a valid ZIP backup file");
             return;
         }
 
@@ -113,13 +113,13 @@ const GeneralSettings = () => {
         setLoading(true);
         ApiService.postWithFormData("/api/v1/settings/import-migration", formData, loginData?.token, navigate)
             .then(() => {
-                makeToast("success", "Migration data imported successfully! Please log in again.");
+                makeToast("success", "Backup imported successfully! Please log in again.");
                 setTimeout(() => {
                     navigate('/logout');
                 }, 2000);
             })
             .catch((error) => {
-                if (!error.handled) makeToast("error", "Failed to import migration data.");
+                if (!error.handled) makeToast("error", "Failed to import backup data.");
             }).finally(() => {
                 setLoading(false);
                 setShowImportModal(false);
@@ -263,13 +263,13 @@ const GeneralSettings = () => {
                             </div>
                         </div>
 
-                        <p className="mb-4 text-sm">Please select a valid JSON backup file to import. After import completes, you will be logged out and need to log in again with the credentials from the backup.</p>
+                        <p className="mb-4 text-sm">Please select a valid ZIP backup file to import. After import completes, you will be logged out and need to log in again with the credentials from the backup.</p>
                         
                         <input 
                             type="file" 
                             ref={fileInputRef} 
                             onChange={handleFileChange} 
-                            accept=".json" 
+                            accept=".zip" 
                             className="hidden" 
                         />
 

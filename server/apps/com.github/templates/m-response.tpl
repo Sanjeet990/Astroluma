@@ -14,22 +14,22 @@
                 <td class="text-right w-1/2 text-itemCardText pb-2 text-xs">{{numPR}}</td>
             </tr>
             <tr>
-                <td class="text-left w-1/2 text-itemCardText py-1 text-xs flex items-center">
+                <td class="text-left w-1/2 text-itemCardText pb-2 text-xs flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <path fill="#0366d6" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-6h2v6zm0-8h-2V7h2v4z"/>
                     </svg>
                     Last PR:
                 </td>
-                <td class="text-right w-1/2 text-itemCardText py-1 text-xs">{{lastPR}}</td>
+                <td class="text-right w-1/2 text-itemCardText pb-2 text-xs">{{lastPR}}</td>
             </tr>
             <tr>
-                <td class="text-left w-1/2 text-itemCardText pt-2 text-xs flex items-center">
+                <td class="text-left w-1/2 text-itemCardText pb-2 text-xs flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                         <path fill="#0366d6" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                     </svg>
                     Author:
                 </td>
-                <td class="text-right w-1/2 text-itemCardText pt-2 text-xs">{{author}}</td>
+                <td class="text-right w-1/2 text-itemCardText pb-2 text-xs">{{author}}</td>
             </tr>
         </tbody>
     </table>

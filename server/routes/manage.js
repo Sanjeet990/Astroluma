@@ -29,17 +29,17 @@ const storage = multer.diskStorage({
         cb(null, tempDir); // Store in temp directory
     },
     filename: function (req, file, cb) {
-        cb(null, 'migration-' + Date.now() + '.json'); // Generate unique filename
+        cb(null, 'backup-' + Date.now() + '.zip'); // Generate unique filename for zip files
     }
 });
 
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // Limit to 10MB
+    limits: { fileSize: 50 * 1024 * 1024 }, // Limit to 50MB (increased for zip files with uploads)
     fileFilter: function (req, file, cb) {
-        // Accept only JSON files
-        if (file.mimetype !== 'application/json') {
-            return cb(new Error('Only JSON files are allowed'), false);
+        // Accept only ZIP files
+        if (file.mimetype !== 'application/zip' && file.mimetype !== 'application/x-zip-compressed') {
+            return cb(new Error('Only ZIP files are allowed'), false);
         }
         cb(null, true);
     }

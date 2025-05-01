@@ -520,17 +520,21 @@ exports.getOidcSettings = async (req, res) => {
 };
 
 /**
- * Imports migration data from a JSON file.
+ * Imports migration data from a backup ZIP file.
  * 
- * This function wipes existing data (except for default icon packs) and imports new data from a JSON file.
+ * This function extracts a ZIP file containing backup.json and an uploads folder.
+ * It wipes existing data (except for default icon packs) and imports new data from the JSON file.
+ * It also copies the uploads folder contents to the storage/uploads directory.
  * Only users with superadmin privileges can perform this action.
  * 
- * @param {Object} req - The request object containing the JSON file and user data
+ * @param {Object} req - The request object containing the ZIP file and user data
  * @param {Object} res - The response object to send the result
  */
 exports.importMigration = async (req, res) => {
     try {
         const user = req.user;
+        const AdmZip = require('adm-zip');
+        const path = require('path');
 
         // Check if the user is a superadmin
         if (!user?.isSuperAdmin) {
@@ -544,24 +548,63 @@ exports.importMigration = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({
                 error: true,
-                message: "No migration file uploaded."
+                message: "No backup file uploaded."
             });
         }
 
-        // Parse the JSON data from the uploaded file
-        let migrationData;
-        try {
-            const fileContent = fs.readFileSync(req.file.path, 'utf8');
-            migrationData = JSON.parse(fileContent);
+        console.log("Processing uploaded ZIP file:", req.file.path);
+        
+        // Create temp extraction directory
+        const extractionDir = path.join(__dirname, '../temp/extraction-' + Date.now());
+        if (!fs.existsSync(extractionDir)) {
+            fs.mkdirSync(extractionDir, { recursive: true });
+        }
 
-            // Remove the temporary file
-            fs.unlinkSync(req.file.path);
-        } catch (parseError) {
-            console.error("Error parsing migration file:", parseError);
+        // Extract the zip file
+        let zip;
+        try {
+            zip = new AdmZip(req.file.path);
+            zip.extractAllTo(extractionDir, true);
+            console.log("ZIP file extracted to:", extractionDir);
+        } catch (zipError) {
+            console.error("Error extracting zip file:", zipError);
             return res.status(400).json({
                 error: true,
-                message: "Invalid JSON file format. Could not parse the file."
+                message: "Invalid ZIP file format. Could not extract the file."
             });
+        }
+
+        // Check if backup.json exists in the extracted files
+        const backupJsonPath = path.join(extractionDir, 'backup.json');
+        if (!fs.existsSync(backupJsonPath)) {
+            console.error("backup.json not found in ZIP file");
+            return res.status(400).json({
+                error: true,
+                message: "Invalid backup ZIP: backup.json not found."
+            });
+        }
+
+        // Parse the JSON data from the backup.json file
+        let migrationData;
+        try {
+            const fileContent = fs.readFileSync(backupJsonPath, 'utf8');
+            migrationData = JSON.parse(fileContent);
+        } catch (parseError) {
+            console.error("Error parsing backup.json file:", parseError);
+            return res.status(400).json({
+                error: true,
+                message: "Invalid JSON format in backup.json. Could not parse the file."
+            });
+        }
+
+        // Check if uploads folder exists in the extracted files
+        const extractedUploadsDir = path.join(extractionDir, 'uploads');
+        const storageUploadsDir = path.join(__dirname, '../../storage/uploads');
+
+        // Ensure storage/uploads directory exists
+        if (!fs.existsSync(storageUploadsDir)) {
+            fs.mkdirSync(storageUploadsDir, { recursive: true });
+            console.log("Created storage/uploads directory");
         }
 
         // Start a database transaction to ensure data consistency
@@ -753,13 +796,52 @@ exports.importMigration = async (req, res) => {
                 await Todo.bulkCreate(migrationData.Todos, { transaction });
             }
 
+            // Copy uploads folder if it exists
+            if (fs.existsSync(extractedUploadsDir)) {
+                console.log('Copying uploads folder contents...');
+                
+                // Get all files in the extracted uploads directory
+                const uploadFiles = fs.readdirSync(extractedUploadsDir);
+                
+                // Copy each file to storage/uploads directory
+                for (const file of uploadFiles) {
+                    try {
+                        const sourcePath = path.join(extractedUploadsDir, file);
+                        const destPath = path.join(storageUploadsDir, file);
+                        
+                        // Skip if it's a directory (we're only copying files)
+                        if (fs.statSync(sourcePath).isDirectory()) continue;
+                        
+                        // Copy the file
+                        fs.copyFileSync(sourcePath, destPath);
+                        console.log(`Copied file: ${file}`);
+                    } catch (copyErr) {
+                        console.error(`Error copying file ${file}:`, copyErr);
+                        // Continue with other files even if one fails
+                    }
+                }
+            } else {
+                console.log('No uploads folder found in the backup.');
+            }
+
             // Commit transaction if all operations succeed
             await transaction.commit();
 
             console.log('Migration data import completed successfully!');
+            
+            // Clean up: remove the ZIP file and extracted directory
+            try {
+                fs.unlinkSync(req.file.path);
+                fs.rmSync(extractionDir, { recursive: true, force: true });
+                console.log("Cleaned up temporary files");
+            } catch (cleanupErr) {
+                console.error("Error cleaning up temporary files:", cleanupErr);
+                // Continue even if cleanup fails
+            }
+            
             return res.status(200).json({
                 error: false,
-                message: "Migration data imported successfully."
+                message: "Backup imported successfully."
             });
 
         } catch (importError) {
@@ -767,17 +849,16 @@ exports.importMigration = async (req, res) => {
             // Rollback transaction if any operation fails
             await transaction.rollback();
 
-            console.error("Error during data import:", importError);
             return res.status(500).json({
                 error: true,
-                message: "Error importing migration data. Database has been rolled back to previous state."
+                message: "Error importing backup data. Database has been rolled back to previous state."
             });
         }
     } catch (error) {
-        console.error("Error handling migration import:", error);
+        console.error("Error handling backup import:", error);
         return res.status(500).json({
             error: true,
-            message: "Server error during migration import."
+            message: "Server error during backup import."
         });
     }
 };
