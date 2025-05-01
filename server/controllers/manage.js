@@ -9,6 +9,7 @@ const IconPack = require('../models/IconPack');
 const { isHostMode } = require('../utils/apiutils');
 const fs = require('fs').promises;
 const path = require('path');
+const zip = require('adm-zip')();
 
 // Method to fetch and return dashboard data for the authenticated user
 /**
@@ -521,33 +522,33 @@ exports.generateBackup = async (req, res) => {
             // Convert MongoDB _id to string id
             if (transformed._id) {
                 transformed._id = transformed._id.toString();
+                delete transformed._id;
             }
             
-            // Remove __v field
-            if (transformed.__v !== undefined) {
-                delete transformed.__v;
-            }
+            // Remove Mongoose-specific fields
+            delete transformed.__v;
             
             return transformed;
         };
-        
+
+        // =============================================
         // Users collection
         // =============================================
         const users = await User.find({}).lean();
         
         const transformedUsers = users.map((user, index) => {
-            const transformedUser = transformData(user);
-            transformedUser.id = index + 1;
+            const userId = index + 1;
+            idMappings.users[user._id.toString()] = userId;
             
-            // Store user ID mappings for reference
-            idMappings.users[transformedUser._id] = transformedUser.id;
+            const transformedUser = transformData(user);
+            transformedUser.id = userId;
             
             return transformedUser;
         });
-        
+
+        // =============================================
         // Apps collection
         // =============================================
-        const App = require('../models/App');
         const apps = await App.find({}).lean();
         
         const transformedApps = apps.map((app, index) => {
@@ -555,27 +556,68 @@ exports.generateBackup = async (req, res) => {
             transformedApp.id = index + 1;
             return transformedApp;
         });
-        
-        // GlobalSettings collection
+
+        // =============================================
+        // Global settings
         // =============================================
         const globalSettings = await GlobalSetting.find({}).lean();
         
         const transformedGlobalSettings = globalSettings.map((setting, index) => {
             const transformedSetting = transformData(setting);
             transformedSetting.id = index + 1;
+            
             return transformedSetting;
         });
-        
-        // IconPack collection
+
         // =============================================
-        const iconPacks = await IconPack.find({}).lean();
+        // Listings collection
+        // =============================================
+        const listings = await Listing.find({}).lean();
         
-        const transformedIconPacks = iconPacks.map((pack, index) => {
-            const transformedPack = transformData(pack);
-            transformedPack.id = index + 1;
-            return transformedPack;
+        listings.forEach((listing, index) => {
+            idMappings.listings[listing._id.toString()] = index + 1;
         });
         
+        const transformedListings = listings.map((listing, index) => {
+            const transformedListing = transformData(listing);
+            transformedListing.id = index + 1;
+            
+            // Replace MongoDB ObjectId references with SQLite integer IDs
+            if (transformedListing.userId) {
+                const mongoUserId = typeof transformedListing.userId === 'object' ? 
+                transformedListing.userId.toString() : transformedListing.userId;
+                transformedListing.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            // Handle parent listing references
+            if (transformedListing.parentId) {
+                const mongoParentId = typeof transformedListing.parentId === 'object' ? 
+                transformedListing.parentId.toString() : transformedListing.parentId;
+                transformedListing.parentId = idMappings.listings[mongoParentId] || null;
+            }
+            
+            return transformedListing;
+        });
+
+        // =============================================
+        // Authenticators collection
+        // =============================================
+        const authenticators = await Authenticator.find({}).lean();
+        
+        const transformedAuthenticators = authenticators.map((authenticator, index) => {
+            const transformedAuth = transformData(authenticator);
+            transformedAuth.id = index + 1;
+            
+            if (transformedAuth.userId) {
+                const mongoUserId = typeof transformedAuth.userId === 'object' ? 
+                transformedAuth.userId.toString() : transformedAuth.userId;
+                transformedAuth.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            return transformedAuth;
+        });
+
+        // =============================================
         // Icons collection
         // =============================================
         const icons = await Icon.find({}).lean();
@@ -583,38 +625,36 @@ exports.generateBackup = async (req, res) => {
         const transformedIcons = icons.map((icon, index) => {
             const transformedIcon = transformData(icon);
             transformedIcon.id = index + 1;
+            
+            if (transformedIcon.userId) {
+                const mongoUserId = typeof transformedIcon.userId === 'object' ? 
+                transformedIcon.userId.toString() : transformedIcon.userId;
+                transformedIcon.userId = idMappings.users[mongoUserId] || null;
+            }
+            
             return transformedIcon;
         });
-        
-        // Listings collection
+
         // =============================================
-        const listings = await Listing.find({}).lean();
+        // IconPacks collection
+        // =============================================
+        const iconPacks = await IconPack.find({}).lean();
         
-        const transformedListings = listings.map((listing, index) => {
-            const transformedListing = transformData(listing);
-            transformedListing.id = index + 1;
+        const transformedIconPacks = iconPacks.map((iconPack, index) => {
+            const transformedIconPack = transformData(iconPack);
+            transformedIconPack.id = index + 1;
             
-            // Store listing ID mappings for reference
-            idMappings.listings[transformedListing._id] = transformedListing.id;
-            
-            // Handle parent IDs
-            if (transformedListing.parentId) {
-                const mongoParentId = typeof transformedListing.parentId === 'object' ? 
-                    transformedListing.parentId.toString() : transformedListing.parentId;
-                transformedListing.parentId = idMappings.listings[mongoParentId] || null;
+            if (transformedIconPack.userId) {
+                const mongoUserId = typeof transformedIconPack.userId === 'object' ? 
+                transformedIconPack.userId.toString() : transformedIconPack.userId;
+                transformedIconPack.userId = idMappings.users[mongoUserId] || null;
             }
             
-            // Handle user IDs
-            if (transformedListing.userId) {
-                const mongoUserId = typeof transformedListing.userId === 'object' ? 
-                    transformedListing.userId.toString() : transformedListing.userId;
-                transformedListing.userId = idMappings.users[mongoUserId] || null;
-            }
-            
-            return transformedListing;
+            return transformedIconPack;
         });
-        
-        // NetworkDevice collection
+
+        // =============================================
+        // NetworkDevices collection
         // =============================================
         const NetworkDevice = require('../models/NetworkDevice');
         const networkDevices = await NetworkDevice.find({}).lean();
@@ -625,14 +665,15 @@ exports.generateBackup = async (req, res) => {
             
             if (transformedDevice.userId) {
                 const mongoUserId = typeof transformedDevice.userId === 'object' ? 
-                    transformedDevice.userId.toString() : transformedDevice.userId;
+                transformedDevice.userId.toString() : transformedDevice.userId;
                 transformedDevice.userId = idMappings.users[mongoUserId] || null;
             }
             
             return transformedDevice;
         });
-        
-        // Page collection
+
+        // =============================================
+        // Pages collection
         // =============================================
         const Page = require('../models/Page');
         const pages = await Page.find({}).lean();
@@ -643,30 +684,14 @@ exports.generateBackup = async (req, res) => {
             
             if (transformedPage.userId) {
                 const mongoUserId = typeof transformedPage.userId === 'object' ? 
-                    transformedPage.userId.toString() : transformedPage.userId;
+                transformedPage.userId.toString() : transformedPage.userId;
                 transformedPage.userId = idMappings.users[mongoUserId] || null;
             }
             
             return transformedPage;
         });
-        
-        // Authenticator collection
+
         // =============================================
-        const authenticators = await Authenticator.find({}).lean();
-        
-        const transformedAuthenticators = authenticators.map((auth, index) => {
-            const transformedAuth = transformData(auth);
-            transformedAuth.id = index + 1;
-            
-            if (transformedAuth.userId) {
-                const mongoUserId = typeof transformedAuth.userId === 'object' ? 
-                    transformedAuth.userId.toString() : transformedAuth.userId;
-                transformedAuth.userId = idMappings.users[mongoUserId] || null;
-            }
-            
-            return transformedAuth;
-        });
-        
         // Snippets collection
         // =============================================
         const Snippet = require('../models/Snippet');
@@ -678,13 +703,20 @@ exports.generateBackup = async (req, res) => {
             
             if (transformedSnippet.userId) {
                 const mongoUserId = typeof transformedSnippet.userId === 'object' ? 
-                    transformedSnippet.userId.toString() : transformedSnippet.userId;
+                transformedSnippet.userId.toString() : transformedSnippet.userId;
                 transformedSnippet.userId = idMappings.users[mongoUserId] || null;
+            }
+            
+            if (transformedSnippet.parent) {
+                const mongoListingId = typeof transformedSnippet.parent === 'object' ? 
+                transformedSnippet.parent.toString() : transformedSnippet.parent;
+                transformedSnippet.parent = idMappings.listings[mongoListingId] || null;
             }
             
             return transformedSnippet;
         });
-        
+
+        // =============================================
         // Todos collection
         // =============================================
         const Todo = require('../models/Todo');
@@ -696,13 +728,13 @@ exports.generateBackup = async (req, res) => {
             
             if (transformedTodo.userId) {
                 const mongoUserId = typeof transformedTodo.userId === 'object' ? 
-                    transformedTodo.userId.toString() : transformedTodo.userId;
+                transformedTodo.userId.toString() : transformedTodo.userId;
                 transformedTodo.userId = idMappings.users[mongoUserId] || null;
             }
             
             if (transformedTodo.parent) {
                 const mongoListingId = typeof transformedTodo.parent === 'object' ? 
-                    transformedTodo.parent.toString() : transformedTodo.parent;
+                transformedTodo.parent.toString() : transformedTodo.parent;
                 transformedTodo.parent = idMappings.listings[mongoListingId] || null;
             }
             
@@ -725,71 +757,37 @@ exports.generateBackup = async (req, res) => {
             Todos: transformedTodos
         };
 
-        // Create JSON string
-        const jsonData = JSON.stringify(backupData, null, 2);
-        
-        // Import required modules
-        const AdmZip = require('adm-zip');
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const zipFilename = `astroluma-backup-${timestamp}.zip`;
-        
-        // Create a new zip archive
-        const zip = new AdmZip();
-        
-        // Add JSON data to the zip
-        zip.addFile("backup.json", Buffer.from(jsonData, "utf8"));
-        
-        // Add the uploads directory to the zip
-        const fs = require('fs');
-        const path = require('path');
-        
-        // Path to the uploads directory
-        const uploadsDir = path.join(__dirname, '../../storage/uploads');
-        
-        // Function to recursively add files to zip
-        const addDirectoryToZip = (zip, dirPath, zipPath) => {
-            // Check if the directory exists
-            if (!fs.existsSync(dirPath)) {
-                console.warn(`Directory does not exist: ${dirPath}`);
-                return;
-            }
-            
-            const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-            
-            for (const entry of entries) {
-                const fullPath = path.join(dirPath, entry.name);
-                const zipEntryPath = path.join(zipPath, entry.name);
-                
-                if (entry.isDirectory()) {
-                    // Create directory in zip
-                    zip.addFile(`${zipEntryPath}/`, Buffer.alloc(0));
-                    // Recursively add contents
-                    addDirectoryToZip(zip, fullPath, zipEntryPath);
-                } else if (entry.isFile()) {
-                    // Add file to zip
-                    zip.addLocalFile(fullPath, zipPath);
-                }
-            }
-        };
-        
-        // Add the uploads directory to the zip if it exists
-        if (fs.existsSync(uploadsDir)) {
-            addDirectoryToZip(zip, uploadsDir, "uploads");
-        }
-        
-        // Get the zip file as buffer
-        const zipBuffer = zip.toBuffer();
-        
-        // Return the zipBuffer as base64 and metadata
+        //Add this json to zip file
+        const backupFilePath = path.join(__dirname, '../../backup.json');
+        await fs.writeFile(backupFilePath, JSON.stringify(backupData, null, 2)); // Write the backup data to a file
+
+        //Now add /storage/uploads folder and the json file to the zip file
+        const uploadsPath = path.join(__dirname, '../../storage/uploads');
+        zip.addLocalFolder(uploadsPath, 'uploads'); // Add the uploads folder with its path preserved
+        zip.addLocalFile(backupFilePath); // Add the backup JSON file to the zip
+
+        const zipFilePath = path.join(__dirname, '../../backup.zip');
+        zip.writeZip(zipFilePath); // Write the zip file
+
+        await fs.unlink(backupFilePath); // Delete the backup JSON file after zipping
+
+        //Get the zip file as buffer
+        const zipBuffer = await fs.readFile(zipFilePath); // Read the zip file as a buffer
+
+        await fs.unlink(zipFilePath); // Delete the zip file after reading
+
+        //Zip name: "Astroluma-backup-<timestamp>.zip"
+        const zipName = `Astroluma-backup-${new Date().toISOString().replace(/:/g, '-')}.zip`;
         return res.status(200).json({
             error: false,
             message: {
-                filename: zipFilename,
+                filename: zipName,
+                fileSize: zipBuffer.length,
                 contentType: 'application/zip',
                 data: zipBuffer.toString('base64')
             }
         });
-        
+
     } catch (error) {
         console.error('Error generating backup:', error);
         return res.status(500).json({
