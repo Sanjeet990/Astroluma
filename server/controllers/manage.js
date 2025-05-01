@@ -542,14 +542,6 @@ exports.generateBackup = async (req, res) => {
             const transformedUser = transformData(user);
             transformedUser.id = userId;
             
-            if (transformedUser.userAvatar && typeof transformedUser.userAvatar === 'object') {
-                transformedUser.userAvatar = JSON.stringify(transformedUser.userAvatar);
-            }
-            
-            if (transformedUser.siteLogo && typeof transformedUser.siteLogo === 'object') {
-                transformedUser.siteLogo = JSON.stringify(transformedUser.siteLogo);
-            }
-            
             return transformedUser;
         });
 
@@ -573,10 +565,6 @@ exports.generateBackup = async (req, res) => {
             const transformedSetting = transformData(setting);
             transformedSetting.id = index + 1;
             
-            if (transformedSetting.oidcConfig && typeof transformedSetting.oidcConfig === 'object') {
-                transformedSetting.oidcConfig = JSON.stringify(transformedSetting.oidcConfig);
-            }
-            
             return transformedSetting;
         });
 
@@ -592,14 +580,6 @@ exports.generateBackup = async (req, res) => {
         const transformedListings = listings.map((listing, index) => {
             const transformedListing = transformData(listing);
             transformedListing.id = index + 1;
-            
-            if (transformedListing.listingIcon && typeof transformedListing.listingIcon === 'object') {
-                transformedListing.listingIcon = JSON.stringify(transformedListing.listingIcon);
-            }
-            
-            if (transformedListing.integration && typeof transformedListing.integration === 'object') {
-                transformedListing.integration = JSON.stringify(transformedListing.integration);
-            }
             
             // Replace MongoDB ObjectId references with SQLite integer IDs
             if (transformedListing.userId) {
@@ -626,10 +606,6 @@ exports.generateBackup = async (req, res) => {
         const transformedAuthenticators = authenticators.map((authenticator, index) => {
             const transformedAuth = transformData(authenticator);
             transformedAuth.id = index + 1;
-            
-            if (transformedAuth.serviceIcon && typeof transformedAuth.serviceIcon === 'object') {
-                transformedAuth.serviceIcon = JSON.stringify(transformedAuth.serviceIcon);
-            }
             
             if (transformedAuth.userId) {
                 const mongoUserId = typeof transformedAuth.userId === 'object' ? 
@@ -667,10 +643,6 @@ exports.generateBackup = async (req, res) => {
             const transformedIconPack = transformData(iconPack);
             transformedIconPack.id = index + 1;
             
-            if (transformedIconPack.credit && typeof transformedIconPack.credit === 'object') {
-                transformedIconPack.credit = JSON.stringify(transformedIconPack.credit);
-            }
-            
             if (transformedIconPack.userId) {
                 const mongoUserId = typeof transformedIconPack.userId === 'object' ? 
                 transformedIconPack.userId.toString() : transformedIconPack.userId;
@@ -689,10 +661,6 @@ exports.generateBackup = async (req, res) => {
         const transformedNetworkDevices = networkDevices.map((device, index) => {
             const transformedDevice = transformData(device);
             transformedDevice.id = index + 1;
-            
-            if (transformedDevice.deviceIcon && typeof transformedDevice.deviceIcon === 'object') {
-                transformedDevice.deviceIcon = JSON.stringify(transformedDevice.deviceIcon);
-            }
             
             if (transformedDevice.userId) {
                 const mongoUserId = typeof transformedDevice.userId === 'object' ? 
@@ -731,12 +699,6 @@ exports.generateBackup = async (req, res) => {
         const transformedSnippets = snippets.map((snippet, index) => {
             const transformedSnippet = transformData(snippet);
             transformedSnippet.id = index + 1;
-            
-            if (Array.isArray(transformedSnippet.snippetItems)) {
-                transformedSnippet.snippetItems = JSON.stringify(transformedSnippet.snippetItems);
-            } else if (transformedSnippet.snippetItems === null || transformedSnippet.snippetItems === undefined) {
-                transformedSnippet.snippetItems = '[]';
-            }
             
             if (transformedSnippet.userId) {
                 const mongoUserId = typeof transformedSnippet.userId === 'object' ? 
