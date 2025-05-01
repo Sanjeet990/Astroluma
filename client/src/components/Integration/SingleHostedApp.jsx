@@ -156,7 +156,7 @@ const SingleHostedApp = ({
                                     ? hasUpdate
                                         ? "bg-yellow-500 text-white"
                                         : "bg-buttonGeneric text-buttonText"
-                                    : "bg-buttonGeneric text-buttonText"
+                                    : "bg-green-500 text-buttonText"
                                 }`}
                         />
                     </div>

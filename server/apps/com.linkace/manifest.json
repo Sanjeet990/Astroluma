@@ -1,0 +1,25 @@
+{
+    "appName": "Linkace",
+    "appId": "com.linkace",
+    "appIcon": "logo.png",
+    "website": "https://www.linkace.org/",
+    "description": "LinkAce is a self-hosted archive to collect links of your favorite websites. Save articles to read them later, tools to use them in your next project, or historic content to archive it for the long term. LinkAce comes with a lot of features while keeping a clean and minimal interface.",
+    "autoRefreshAfterSeconds": 60,
+    "alwaysShowDetailedView": true,
+    "config": [
+        {
+            "name": "overrideurl",
+            "label": "Linkace URL",
+            "type": "string",
+            "required": false,
+            "placeholder": "If different from the Link URL, enter URL"
+        },
+        {
+            "name": "apiKey",
+            "label": "Linkace API key",
+            "type": "password",
+            "required": true,
+            "placeholder": "Enter your Linkace API key"
+        }
+    ]
+}

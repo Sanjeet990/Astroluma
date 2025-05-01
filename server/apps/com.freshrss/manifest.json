@@ -1,0 +1,32 @@
+{
+    "appName": "FreshRSS",
+    "appId": "com.freshrss",
+    "appIcon": "logo.png",
+    "website": "https://freshrss.org/",
+    "description": "FreshRSS is a self-hosted RSS feed aggregator. It is lightweight, easy to work with, powerful and customizable.",
+    "autoRefreshAfterSeconds": 120,
+    "alwaysShowDetailedView": true,
+    "config": [
+        {
+            "name": "overrideurl",
+            "label": "FreshRSS URL",
+            "type": "string",
+            "required": false,
+            "placeholder": "If different from the Link URL, enter URL"
+        },
+        {
+            "name": "username",
+            "label": "Username",
+            "type": "string",
+            "required": true,
+            "placeholder": "FreshRSS username"
+        },
+        {
+            "name": "apiKey",
+            "label": "FreshRSS API key",
+            "type": "password",
+            "required": true,
+            "placeholder": "Enter your FreshRSS API key"
+        }
+    ]
+}

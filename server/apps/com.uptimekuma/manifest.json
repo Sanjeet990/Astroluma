@@ -1,0 +1,32 @@
+{
+    "appName": "Uptime Kuma",
+    "appId": "com.uptimekuma",
+    "appIcon": "logo.png",
+    "website": "https://uptime.kuma.pet",
+    "description": "It is a self-hosted monitoring tool similar to \"Uptime Robot\".",
+    "autoRefreshAfterSeconds": 30,
+    "alwaysShowDetailedView": true,
+    "config": [
+        {
+            "name": "overrideurl",
+            "label": "Uptime Kuma URL",
+            "type": "string",
+            "required": false,
+            "placeholder": "If different from the Link URL, enter URL"
+        },
+        {
+            "name": "apiKey",
+            "label": "Uptime Kuma API key",
+            "type": "password",
+            "required": true,
+            "placeholder": "Enter your Uptime Kuma API key"
+        },
+        {
+            "name": "skipTlsValidation",
+            "label": "Skip TLS Validation",
+            "type": "checkbox",
+            "default": true,
+            "placeholder": "Skip TLS Validation"
+        }
+    ]
+}

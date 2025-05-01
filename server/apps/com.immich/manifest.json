@@ -1,0 +1,25 @@
+{
+    "appName": "Immich",
+    "appId": "com.immich",
+    "appIcon": "logo.png",
+    "website": "https://immich.app/",
+    "description": "High performance self-hosted photo and video backup solution directly from your mobile phone",
+    "autoRefreshAfterSeconds": 60,
+    "alwaysShowDetailedView": true,
+    "config": [
+        {
+            "name": "overrideurl",
+            "label": "Immich URL",
+            "type": "string",
+            "required": false,
+            "placeholder": "If different from the Link URL, enter URL"
+        },
+        {
+            "name": "apiKey",
+            "label": "Immich API key",
+            "type": "password",
+            "required": true,
+            "placeholder": "Enter your Immich API key"
+        }
+    ]
+}

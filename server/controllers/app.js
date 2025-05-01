@@ -8,6 +8,7 @@ const vm = require('vm');
 const { Op } = require('sequelize');
 const { App, Listing, User } = require('../models');
 const allowedModules = require('../utils/allowedModules');
+const { getAppDirectory, registerApp } = require('../utils/appDiscovery');
 
 // Helper functions - no changes needed to these utility functions
 const validateUser = (user) => {
@@ -28,22 +29,6 @@ const cleanupFiles = (filePaths) => {
     }
 };
 
-// Install NPM dependencies for an app
-const installDependencies = async (appDir) => {
-    return new Promise((resolve, reject) => {
-        const { exec } = require('child_process');
-        const cmd = `cd ${appDir} && npm install --production`;
-
-        exec(cmd, (error, stdout, stderr) => {
-            if (error) {
-                reject(`Error installing dependencies: ${error.message}`);
-            } else {
-                resolve("Dependencies installed successfully");
-            }
-        });
-    });
-};
-
 // Handler for app installation
 const handleAppInstallation = async (zipPath, extractPath) => {
     try {
@@ -55,75 +40,55 @@ const handleAppInstallation = async (zipPath, extractPath) => {
 
         const zip = new AdmZip(zipPath);
 
-        // Extract the ZIP file
+        // Extract the ZIP file to the temporary path (using timestamp)
         zip.extractAllTo(extractPath, true);
 
-        if (!fs.existsSync(path.join(extractPath, 'manifest.json'))) {
+        const manifestPath = path.join(extractPath, 'manifest.json');
+        if (!fs.existsSync(manifestPath)) {
             throw new Error("Invalid app package: missing manifest.json");
         }
 
-        const manifest = JSON.parse(fs.readFileSync(path.join(extractPath, 'manifest.json'), 'utf8'));
-        const package = JSON.parse(fs.readFileSync(path.join(extractPath, 'package.json'), 'utf8'));
-
-        console.log(manifest);
-
-        // Check if app already exists
-        const existingApp = await App.findOne({
-            where: {
-                appId: manifest.appId
-            }
-        });
-
-        if (existingApp) {
-            throw new Error("App already exists.");
+        // Read the manifest.json to get the actual appId
+        const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+        const manifest = JSON.parse(manifestContent);
+        
+        if (!manifest.appId) {
+            throw new Error("Invalid app package: missing appId in manifest.json");
         }
 
-        // Create a new app entry in the database
-        const app = await App.create({
-            appId: manifest.appId,
-            appName: manifest.appName,
-            description: manifest.description || "",
-            category: manifest.category || "others",
-            supportedThemes: JSON.stringify(manifest.supportedThemes || ["light", "dark"]),
-            supportedViewportSize: manifest.supportedViewportSize || "default",
-            requiresConfiguration: manifest.config?.length > 0 ? true : false,
-            config: JSON.stringify(manifest.config || []),
-            remoteVersion: manifest.version || "0.0.0",
-            installedVersion: manifest.version || "0.0.0",
-            npmInstalled: 0,
-            version: manifest.version || "0.0.0",
-            appIcon: manifest.appIcon || "integration.png",
-            coreSettings: manifest.config?.some(setting => setting.scope === "core") || false,
-            configured: manifest.config?.some(setting => setting.scope === "core") ? false : true
-        });
+        // Get the proper destination path based on the appId from manifest
+        const storageAppsDir = path.dirname(extractPath);
+        const properDestPath = path.join(storageAppsDir, manifest.appId);
 
-        // Start npm installation process
-        process.nextTick(() => {
-            installDependencies(extractPath)
-                .then(async (msg) => {
-                    console.log(msg);
-                    await App.update(
-                        { npmInstalled: 1 },
-                        { where: { id: app.id } }
-                    );
-                    cleanupFiles([zipPath]);
-                })
-                .catch(async (error) => {
-                    await App.update(
-                        { npmInstalled: -1 },
-                        { where: { id: app.id } }
-                    );
-                    cleanupFiles([zipPath, extractPath]);
-                });
-        });
+        // If there's already an app with this ID, remove it first
+        if (fs.existsSync(properDestPath)) {
+            rimraf.sync(properDestPath);
+        }
 
+        // Rename the folder to match the appId
+        fs.renameSync(extractPath, properDestPath);
+
+        // Simply extract the app to the storage/apps directory
+        // The file watcher will detect the new directory and trigger the registration process
+        // No need to manually create DB entries or install dependencies
+
+        // Return success response
         return {
             error: false,
-            message: "The integration is added."
+            message: "The integration is being added. Installation will complete shortly."
         };
 
     } catch (error) {
+        // Clean up the extract path if there was an error
+        if (fs.existsSync(extractPath)) {
+            rimraf.sync(extractPath);
+        }
         throw error;
+    } finally {
+        // Clean up the zip file
+        if (fs.existsSync(zipPath)) {
+            fs.unlinkSync(zipPath);
+        }
     }
 };
 
@@ -137,11 +102,17 @@ exports.installFromZip = async (req, res) => {
         }
 
         const zipPath = req.file.path;
-        const extractPath = path.join(
-            __dirname,
-            '../../storage/apps',
-            req.file.filename.split('.').slice(0, -1).join('.')
-        );
+        const storageAppsDir = path.join(__dirname, '../../storage/apps');
+        
+        // Ensure storage/apps directory exists
+        if (!fs.existsSync(storageAppsDir)) {
+            fs.mkdirSync(storageAppsDir, { recursive: true });
+        }
+        
+        // Use the timestamp from multer as the temporary folder name
+        const extractPath = path.join(storageAppsDir, req.file.filename.split('.')[0]);
+
+        console.log("Extracting to:", zipPath, extractPath);
 
         const result = await handleAppInstallation(zipPath, extractPath);
         return res.status(200).json(result);
@@ -182,9 +153,6 @@ const downloadFile = async (url, zipPath) => {
 };
 
 exports.installRemoteApp = async (req, res) => {
-    const zipPath = path.join(__dirname, '../public/uploads/integrations', `${req.params.appId}`);
-    const extractPath = path.join(__dirname, '../../storage/apps', req.params.appId);
-
     try {
         validateUser(req.user);
 
@@ -193,13 +161,24 @@ exports.installRemoteApp = async (req, res) => {
             throw new Error("No application id provided.");
         }
 
+        // Create a temporary extraction directory with timestamp
+        const tempDirName = `temp_${Date.now()}`;
+        const zipPath = path.join(__dirname, '../public/uploads/integrations', `${appId}`);
+        const storageAppsDir = path.join(__dirname, '../../storage/apps');
+        const tempExtractPath = path.join(storageAppsDir, tempDirName);
+        
+        // Ensure storage/apps directory exists
+        if (!fs.existsSync(storageAppsDir)) {
+            fs.mkdirSync(storageAppsDir, { recursive: true });
+        }
+
         const appUrl = `https://cdn.jsdelivr.net/gh/Sanjeet990/AstrolumaApps/apps/${appId}.zip`;
 
         // Download file first
         await downloadFile(appUrl, zipPath);
 
-        // Install the app
-        const result = await handleAppInstallation(zipPath, extractPath);
+        // Install the app using the temporary path
+        const result = await handleAppInstallation(zipPath, tempExtractPath);
         return res.status(200).json(result);
 
     } catch (error) {
@@ -211,11 +190,6 @@ exports.installRemoteApp = async (req, res) => {
 };
 
 exports.updateRemoteApp = async (req, res) => {
-
-    const zipPath = path.join(__dirname, '../public/uploads/integrations', `${req.params.appId}`);
-    const extractPath = path.join(__dirname, '../../storage/apps', req.params.appId);
-    const appPath = path.join(__dirname, '../../storage/apps', req.params.appId);
-
     try {
         validateUser(req.user);
 
@@ -225,82 +199,71 @@ exports.updateRemoteApp = async (req, res) => {
         }
 
         // Check if app exists
-        const existingApp = await App.findOne({ appId });
+        const existingApp = await App.findOne({ where: { appId } });
         if (!existingApp) {
             throw new Error("App not found.");
         }
 
-        // Remove existing app files
-        if (fs.existsSync(appPath)) {
-            fs.rmSync(appPath, { recursive: true });
-        }
-
+        // Create a temporary extraction directory with timestamp
+        const tempDirName = `temp_${Date.now()}`;
+        const zipPath = path.join(__dirname, '../public/uploads/integrations', `${appId}`);
+        const storageAppsDir = path.join(__dirname, '../../storage/apps');
+        const tempExtractPath = path.join(storageAppsDir, tempDirName);
+        
         const appUrl = `https://cdn.jsdelivr.net/gh/Sanjeet990/AstrolumaApps/apps/${appId}.zip`;
 
         // Download new version
         await downloadFile(appUrl, zipPath);
 
-        // Extract and check manifest
+        // Extract to temporary directory
         const zip = new AdmZip(zipPath);
-        zip.extractAllTo(extractPath, true);
+        zip.extractAllTo(tempExtractPath, true);
 
-        const manifestPath = path.join(extractPath, 'manifest.json');
+        const manifestPath = path.join(tempExtractPath, 'manifest.json');
         if (!fs.existsSync(manifestPath)) {
-            cleanupFiles([zipPath, extractPath]);
+            cleanupFiles([zipPath, tempExtractPath]);
             throw new Error("Invalid app package: missing manifest.json");
         }
 
-        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+        // Read the manifest.json to get the actual appId
+        const manifestContent = fs.readFileSync(manifestPath, 'utf8');
+        const manifest = JSON.parse(manifestContent);
+        
+        if (!manifest.appId) {
+            cleanupFiles([zipPath, tempExtractPath]);
+            throw new Error("Invalid app package: missing appId in manifest.json");
+        }
 
-        // Update app information
-        await App.update({
-            appName: manifest.appName,
-            appDescription: manifest.appDescription,
-            category: manifest.category || existingApp.category,
-            supportedThemes: JSON.stringify(manifest.supportedThemes || ["light", "dark"]),
-            supportedViewportSize: manifest.supportedViewportSize || "default",
-            requiresConfiguration: manifest.config?.length > 0 ? true : false,
-            config: JSON.stringify(manifest.config || []),
-            remoteVersion: manifest.version,
-            installedVersion: manifest.version,
-            npmInstalled: 0,
-            coreSettings: manifest.config?.some(setting => setting.scope === "core") || false,
-            configured: manifest.config?.some(setting => setting.scope === "core") ? false : true,
-            appIcon: manifest.appIcon || "integration.png"
-        }, {
-            where: { id: existingApp.id }
-        });
+        // Make sure the manifest appId matches the requested appId
+        if (manifest.appId !== appId) {
+            cleanupFiles([zipPath, tempExtractPath]);
+            throw new Error(`Manifest appId (${manifest.appId}) doesn't match expected appId (${appId})`);
+        }
 
-        // Start npm installation process
-        process.nextTick(() => {
-            installDependencies(extractPath)
-                .then(async (msg) => {
-                    console.log(msg);
-                    await App.update(
-                        { npmInstalled: 1 },
-                        { where: { id: existingApp.id } }
-                    );
-                    cleanupFiles([zipPath]);
-                })
-                .catch(async (error) => {
-                    await App.update(
-                        { npmInstalled: -1 },
-                        { where: { id: existingApp.id } }
-                    );
-                    cleanupFiles([zipPath, extractPath]);
-                });
-        });
+        // Get the proper destination path based on the appId from manifest
+        const properDestPath = path.join(storageAppsDir, manifest.appId);
+
+        // If there's already an app with this ID, remove it first
+        if (fs.existsSync(properDestPath)) {
+            fs.rmSync(properDestPath, { recursive: true });
+        }
+
+        // Rename the folder to match the appId
+        fs.renameSync(tempExtractPath, properDestPath);
+
+        // Cleanup the zip file since we don't need it anymore
+        cleanupFiles([zipPath]);
 
         return res.status(200).json({
             error: false,
-            message: "The integration has been updated."
+            message: "The integration is being updated. Update will complete shortly."
         });
 
     } catch (error) {
         // Clean up files in case of any error
         cleanupFiles([
-            path.join(__dirname, `../../storage/uploads/${req.params.appId}.zip`),
-            path.join(__dirname, `../../storage/apps/${req.params.appId}`)
+            path.join(__dirname, `../public/uploads/integrations/${req.params.appId}`),
+            path.join(__dirname, `../../storage/apps/temp_*`)
         ]);
 
         return res.status(400).json({
@@ -316,13 +279,21 @@ exports.removeInstalledApp = async (req, res) => {
 
         const appId = req.params.appId;
 
-        // Check if app exists
+        // Check if app exists in database
         const app = await App.findOne({
             where: { appId }
         });
 
         if (!app) {
             throw new Error("App not found.");
+        }
+
+        // Check if this is a system app with updates
+        const isSystemAppWithUpdates = app.appType === 'system' && app.isUpdated === 1;
+        
+        // If this is a system app without updates, prevent removal
+        if (app.appType === 'system' && !isSystemAppWithUpdates) {
+            throw new Error("System apps cannot be removed. They are part of the core system.");
         }
 
         // Update listings that use this app
@@ -337,14 +308,38 @@ exports.removeInstalledApp = async (req, res) => {
             }
         );
 
-        // Delete the app
+        // For system apps with updates, we only want to remove the update, not the app itself
+        if (isSystemAppWithUpdates) {
+            // Just reset the app in the database to show it's no longer updated
+            await App.update(
+                { 
+                    isUpdated: 0 
+                },
+                {
+                    where: { appId }
+                }
+            );
+            
+            // Only remove the version in storage/apps, not in server/apps
+            const storageAppPath = path.join(__dirname, `../../storage/apps/${appId}`);
+            cleanupFiles([storageAppPath]);
+            
+            return res.status(200).json({
+                error: false,
+                message: "App updates removed successfully."
+            });
+        }
+        
+        // For user apps, proceed with normal removal
+        // Delete the app from database
         await App.destroy({
             where: { appId }
         });
 
-        // Remove app directory
-        const appPath = path.join(__dirname, `../../storage/apps/${appId}`);
-        cleanupFiles([appPath]);
+        // Only remove from storage/apps for user apps
+        // Never remove from server/apps
+        const storageAppPath = path.join(__dirname, `../../storage/apps/${appId}`);
+        cleanupFiles([storageAppPath]);
 
         return res.status(200).json({
             error: false,
@@ -359,114 +354,18 @@ exports.removeInstalledApp = async (req, res) => {
     }
 };
 
-exports.syncFromDisk = async (req, res) => {
-    try {
-        validateUser(req.user);
-
-        const appsDir = path.join(__dirname, '../../storage/apps');
-
-        if (!fs.existsSync(appsDir)) {
-            fs.mkdirSync(appsDir, { recursive: true });
-            return res.status(200).json({
-                error: false,
-                message: "Apps directory created. No apps found to sync."
-            });
-        }
-
-        const appsInFolder = fs.readdirSync(appsDir)
-            .filter(folder => fs.statSync(path.join(appsDir, folder)).isDirectory());
-
-        // Get apps from database
-        const appsInDatabase = await App.findAll();
-        const appsInDatabaseMap = new Map(appsInDatabase.map(app => [app.appId, app]));
-
-        const appsToDelete = [];
-        const appsToAdd = [];
-
-        appsInFolder.forEach(appId => {
-            if (!appsInDatabaseMap.has(appId)) {
-                appsToAdd.push(appId);
-            }
-        });
-
-        appsInDatabase.forEach(app => {
-            if (!appsInFolder.includes(app.appId)) {
-                appsToDelete.push(app.appId);
-            }
-        });
-
-        // Delete apps that don't exist in folder
-        for (const appId of appsToDelete) {
-            await App.destroy({ where: { appId } });
-            // Update listings with this integration
-            await Listing.update(
-                { integration: null },
-                {
-                    where: {
-                        integration: {
-                            [Op.ne]: null
-                        }
-                    }
-                }
-            );
-        }
-
-        // Add apps from folder that don't exist in database
-        for (const appId of appsToAdd) {
-            const manifestPath = path.join(appsDir, appId, 'manifest.json');
-            const packagePath = path.join(appsDir, appId, 'package.json');
-
-            if (!fs.existsSync(manifestPath) || !fs.existsSync(packagePath)) {
-                continue;
-            }
-
-            const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-            const package = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-
-            await App.create({
-                appId: manifest.appId,
-                appName: manifest.appName,
-                appDescription: manifest.appDescription,
-                category: manifest.category || "others",
-                supportedThemes: JSON.stringify(manifest.supportedThemes || ["light", "dark"]),
-                supportedViewportSize: manifest.supportedViewportSize || "default",
-                requiresConfiguration: manifest.config?.length > 0 ? true : false,
-                config: JSON.stringify(manifest.config || []),
-                remoteVersion: manifest.version || "0.0.0",
-                installedVersion: manifest.version || "0.0.0",
-                npmInstalled: fs.existsSync(path.join(appsDir, appId, 'node_modules')) ? 1 : 0,
-                appIcon: manifest.appIcon || "integration.png",
-                coreSettings: manifest.config?.some(setting => setting.scope === "core") || false,
-                configured: manifest.config?.some(setting => setting.scope === "core") ? false : true
-            });
-        }
-
-        return res.status(200).json({
-            error: false,
-            message: `Apps synced successfully. Added: ${appsToAdd.length}, Removed: ${appsToDelete.length}`
-        });
-
-    } catch (error) {
-        return res.status(400).json({
-            error: true,
-            message: error.message || "Error syncing apps from disk."
-        });
-    }
-};
-
 exports.serveLogo = (req, res) => {
     try {
         const appId = req.params.appId;
-        const appsDir = path.join(__dirname, '../../storage/apps');
-
-        // Check app directory
-        const appDir = path.join(appsDir, appId);
-        if (!fs.existsSync(appDir)) {
+        
+        // Get the effective app directory (prioritizing storage/apps)
+        const appDirectory = getAppDirectory(appId);
+        if (!appDirectory) {
             return res.status(404).send('App not found');
         }
 
         // Check manifest
-        const manifestPath = path.join(appDir, 'manifest.json');
+        const manifestPath = path.join(appDirectory, 'manifest.json');
         if (!fs.existsSync(manifestPath)) {
             return res.status(404).send('Manifest not found');
         }
@@ -475,13 +374,13 @@ exports.serveLogo = (req, res) => {
         const appIcon = manifest.appIcon || "integration.png";
 
         // Check if icon exists
-        const iconPath = path.join(appDir, 'icons', appIcon);
+        const iconPath = path.join(appDirectory, 'icons', appIcon);
         if (fs.existsSync(iconPath)) {
             return res.sendFile(iconPath);
         }
 
         // Default icon
-        const defaultIconPath = path.join(__dirname, '../../public/uploads/apps.png');
+        const defaultIconPath = path.join(__dirname, '../public/uploads/apps.png');
         if (fs.existsSync(defaultIconPath)) {
             return res.sendFile(defaultIconPath);
         }
@@ -583,7 +482,23 @@ exports.connectTest = async (req, res) => {
 
         appUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
 
-        const modulePath = path.join(__dirname, `../../storage/apps/${appId}/app.js`);
+        // Get the effective app directory (prioritizing storage/apps)
+        const appDirectory = getAppDirectory(appId);
+        if (!appDirectory) {
+            return res.status(400).json({
+                error: true,
+                message: "Application files not found."
+            });
+        }
+
+        const modulePath = path.join(appDirectory, 'app.js');
+        if (!fs.existsSync(modulePath)) {
+            return res.status(400).json({
+                error: true,
+                message: "Application module not found."
+            });
+        }
+
         const moduleCode = fs.readFileSync(modulePath, 'utf8');
 
         let hasResponded = false;
@@ -632,9 +547,7 @@ exports.connectTest = async (req, res) => {
             }
         });
 
-        const pluginNodeModulesPath = path.join(__dirname, `../../storage/apps/${appId}/node_modules`);
-
-        const allowedModules = ['axios', 'lodash', 'moment', 'crypto-js'];
+        const pluginNodeModulesPath = path.join(appDirectory, 'node_modules');
 
         const sandbox = {
             require: (module) => {
@@ -711,7 +624,17 @@ exports.runIntegratedApp = async (req, res) => {
             return res.status(400).send("Listing not found.");
         }
 
-        const modulePath = path.join(__dirname, `../../storage/apps/${listing?.integration?.appId}/app.js`);
+        // Get the effective app directory (prioritizing storage/apps)
+        const appDirectory = getAppDirectory(listing.integration.appId);
+        if (!appDirectory) {
+            return res.status(400).send("Application files not found.");
+        }
+
+        const modulePath = path.join(appDirectory, 'app.js');
+        if (!fs.existsSync(modulePath)) {
+            return res.status(400).send("Application module not found.");
+        }
+        
         const moduleCode = fs.readFileSync(modulePath, 'utf8');
 
         const decryptedConfig = listing.integration.config;
@@ -730,11 +653,23 @@ exports.runIntegratedApp = async (req, res) => {
             if (hasResponded) return;
             hasResponded = true;
 
-            let templateFromDisk = fs.readFileSync(path.join(__dirname, `../../storage/apps/${listing.integration.appId}/templates/${template}`), 'utf8');
+            // Look for templates in the app directory
+            const templatesDir = path.join(appDirectory, 'templates');
+            const templatePath = path.join(templatesDir, template);
+
+            if (!fs.existsSync(templatePath)) {
+                return res.status(400).send(`Template ${template} not found`);
+            }
+
+            let templateFromDisk = fs.readFileSync(templatePath, 'utf8');
             let mtemplateFromDisk = null;
 
+            // Try to load mobile template
+            const mTemplatePath = path.join(templatesDir, `m-${template}`);
             try {
-                mtemplateFromDisk = fs.readFileSync(path.join(__dirname, `../../storage/apps/${listing.integration.appId}/templates/m-${template}`), 'utf8');
+                if (fs.existsSync(mTemplatePath)) {
+                    mtemplateFromDisk = fs.readFileSync(mTemplatePath, 'utf8');
+                }
             } catch (e) {
                 mtemplateFromDisk = null;
             }
@@ -784,9 +719,7 @@ exports.runIntegratedApp = async (req, res) => {
             sendError
         };
 
-        //const allowedModules = ['axios', 'lodash', 'moment', 'crypto-js', 'md5', 'fs', 'path', 'vm', 'https', 'adm-zip', 'rimraf', 'buffer'];
-
-        const pluginNodeModulesPath = path.join(__dirname, `../../storage/apps/${listing.integration.appId}/node_modules`);
+        const pluginNodeModulesPath = path.join(appDirectory, 'node_modules');
 
         const sandbox = {
             application,
@@ -809,7 +742,7 @@ exports.runIntegratedApp = async (req, res) => {
             clearTimeout,
             clearInterval,
             global: {
-                eval: undefined,   // Disable eval
+                eval: undefined,
                 Function: undefined,
             }
         };

@@ -1,0 +1,25 @@
+{
+    "appName": "Sonarr",
+    "appId": "com.sonarr",
+    "appIcon": "logo.png",
+    "website": "https://sonarr.tv",
+    "description": "Sonarr is a PVR for Usenet and BitTorrent users. It can monitor multiple RSS feeds for new episodes of your favorite shows and will grab, sort and rename them. It can also be configured to automatically upgrade the quality of files already downloaded when a better quality format becomes available.",
+    "autoRefreshAfterSeconds": 0,
+    "alwaysShowDetailedView": true,
+    "config": [
+        {
+            "name": "overrideurl",
+            "label": "Sonarr URL",
+            "type": "string",
+            "required": false,
+            "placeholder": "If different from the Link URL, enter URL"
+        },
+        {
+            "name": "apiKey",
+            "label": "Sonarr API key",
+            "type": "password",
+            "required": true,
+            "placeholder": "Enter your Sonarr API key"
+        }
+    ]
+}

@@ -10,7 +10,6 @@ import NoListing from '../Misc/NoListing';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import NiceLink from '../NiceViews/NiceLink';
-import NiceButton from '../NiceViews/NiceButton';
 import NiceTip from '../NiceViews/NiceTip';
 import makeToast from '../../utils/ToastUtils';
 import RemoveInstalledIntegration from '../Modals/RemoveInstalledIntegration';
@@ -41,7 +40,6 @@ const InstalledApps = () => {
     const fetchApps = useCallback(async (page) => {
         try {
             const data = await ApiService.get(`/api/v1/app/installed?page=${page}`, loginData?.token, navigate);
-            console.log(data);
             if (data?.message?.page >= data?.message?.pages) {
                 setHasMore(false);
             }
@@ -91,7 +89,7 @@ const InstalledApps = () => {
     }, [hasMore, isLoadingMore, loadMoreData]);
 
 
-    // Reload data after successful syncFromDisk
+    // Reload data
     const reloadData = useCallback(() => {
         setCurrentPage(1);
         setHasMore(true);
@@ -100,38 +98,17 @@ const InstalledApps = () => {
 
     // Initial data load
     useEffect(() => {
-
         emitter.on(RELOAD_INSTALLED_APPS, reloadData);
-
         loadInitialData();
 
         return () => {
             emitter.off(RELOAD_INSTALLED_APPS, reloadData);
         };
-
     }, [loadInitialData, reloadData]);
 
     const handleAppRemove = (app) => {
         setRemoveInstalledIntegration({ isOpen: true, data: { app } });
     };
-
-    const syncFromDisk = () => {
-        setLoading(true);
-
-        ApiService.get('/api/v1/app/sync', loginData?.token, navigate)
-            .then(async () => {
-                makeToast("success", "Sync completed successfully.");
-                const newApps = await fetchApps(1);
-                setAppList(newApps);
-                setCurrentPage(1);
-                setHasMore(true);
-            })
-            .catch((error) => {
-                if (!error.handled) makeToast("error", error?.response?.data?.message || "Failed to sync.");
-            }).finally(() => {
-                setLoading(false);
-            });
-    }
 
     const handleConfigureClick = (app) => {
         setConfigModalState({ isOpen: true, data: app });
@@ -149,18 +126,12 @@ const InstalledApps = () => {
                 breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }]}
             />
 
-
             <AdditionalIntegrationConfigurationModal />
             <RemoveInstalledIntegration onSuccess={reloadData} />
 
             <div className="flex flex-col justify-between">
                 <div className="text-left w-full md:w-auto" />
                 <div className={`flex flex-wrap justify-end space-x-2 mt-4 md:mt-0 mb-4 ${!isSuperAdmin ? "hidden" : ""}`}>
-                    <NiceButton
-                        onClick={syncFromDisk}
-                        label="Sync from Disk"
-                        className="bg-buttonGeneric text-buttonText"
-                    />
                     <NiceLink
                         to="/manage/apps/install"
                         label="Install Integrations"

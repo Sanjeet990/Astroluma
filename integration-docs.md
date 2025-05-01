@@ -391,7 +391,7 @@ To distribute your integration:
 
 3. Users can install the integration using one of these methods:
    - Upload the ZIP file through the Astroluma admin interface
-   - Place the files in the server/storage/apps directory and use "Sync from Disk"
+   - Place the files in the server/apps directory and use "Sync from Disk"
 
 ## Best Practices
 

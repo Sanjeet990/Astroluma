@@ -4,7 +4,7 @@ const fs = require('fs');
 const router = express.Router();
 
 const { verifyToken } = require('../middlewares/auth');
-const { runIntegratedApp, connectTest, installedApps, installFromZip, removeInstalledApp, syncFromDisk, installRemoteApp, allInstalledApps, serveLogo, updateRemoteApp } = require('../controllers/app');
+const { runIntegratedApp, connectTest, installedApps, installFromZip, removeInstalledApp, installRemoteApp, allInstalledApps, serveLogo, updateRemoteApp } = require('../controllers/app');
 
 // Ensure the upload directory exists
 const uploadDir = './public/uploads/integrations';
@@ -41,7 +41,6 @@ router.post('/app/test', verifyToken, connectTest);
 router.get('/app/installed', verifyToken, installedApps);
 router.get('/app/installed/all', verifyToken, allInstalledApps);
 router.post('/app/fromzip', verifyToken, upload.single('file'), installFromZip);
-router.get('/app/sync', verifyToken, syncFromDisk);
 router.get('/app/:appId/logo', serveLogo);
 router.get('/app/:appId/delete', verifyToken, removeInstalledApp);
 router.get('/app/:appId/install', verifyToken, installRemoteApp);

@@ -1,0 +1,25 @@
+{
+    "appName": "Bazarr",
+    "appId": "com.bazarr",
+    "appIcon": "logo.png",
+    "website": "https://github.com/morpheus65535/bazarr",
+    "description": "Bazarr is a companion application to Sonarr and Radarr. It manage and download subtitles based on your requirements. You defined your preferences by TV show or movies and Bazarr take care of everything for you.",
+    "autoRefreshAfterSeconds": 300,
+    "alwaysShowDetailedView": true,
+    "config": [
+        {
+            "name": "overrideurl",
+            "label": "Bazarr URL",
+            "type": "string",
+            "required": false,
+            "placeholder": "If different from the Link URL, enter URL"
+        },
+        {
+            "name": "apiKey",
+            "label": "Bazarr API key",
+            "type": "password",
+            "required": true,
+            "placeholder": "Enter your Bazarr API key"
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+{
+  "watch": [
+    "server.js",
+    "websocket.js",
+    "routes/",
+    "controllers/",
+    "models/",
+    "middlewares/",
+    "utils/",
+    "config/"
+  ],
+  "ignore": [
+    "apps/",
+    "../storage/apps/",
+    "*.test.js",
+    "node_modules/"
+  ],
+  "ext": "js,json"
+}

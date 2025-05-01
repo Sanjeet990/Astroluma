@@ -4,6 +4,7 @@ const { isHostMode } = require('../utils/apiutils');
 const { Op } = require('sequelize');
 const fs = require('fs');
 const CryptoJS = require('crypto-js');
+const { Json } = require('sequelize/lib/utils');
 
 // Method to fetch and return dashboard data for the authenticated user
 /**
@@ -180,16 +181,16 @@ exports.saveSettings = async (req, res) => {
     try {
         // Update user settings in the database.
         const [updatedRows] = await User.update(
-            { 
-                siteName, 
-                siteLogo, 
-                authenticator, 
-                camerafeed, 
-                networkdevices: networkdevices && isHostMode(), 
-                todolist, 
-                snippetmanager, 
-                linksalwaysnewtab, 
-                foldersalwaysnewtab 
+            {
+                siteName,
+                siteLogo,
+                authenticator,
+                camerafeed,
+                networkdevices: networkdevices && isHostMode(),
+                todolist,
+                snippetmanager,
+                linksalwaysnewtab,
+                foldersalwaysnewtab
             },
             { where: { id: userId } }
         );
@@ -552,7 +553,7 @@ exports.importMigration = async (req, res) => {
         try {
             const fileContent = fs.readFileSync(req.file.path, 'utf8');
             migrationData = JSON.parse(fileContent);
-            
+
             // Remove the temporary file
             fs.unlinkSync(req.file.path);
         } catch (parseError) {
@@ -567,14 +568,6 @@ exports.importMigration = async (req, res) => {
         const transaction = await sequelize.transaction();
 
         try {
-            // Save the default icon pack ID to preserve it
-            const defaultIconPack = await IconPack.findOne({
-                where: { 
-                    iconProvider: 'com.astroluma.self' 
-                },
-                transaction
-            });
-
             // Wipe all data except the default icon pack
             await Promise.all([
                 User.destroy({ where: {}, transaction }),
@@ -583,13 +576,13 @@ exports.importMigration = async (req, res) => {
                 GlobalSetting.destroy({ where: {}, transaction }),
                 Icon.destroy({ where: {}, transaction }),
                 // Only delete non-default icon packs
-                IconPack.destroy({ 
-                    where: { 
-                        iconProvider: { 
-                            [Op.ne]: 'com.astroluma.self' 
-                        } 
-                    }, 
-                    transaction 
+                IconPack.destroy({
+                    where: {
+                        iconProvider: {
+                            [Op.ne]: 'com.astroluma.self'
+                        }
+                    },
+                    transaction
                 }),
                 Listing.destroy({ where: {}, transaction }),
                 NetworkDevice.destroy({ where: {}, transaction }),
@@ -603,53 +596,89 @@ exports.importMigration = async (req, res) => {
             if (migrationData.Users && migrationData.Users.length > 0) {
                 await User.bulkCreate(migrationData.Users, { transaction });
             }
-            
+
             console.log('Importing Apps...');
             if (migrationData.Apps && migrationData.Apps.length > 0) {
                 await App.bulkCreate(migrationData.Apps, { transaction });
             }
-            
+
             console.log('Importing GlobalSettings...');
             if (migrationData.GlobalSettings && migrationData.GlobalSettings.length > 0) {
                 await GlobalSetting.bulkCreate(migrationData.GlobalSettings, { transaction });
             }
-            
+
             console.log('Importing IconPacks...');
             if (migrationData.IconPacks && migrationData.IconPacks.length > 0) {
-                // Filter out any icon pack with the same iconProvider as the default one
-                const iconPacksToImport = migrationData.IconPacks.filter(
-                    iconPack => iconPack.iconProvider !== 'com.astroluma.self'
-                );
-                await IconPack.bulkCreate(iconPacksToImport, { transaction });
+                // Get all existing icon packs
+                const existingIconPacks = await IconPack.findAll({
+                    attributes: ['id', 'iconProvider'],
+                    transaction
+                });
+
+                // Create a map of iconProvider -> id for quick lookup
+                const existingIconProviderMap = {};
+                existingIconPacks.forEach(pack => {
+                    existingIconProviderMap[pack.iconProvider] = pack.id;
+                });
+
+                // Process each icon pack and handle conflicts
+                for (const iconPack of migrationData.IconPacks) {
+                    try {
+                        // Skip any icon packs with the same provider as default one
+                        if (iconPack.iconProvider === 'com.astroluma.self') {
+                            console.log(`Skipping default icon pack: ${iconPack.iconProvider}`);
+                            continue;
+                        }
+
+                        // Check if an icon pack with the same provider already exists
+                        if (existingIconProviderMap[iconPack.iconProvider]) {
+                            console.log(`Icon pack with provider ${iconPack.iconProvider} already exists, skipping`);
+                            continue;
+                        }
+
+                        // Create each icon pack individually without specifying ID
+                        // This lets the database assign a new ID automatically
+                        const newIconPack = Object.assign({}, iconPack);
+                        delete newIconPack.id; // Remove ID to let it auto-increment
+
+                        newIconPack.credit = JSON.parse(iconPack.credit);
+
+                        await IconPack.create(newIconPack, { transaction });
+                        console.log(`Created icon pack: ${iconPack.iconProvider}`);
+                    } catch (err) {
+                        console.error(`Error importing icon pack ${iconPack.iconProvider}:`, err);
+                        // Continue with other icon packs even if one fails
+                    }
+                }
             }
-            
+
             console.log('Importing Icons...');
             if (migrationData.Icons && migrationData.Icons.length > 0) {
                 await Icon.bulkCreate(migrationData.Icons, { transaction });
             }
-            
+
             console.log('Importing Listings...');
             if (migrationData.Listings && migrationData.Listings.length > 0) {
                 // Initialize SECRET_KEY for decryption
                 const SECRET_KEY = migrationData?.Secret;
-                
+
                 //First thing first, the integration field is a string, we need an object
                 migrationData.Listings.forEach(listing => {
                     if (listing.integration) {
                         try {
                             const parsedValue = JSON.parse(listing.integration);
                             listing.integration = parsedValue;
-                            
+
                             // Decrypt integration.config if it exists
                             if (parsedValue.config) {
-                              try {
-                                const bytes = CryptoJS.AES.decrypt(parsedValue.config, SECRET_KEY);
-                                const decryptedValue = bytes.toString(CryptoJS.enc.Utf8);
-                                parsedValue.config = JSON.parse(decryptedValue);
-                              } catch (error) {
-                                console.error('Error decrypting config:', error);
-                                //parsedValue.config = null;
-                              }
+                                try {
+                                    const bytes = CryptoJS.AES.decrypt(parsedValue.config, SECRET_KEY);
+                                    const decryptedValue = bytes.toString(CryptoJS.enc.Utf8);
+                                    parsedValue.config = JSON.parse(decryptedValue);
+                                } catch (error) {
+                                    console.error('Error decrypting config:', error);
+                                    //parsedValue.config = null;
+                                }
                             }
                         } catch (e) {
                             console.error("Error parsing integration field:", e);
@@ -660,33 +689,65 @@ exports.importMigration = async (req, res) => {
                 // First import listings without parent references
                 const listingsWithoutParent = migrationData.Listings.filter(listing => !listing.parentId);
                 await Listing.bulkCreate(listingsWithoutParent, { transaction });
-                console.log(listingsWithoutParent);
+                //console.log(listingsWithoutParent);
 
                 // Then import listings with parent references
                 const listingsWithParent = migrationData.Listings.filter(listing => listing.parentId);
                 await Listing.bulkCreate(listingsWithParent, { transaction });
             }
-            
+
             console.log('Importing NetworkDevices...');
             if (migrationData.NetworkDevices && migrationData.NetworkDevices.length > 0) {
                 await NetworkDevice.bulkCreate(migrationData.NetworkDevices, { transaction });
             }
-            
+
             console.log('Importing Pages...');
             if (migrationData.Pages && migrationData.Pages.length > 0) {
                 await Page.bulkCreate(migrationData.Pages, { transaction });
             }
-            
+
             console.log('Importing Authenticators...');
             if (migrationData.Authenticators && migrationData.Authenticators.length > 0) {
                 await Authenticator.bulkCreate(migrationData.Authenticators, { transaction });
+            } else {
+                console.log('No Authenticators to import.');
             }
-            
+
             console.log('Importing Snippets...');
             if (migrationData.Snippets && migrationData.Snippets.length > 0) {
-                await Snippet.bulkCreate(migrationData.Snippets, { transaction });
+                // Filter out snippets with null userId or assign a default userId
+                const validSnippets = migrationData.Snippets.filter(snippet => {
+                    // If userId is null, try to find the first user ID to assign
+                    if (!snippet.userId) {
+                        console.log(`Found snippet without userId: ${snippet.snippetTitle}`);
+
+                        // If we have users, assign the first user's ID
+                        if (migrationData.Users && migrationData.Users.length > 0) {
+                            snippet.userId = migrationData.Users[0].id;
+                            console.log(`Assigned userId ${snippet.userId} to snippet: ${snippet.snippetTitle}`);
+                            return true;
+                        } else {
+                            console.log(`Skipping snippet without userId: ${snippet.snippetTitle}`);
+                            return false; // Skip this snippet if no users are available
+                        }
+
+                    }
+                    return true; // Keep snippets that already have a userId
+                });
+
+                if (validSnippets.length > 0) {
+                    try {
+                        await Snippet.bulkCreate(validSnippets, { transaction });
+                        console.log(`Imported ${validSnippets.length} snippets successfully`);
+                    } catch (snippetErr) {
+                        console.error("Error importing snippets:", snippetErr);
+                        console.log("Continuing with import process...");
+                    }
+                } else {
+                    console.log('No valid snippets to import after filtering.');
+                }
             }
-            
+
             console.log('Importing Todos...');
             if (migrationData.Todos && migrationData.Todos.length > 0) {
                 await Todo.bulkCreate(migrationData.Todos, { transaction });
@@ -694,18 +755,18 @@ exports.importMigration = async (req, res) => {
 
             // Commit transaction if all operations succeed
             await transaction.commit();
-            
+
             console.log('Migration data import completed successfully!');
             return res.status(200).json({
                 error: false,
                 message: "Migration data imported successfully."
             });
-            
+
         } catch (importError) {
             console.error("Error during data import:", importError);
             // Rollback transaction if any operation fails
             await transaction.rollback();
-            
+
             console.error("Error during data import:", importError);
             return res.status(500).json({
                 error: true,

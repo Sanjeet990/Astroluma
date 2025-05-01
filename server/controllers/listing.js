@@ -109,7 +109,7 @@ exports.listingDetails = async (req, res) => {
             order: [['appName', 'ASC']]
         });
 
-        const appsDir = path.join(__dirname, '../../storage/apps'); // Path to the apps directory
+        const appsDir = path.join(__dirname, '../apps'); // Path to the apps directory
 
         const apps = [];
 
@@ -440,7 +440,7 @@ exports.saveLink = async (req, res) => {
 
     if (integration) {
         //try to load integration manifest
-        const appsDir = path.join(__dirname, '../../storage/apps');
+        const appsDir = path.join(__dirname, '../apps');
         const manifestPath = path.join(appsDir, integration.package, 'manifest.json');
 
         if (fs.existsSync(manifestPath)) {

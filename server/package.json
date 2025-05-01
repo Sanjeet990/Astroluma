@@ -22,6 +22,7 @@
   "dependencies": {
     "adm-zip": "^0.5.16",
     "axios": "^1.7.4",
+    "chokidar": "^4.0.3",
     "cors": "^2.8.5",
     "crypto-js": "^4.2.0",
     "dotenv": "^16.4.7",

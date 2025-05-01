@@ -4,7 +4,7 @@ const { execSync } = require('child_process');
 
 // Define directories
 const appsDir = path.resolve(__dirname, 'apps');
-const storageAppsDir = path.resolve(__dirname, '../storage/apps');
+const storageAppsDir = path.resolve(__dirname, 'apps');
 
 // Function to create directory if it doesn't exist
 const ensureDirectoryExists = (dirPath) => {
@@ -43,7 +43,7 @@ const installDependencies = (moduleDir) => {
 // Main process
 const main = async () => {
   try {
-    // Ensure storage/apps directory exists
+    // Ensure server/apps directory exists
     ensureDirectoryExists(storageAppsDir);
 
     // Read the source apps directory
@@ -59,7 +59,7 @@ const main = async () => {
       if (fs.existsSync(sourcePackageJsonPath)) {
         console.log(`Found package.json at ${sourcePackageJsonPath}`);
         
-        // Copy the directory to storage/apps
+        // Copy the directory to server/apps
         copyDirectory(sourceModuleDir, destinationModuleDir);
         
         // Install dependencies in the copied directory

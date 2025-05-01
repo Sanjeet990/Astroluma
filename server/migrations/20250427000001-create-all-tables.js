@@ -161,6 +161,16 @@ module.exports = {
         allowNull: true,
         defaultValue: true
       },
+      appType: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        defaultValue: 'user'
+      },
+      isUpdated: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+      },
       createdAt: {
         type: Sequelize.DATE,
         allowNull: false
