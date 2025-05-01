@@ -615,6 +615,8 @@ exports.importMigration = async (req, res) => {
                     transaction
                 });
 
+                console.log(existingIconPacks);
+
                 // Create a map of iconProvider -> id for quick lookup
                 const existingIconProviderMap = {};
                 existingIconPacks.forEach(pack => {
@@ -641,8 +643,6 @@ exports.importMigration = async (req, res) => {
                         const newIconPack = Object.assign({}, iconPack);
                         delete newIconPack.id; // Remove ID to let it auto-increment
 
-                        newIconPack.credit = JSON.parse(iconPack.credit);
-
                         await IconPack.create(newIconPack, { transaction });
                         console.log(`Created icon pack: ${iconPack.iconProvider}`);
                     } catch (err) {
@@ -666,7 +666,7 @@ exports.importMigration = async (req, res) => {
                 migrationData.Listings.forEach(listing => {
                     if (listing.integration) {
                         try {
-                            const parsedValue = JSON.parse(listing.integration);
+                            const parsedValue = listing.integration;
                             listing.integration = parsedValue;
 
                             // Decrypt integration.config if it exists
