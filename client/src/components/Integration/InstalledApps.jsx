@@ -15,7 +15,7 @@ import makeToast from '../../utils/ToastUtils';
 import RemoveInstalledIntegration from '../Modals/RemoveInstalledIntegration';
 import { useNavigate } from 'react-router-dom';
 import emitter, { RELOAD_INSTALLED_APPS } from '../../events';
-import AdditionalIntegrationConfigurationModal from '../Modals/AdditionalIntegrationConfigurationModal';
+import LiveAppConfigurationModal from '../Modals/AdditionalIntegrationConfigurationModal';
 import NiceButton from '../NiceViews/NiceButton';
 
 const InstalledApps = () => {
@@ -66,7 +66,7 @@ const InstalledApps = () => {
 
         ApiService.postWithFormData('/api/v1/app/fromzip', formData, loginData?.token, navigate)
             .then(() => {
-                makeToast("success", "Integration from zip is installed.");
+                makeToast("success", "Live App from zip is installed.");
                 reloadData();
             })
             .catch((error) => {
@@ -156,16 +156,16 @@ const InstalledApps = () => {
     return (
         <>
             <Helmet>
-                <title>Installed Integrations</title>
+                <title>Installed Live Apps</title>
             </Helmet>
 
             <Breadcrumb
                 type="custom"
-                pageTitle="Installed Integrations"
+                pageTitle="Live Apps"
                 breadcrumbList={[{ "id": "1", "linkName": "Settings", "linkUrl": "/manage" }]}
             />
 
-            <AdditionalIntegrationConfigurationModal />
+            <LiveAppConfigurationModal />
             <RemoveInstalledIntegration onSuccess={reloadData} />
 
             <div className="flex flex-col justify-between">
@@ -173,12 +173,12 @@ const InstalledApps = () => {
                 <div className={`flex flex-wrap justify-end space-x-2 mt-4 md:mt-0 mb-4 ${!isSuperAdmin ? "hidden" : ""}`}>
                     <NiceLink
                         to="/manage/apps/install"
-                        label="Install Integrations"
+                        label="Live Apps Store"
                         className="bg-buttonGeneric text-buttonText"
                     />
                     <NiceButton
                         onClick={uploadZip}
-                        label="Upload Zip"
+                        label="Add from ZIP"
                         className="bg-buttonGeneric text-buttonText"
                     />
                     <input
@@ -193,7 +193,7 @@ const InstalledApps = () => {
 
             {
                 !isSuperAdmin && <NiceTip title="Information">
-                    Only Admin can install, update and remove integrations. You can only view and use the installed integrations.
+                    Only Admin can install, update and remove Live Apps. You can only view and use the installed Live Apps.
                 </NiceTip>
             }
             <div className="mt-8">

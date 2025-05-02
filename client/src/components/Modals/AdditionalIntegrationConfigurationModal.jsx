@@ -9,7 +9,7 @@ import NiceCheckbox from '../NiceViews/NiceCheckbox';
 import NiceModal from '../NiceViews/NiceModal';
 import makeToast from '../../utils/ToastUtils';
 
-const AdditionalIntegrationConfigurationModal = () => {
+const LiveAppConfigurationModal = () => {
   const [modalState, setModalState] = useRecoilState(integrationConfigureModalState);
   const loginData = useRecoilValue(loginState);
   const setLoading = useSetRecoilState(loadingState);
@@ -57,7 +57,7 @@ const AdditionalIntegrationConfigurationModal = () => {
     const newErrors = {};
 
     if (!formData.integrationName) {
-      newErrors.integrationName = 'Integration Name is required';
+      newErrors.integrationName = 'Live App Name is required';
     }
 
     modalState.data?.config.forEach(field => {
@@ -93,11 +93,11 @@ const AdditionalIntegrationConfigurationModal = () => {
 
     ApiService.post("/api/v1/app/install", requestData, loginData?.token)
       .then(() => {
-        makeToast("success", "Integration activated.");
+        makeToast("success", "Live App activated.");
         closeModal(true);
       })
       .catch(() => {
-        makeToast("error", "Integration cannot be activated.");
+        makeToast("error", "Live App cannot be activated.");
       })
       .finally(() => {
         setLoading(false);
@@ -106,12 +106,12 @@ const AdditionalIntegrationConfigurationModal = () => {
 
   return (
     <NiceModal
-      title={`Add Integration: ${modalState.data?.appName}`}
+      title={`Add Live App: ${modalState.data?.appName}`}
       show={modalState.isOpen}
       body={
         <>
           <NiceInput
-            label='Integration Name'
+            label='Live App Name'
             name='integrationName'
             className='border bg-inputBg border-inputBorder text-inputText placeholder-inputPlaceholder'
             value={formData.integrationName}
@@ -204,5 +204,4 @@ const AdditionalIntegrationConfigurationModal = () => {
 
 }
 
-const MemoizedComponent = React.memo(AdditionalIntegrationConfigurationModal);
-export default MemoizedComponent;
+export default LiveAppConfigurationModal;

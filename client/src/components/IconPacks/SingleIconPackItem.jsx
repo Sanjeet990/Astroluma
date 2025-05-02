@@ -144,23 +144,37 @@ const SingleIconPackItem = ({ iconPack, deleteListener }) => {
                       </div>
                     }
                     {
-                      icons.map((icon, index) => (
-                        <div
-                          key={`${icon.iconUrl}-${index}`}
-                          className="w-16 h-20 p-2 flex flex-col justify-center items-center duration-300"
-                        >
-                          <div
-                            className='w-16 h-16 flex justify-center items-center p-2'>
-                            <ImageView
-                              src={decideTheIcon(icon)}
-                              alt={icon.iconName}
-                              className="w-full h-full object-contain rounded-lg"
-                              defaultSrc="/default.png"
-                              errorSrc="/default.png"
+                      icons.length > 0 ? <>
+                        {
+                          icons.map((icon, index) => (
+                            <div
+                              key={`${icon.iconUrl}-${index}`}
+                              className="w-16 h-20 p-2 flex flex-col justify-center items-center duration-300"
+                            >
+                              <div
+                                className='w-16 h-16 flex justify-center items-center p-2'>
+                                <ImageView
+                                  src={decideTheIcon(icon)}
+                                  alt={icon.iconName}
+                                  className="w-full h-full object-contain rounded-lg"
+                                  defaultSrc="/default.png"
+                                  errorSrc="/default.png"
+                                />
+                              </div>
+                            </div>
+                          ))
+                        }
+                      </>
+                        :
+                        <div className="col-span-2 md:col-span-4 flex flex-col justify-center items-center h-full min-h-[12rem] text-center text-sm text-gray-500">
+                          <div className="mb-2">No icons available</div>
+                          {
+                            iconPack.iconProvider === "com.astroluma.self" && <NiceButton
+                              label="Click to upload icons"
+                              className="bg-primary text-buttonText mt-2"
                             />
-                          </div>
+                          }
                         </div>
-                      ))
                     }
                   </div>
               }

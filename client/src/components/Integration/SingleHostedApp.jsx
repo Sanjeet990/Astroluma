@@ -31,11 +31,11 @@ const SingleHostedApp = ({
 
         ApiService.get(`/api/v1/app/${app.appId}/install`, loginData?.token, navigate)
             .then(() => {
-                makeToast("success", "Integration installed.");
+                makeToast("success", "Live App installed.");
                 navigate("/manage/apps");
             })
             .catch((error) => {
-                if (!error.handled) makeToast("error", error?.response?.data?.message || "Integration cannot be installed.");
+                if (!error.handled) makeToast("error", error?.response?.data?.message || "Live App cannot be installed.");
             })
             .finally(() => {
                 setLoading(false);
@@ -47,11 +47,11 @@ const SingleHostedApp = ({
 
         ApiService.get(`/api/v1/app/${app.appId}/update`, loginData?.token, navigate)
             .then(() => {
-                makeToast("success", "Integration updated.");
+                makeToast("success", "Live App updated.");
                 navigate("/manage/apps");
             })
             .catch((error) => {
-                if (!error.handled) makeToast("error", error?.response?.data?.message || "Integration cannot be updated.");
+                if (!error.handled) makeToast("error", error?.response?.data?.message || "Live App cannot be updated.");
             })
             .finally(() => {
                 setLoading(false);

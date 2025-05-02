@@ -383,10 +383,10 @@ const EditLink = () => {
                         </div>
 
                         <div className="mt-6">
-                            <NicePreferenceHeader title="Application Integration (Optional)" />
+                            <NicePreferenceHeader title="Live App Integration (Optional)" />
                             <div className="w-full sm:w-1/2">
                                 <label className="block mb-2" htmlFor="integrationApp">
-                                    Select Application
+                                    Select Live App
                                 </label>
                                 <select
                                     className="appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline bg-inputBg border-inputBorder text-inputText"

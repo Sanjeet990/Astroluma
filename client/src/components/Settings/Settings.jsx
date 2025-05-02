@@ -117,8 +117,8 @@ const Settings = () => {
         },
         {
             id: 11,
-            title: 'App Integration',
-            description: 'Setup integrations with number of other supported apps',
+            title: 'Live Apps',
+            description: 'Setup Live Apps with number of other supported apps',
             icon: <BsAppIndicator />,
             show: true,
             route: '/manage/apps'

@@ -276,7 +276,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     <ul className="mb-3 flex flex-col gap-1.5">
                       <SidebarLinkItem
                         icon={<BsAppIndicator />}
-                        text="App Integrations"
+                        text="Live Apps"
                         active={activeRoute === '/manage/apps'}
                         to="/manage/apps" />
 

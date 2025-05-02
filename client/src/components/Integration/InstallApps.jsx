@@ -109,15 +109,15 @@ const InstallApps = () => {
     return (
         <>
             <Helmet>
-                <title>Browse Integrations</title>
+                <title>Browse Live Apps</title>
             </Helmet>
 
             <Breadcrumb
                 type="custom"
-                pageTitle={"Browse Integrations"}
+                pageTitle={"Browse Live Apps"}
                 breadcrumbList={[
                     { "id": "1", "linkName": "Settings", "linkUrl": "/manage" },
-                    { "id": "2", "linkName": "Installed Integrations", "linkUrl": "/manage/apps" }
+                    { "id": "2", "linkName": "Live Apps", "linkUrl": "/manage/apps" }
                 ]}
             />
 
