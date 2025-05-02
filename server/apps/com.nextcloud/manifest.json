@@ -2,6 +2,7 @@
     "appName": "Nextcloud",
     "appId": "com.nextcloud",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "description": "Nextcloud is an open source, self-hosted file share and communication platform. Access and sync your files, contacts, calendars and communicate and collaborate across your devices.",
     "website": "https://nextcloud.com",
     "alwaysShowDetailedView": true,

@@ -4,13 +4,9 @@ const express = require("express");
 const cors = require("cors");
 const path = require('path');
 const fs = require('fs');
-const chokidar = require('chokidar');
 const { handleUpgrade } = require('./websocket.js');
 // Sequelize import
 const { sequelize } = require('./models');
-
-// App discovery and installation
-const { discoverAndRegisterApps, installDependencies } = require('./utils/appDiscovery');
 
 //INIT APP
 const app = express();
@@ -31,74 +27,17 @@ sequelize.authenticate()
         console.log('Connected to SQLite via Sequelize');
         isSequelizeConnected = true;
         
-        // Once database is connected, initialize app discovery
-        initializeAppDiscovery();
+        // Ensure storage/apps directory exists
+        const storageAppsDir = path.join(__dirname, '../storage/apps');
+        if (!fs.existsSync(storageAppsDir)) {
+            console.log(`Creating storage/apps directory: ${storageAppsDir}`);
+            fs.mkdirSync(storageAppsDir, { recursive: true });
+        }
     })
     .catch(err => {
         console.error('SQLite connection error:', err);
         isSequelizeConnected = false;
     });
-
-// Function to set up app discovery and watching
-function initializeAppDiscovery() {
-    // Ensure storage/apps directory exists
-    const storageAppsDir = path.join(__dirname, '../storage/apps');
-    if (!fs.existsSync(storageAppsDir)) {
-        console.log(`Creating storage/apps directory: ${storageAppsDir}`);
-        fs.mkdirSync(storageAppsDir, { recursive: true });
-    }
-    
-    // Initial app discovery - passing true to indicate this is the server startup scan
-    // This will sync the database with available apps in both directories
-    discoverAndRegisterApps(null, true)
-        .then(() => {
-            console.log('Initial app discovery and database synchronization complete');
-        })
-        .catch(error => {
-            console.error('Error during initial app discovery:', error);
-        });
-    
-    // Setup file watcher for storage/apps only (as per requirements)
-    const watcher = chokidar.watch(storageAppsDir, {
-        persistent: true,
-        ignoreInitial: true,
-        depth: 2,
-        ignored: [
-            /(^|[\/\\])\../, // ignore dotfiles
-            '**/node_modules/**', // ignore all node_modules directories
-            '**/.git/**',     // ignore git directories
-            '**/package-lock.json', // ignore package lock files
-            '**/npm-debug.log',  // ignore npm debug logs
-            '**/npm-install.log' // ignore our custom install logs
-        ]
-    });
-    
-    // Handle new app directories and removed app directories
-    watcher
-        .on('addDir', dirPath => {
-            // Only process direct subdirectories of storage/apps
-            if (path.dirname(dirPath) === storageAppsDir) {
-                console.log(`New app directory detected: ${dirPath}`);
-                discoverAndRegisterApps([dirPath])
-                    .catch(error => console.error(`Error processing new app directory ${dirPath}:`, error));
-            }
-        })
-        .on('unlinkDir', dirPath => {
-            // Only process direct subdirectories of storage/apps
-            if (path.dirname(dirPath) === storageAppsDir) {
-                const appName = path.basename(dirPath);
-                console.log(`App directory removed: ${appName}`);
-                
-                // Call the utility function to handle app removal
-                // The updated version will check if app exists in server/apps before removing
-                const { removeAppFromDatabase } = require('./utils/appDiscovery');
-                removeAppFromDatabase(appName)
-                    .then(() => console.log(`App ${appName} removal process completed`))
-                    .catch(error => console.error(`Error removing app ${appName}: ${error.message}`));
-            }
-        })
-        .on('error', error => console.error(`Watcher error: ${error}`));
-}
 
 server.on('upgrade', handleUpgrade);
 

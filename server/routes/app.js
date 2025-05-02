@@ -4,7 +4,7 @@ const fs = require('fs');
 const router = express.Router();
 
 const { verifyToken } = require('../middlewares/auth');
-const { runIntegratedApp, connectTest, installedApps, installFromZip, removeInstalledApp, installRemoteApp, allInstalledApps, serveLogo, updateRemoteApp } = require('../controllers/app');
+const { runIntegratedApp, connectTest, installedApps, installFromZip, removeInstalledApp, installRemoteApp, allInstalledApps, serveLogo, updateRemoteApp, reinstallNpmDependencies } = require('../controllers/app');
 
 // Ensure the upload directory exists
 const uploadDir = './public/uploads/integrations';
@@ -45,5 +45,6 @@ router.get('/app/:appId/logo', serveLogo);
 router.get('/app/:appId/delete', verifyToken, removeInstalledApp);
 router.get('/app/:appId/install', verifyToken, installRemoteApp);
 router.get('/app/:appId/update', verifyToken, updateRemoteApp);
+router.get('/app/:appId/reinstall-dependencies', verifyToken, reinstallNpmDependencies);
 
 module.exports = router;

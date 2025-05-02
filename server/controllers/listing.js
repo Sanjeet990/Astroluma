@@ -5,6 +5,7 @@ const { Op } = require('sequelize');
 const { isValidStream } = require("../utils/apiutils");
 const fs = require('fs');
 const path = require('path');
+const { getAllInstalledApps } = require("../utils/appUtils");
 
 exports.saveFolder = async (req, res) => {
     const userId = req.user.id;
@@ -104,10 +105,7 @@ exports.listingDetails = async (req, res) => {
         });
 
         //select apps from the db
-        const appList = await App.findAll({
-            where: { npmInstalled: 1 },
-            order: [['appName', 'ASC']]
-        });
+        const appList = await getAllInstalledApps(userId);
 
         const appsDir = path.join(__dirname, '../apps'); // Path to the apps directory
 

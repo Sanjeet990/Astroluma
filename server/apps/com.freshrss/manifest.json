@@ -2,6 +2,7 @@
     "appName": "FreshRSS",
     "appId": "com.freshrss",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "website": "https://freshrss.org/",
     "description": "FreshRSS is a self-hosted RSS feed aggregator. It is lightweight, easy to work with, powerful and customizable.",
     "autoRefreshAfterSeconds": 120,

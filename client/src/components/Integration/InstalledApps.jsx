@@ -16,9 +16,11 @@ import RemoveInstalledIntegration from '../Modals/RemoveInstalledIntegration';
 import { useNavigate } from 'react-router-dom';
 import emitter, { RELOAD_INSTALLED_APPS } from '../../events';
 import AdditionalIntegrationConfigurationModal from '../Modals/AdditionalIntegrationConfigurationModal';
+import NiceButton from '../NiceViews/NiceButton';
 
 const InstalledApps = () => {
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
     const setLoading = useSetRecoilState(loadingState);
 
     const setConfigModalState = useSetRecoilState(integrationConfigureModalState);
@@ -36,6 +38,43 @@ const InstalledApps = () => {
 
     useDynamicFilter(false);
     useCurrentRoute("/manage/apps");
+
+    const uploadZip = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileSelect = async (event) => {
+        const file = event.target.files[0];
+        event.target.value = '';
+
+        if (!file) return;
+
+        if (file.type !== 'application/zip' && !file.name.toLowerCase().endsWith('.zip')) {
+            makeToast("error", "Please select a valid ZIP file.");
+            return;
+        }
+
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+            makeToast("error", "File size too large. Maximum size is 10MB.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        setLoading(true);
+
+        ApiService.postWithFormData('/api/v1/app/fromzip', formData, loginData?.token, navigate)
+            .then(() => {
+                makeToast("success", "Integration from zip is installed.");
+                reloadData();
+            })
+            .catch((error) => {
+                if (!error.handled) makeToast("error", error?.response?.data?.message || "Failed to upload file.");
+            }).finally(() => {
+                setLoading(false);
+            });
+    };
 
     const fetchApps = useCallback(async (page) => {
         try {
@@ -137,6 +176,18 @@ const InstalledApps = () => {
                         label="Install Integrations"
                         className="bg-buttonGeneric text-buttonText"
                     />
+                    <NiceButton
+                        onClick={uploadZip}
+                        label="Upload Zip"
+                        className="bg-buttonGeneric text-buttonText"
+                    />
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept=".zip"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                    />
                 </div>
             </div>
 
@@ -156,6 +207,7 @@ const InstalledApps = () => {
                                             app={app}
                                             configurationHandler={handleConfigureClick}
                                             handleAppRemove={handleAppRemove}
+                                            refreshApps={reloadData}
                                         />
                                     </div>
                                 );
@@ -166,6 +218,7 @@ const InstalledApps = () => {
                                     app={app}
                                     configurationHandler={handleConfigureClick}
                                     handleAppRemove={handleAppRemove}
+                                    refreshApps={reloadData}
                                 />
                             );
                         })}

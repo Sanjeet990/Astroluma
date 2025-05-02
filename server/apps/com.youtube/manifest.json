@@ -2,6 +2,7 @@
     "appName": "Youtube",
     "appId": "com.youtube",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "description": "",
     "autoRefreshAfterSeconds": 0,
     "alwaysShowDetailedView": true,

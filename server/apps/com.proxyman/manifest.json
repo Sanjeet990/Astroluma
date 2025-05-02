@@ -2,6 +2,7 @@
     "appName": "Nginx Proxy Manager",
     "appId": "com.proxyman",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "description": "Displays statistics from the Nginx Proxy Manager",
     "autoRefreshAfterSeconds": 300,
     "alwaysShowDetailedView": true,

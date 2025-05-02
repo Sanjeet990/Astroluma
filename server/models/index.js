@@ -32,7 +32,8 @@ fs
       file.indexOf('.') !== 0 &&
       file !== basename &&
       file.slice(-3) === '.js' &&
-      file !== 'index.js'
+      file !== 'index.js' && 
+      file !== 'App.js'  // Exclude App.js from being loaded
     );
   })
   .forEach(file => {

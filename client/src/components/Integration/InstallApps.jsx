@@ -10,19 +10,16 @@ import useDynamicFilter from '../../hooks/useDynamicFilter';
 import NoListing from '../Misc/NoListing';
 import Breadcrumb from '../Breadcrumb/Breadcrumb';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
-import NiceButton from '../NiceViews/NiceButton';
 import makeToast from '../../utils/ToastUtils';
 import { useNavigate } from 'react-router-dom';
 import semver from 'semver';
 
 const InstallApps = () => {
     const navigate = useNavigate();
-    const fileInputRef = useRef(null);
     const observerRef = useRef(null);
     const setLoading = useSetRecoilState(loadingState);
     const [appList, setAppList] = useState([]);
     const [installedApps, setInstalledApps] = useState(new Map());
-    //const [currentPage, setCurrentPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const loginData = useRecoilValue(loginState);
@@ -76,7 +73,6 @@ const InstallApps = () => {
                             a.appName.toLowerCase().localeCompare(b.appName.toLowerCase())
                         );
                     });
-                    //setCurrentPage(page);
                 }
             })
             .catch((error) => {
@@ -106,46 +102,6 @@ const InstallApps = () => {
         if (node) observerRef.current.observe(node);
     }, [isLoadingMore, hasMore]);
 
-    const uploadZip = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleFileSelect = async (event) => {
-        const file = event.target.files[0];
-        event.target.value = '';
-
-        if (!file) return;
-
-        if (file.type !== 'application/zip' && !file.name.toLowerCase().endsWith('.zip')) {
-            makeToast("error", "Please select a valid ZIP file.");
-            return;
-        }
-
-        const maxSize = 10 * 1024 * 1024;
-        if (file.size > maxSize) {
-            makeToast("error", "File size too large. Maximum size is 10MB.");
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('file', file);
-        setLoading(true);
-
-        ApiService.postWithFormData('/api/v1/app/fromzip', formData, loginData?.token, navigate)
-            .then(() => {
-                makeToast("success", "Integration from zip is installed.");
-                fetchInstalledApps();
-                navigate("/manage/apps");
-            })
-            .catch((error) => {
-                if (!error.handled) makeToast("error", error?.response?.data?.message || "Failed to upload file.");
-            }).finally(() => {
-                setLoading(false);
-            });
-    };
-
-    
-
     if(!userData?.isSuperAdmin){
         return null;
     }
@@ -168,18 +124,7 @@ const InstallApps = () => {
             <div className="flex flex-col justify-between">
                 <div className="text-left w-full md:w-auto" />
                 <div className="flex flex-wrap justify-end space-x-2 mt-4 md:mt-0">
-                    <NiceButton
-                        onClick={uploadZip}
-                        label="Upload Zip"
-                        className="bg-buttonGeneric text-buttonText"
-                    />
-                    <input
-                        type="file"
-                        ref={fileInputRef}
-                        accept=".zip"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                    />
+                    {/* Upload Zip button removed from here */}
                 </div>
             </div>
 

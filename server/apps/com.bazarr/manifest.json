@@ -2,6 +2,7 @@
     "appName": "Bazarr",
     "appId": "com.bazarr",
     "appIcon": "logo.png",
+    "version": "0.2.2",
     "website": "https://github.com/morpheus65535/bazarr",
     "description": "Bazarr is a companion application to Sonarr and Radarr. It manage and download subtitles based on your requirements. You defined your preferences by TV show or movies and Bazarr take care of everything for you.",
     "autoRefreshAfterSeconds": 300,

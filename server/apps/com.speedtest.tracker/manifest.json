@@ -2,6 +2,7 @@
     "appName": "Speedtest Tracker",
     "appId": "com.speedtest.tracker",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "website": "https://github.com/henrywhitaker3/Speedtest-Tracker",
     "description": "This program runs a speedtest check every hour and graphs the results. The back-end is written in Laravel and the front-end uses React. It uses the Ookla's speedtest cli package to get the data and uses Chart.js to plot the results.",
     "autoRefreshAfterSeconds": 0,

@@ -1,4 +1,5 @@
-const { Authenticator, User, GlobalSetting, Listing, IconPack, App, Icon, NetworkDevice, Page, Snippet, Todo, sequelize } = require('../models');
+const { Authenticator, User, GlobalSetting, Listing, IconPack, Icon, NetworkDevice, Page, Snippet, Todo, sequelize } = require('../models');
+// App model reference has been removed
 const axios = require('axios');
 const { isHostMode } = require('../utils/apiutils');
 const { Op } = require('sequelize');
@@ -614,7 +615,6 @@ exports.importMigration = async (req, res) => {
             // Wipe all data except the default icon pack
             await Promise.all([
                 User.destroy({ where: {}, transaction }),
-                App.destroy({ where: {}, transaction }),
                 Authenticator.destroy({ where: {}, transaction }),
                 GlobalSetting.destroy({ where: {}, transaction }),
                 Icon.destroy({ where: {}, transaction }),
@@ -638,11 +638,6 @@ exports.importMigration = async (req, res) => {
             console.log('Importing Users...');
             if (migrationData.Users && migrationData.Users.length > 0) {
                 await User.bulkCreate(migrationData.Users, { transaction });
-            }
-
-            console.log('Importing Apps...');
-            if (migrationData.Apps && migrationData.Apps.length > 0) {
-                await App.bulkCreate(migrationData.Apps, { transaction });
             }
 
             console.log('Importing GlobalSettings...');

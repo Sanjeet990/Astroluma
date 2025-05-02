@@ -2,6 +2,7 @@
     "appName": "Portainer",
     "appId": "com.portainer",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "description": "Displays statistics from Portainer.",
     "alwaysShowDetailedView": true,
     "autoRefreshAfterSeconds": 60,

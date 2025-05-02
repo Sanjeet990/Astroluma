@@ -2,6 +2,7 @@
     "appName": "TrueNas Scale",
     "appId": "com.truenas.scale",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "description": "",
     "autoRefreshAfterSeconds": 300,
     "alwaysShowDetailedView": true,

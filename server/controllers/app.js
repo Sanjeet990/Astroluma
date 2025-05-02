@@ -5,10 +5,16 @@ const axios = require('axios');
 const AdmZip = require('adm-zip');
 const rimraf = require('rimraf');
 const vm = require('vm');
-const { Op } = require('sequelize');
-const { App, Listing, User } = require('../models');
+const { Listing } = require('../models');
 const allowedModules = require('../utils/allowedModules');
-const { getAppDirectory, registerApp } = require('../utils/appDiscovery');
+const { 
+    getAppDirectory, 
+    getAllInstalledApps, 
+    getAppDetails,
+    removeApp,
+    installDependencies,
+    paginateApps
+} = require('../utils/appUtils');
 
 // Helper functions - no changes needed to these utility functions
 const validateUser = (user) => {
@@ -68,14 +74,19 @@ const handleAppInstallation = async (zipPath, extractPath) => {
         // Rename the folder to match the appId
         fs.renameSync(extractPath, properDestPath);
 
-        // Simply extract the app to the storage/apps directory
-        // The file watcher will detect the new directory and trigger the registration process
-        // No need to manually create DB entries or install dependencies
+        // Optionally install dependencies right away
+        try {
+            await installDependencies(properDestPath);
+            console.log(`Dependencies installed for ${manifest.appId}`);
+        } catch (err) {
+            console.error(`Error installing dependencies for ${manifest.appId}:`, err);
+            // Continue despite dependency installation errors
+        }
 
         // Return success response
         return {
             error: false,
-            message: "The integration is being added. Installation will complete shortly."
+            message: "The integration has been installed successfully."
         };
 
     } catch (error) {
@@ -199,8 +210,8 @@ exports.updateRemoteApp = async (req, res) => {
         }
 
         // Check if app exists
-        const existingApp = await App.findOne({ where: { appId } });
-        if (!existingApp) {
+        const appDetails = getAppDetails(appId);
+        if (!appDetails) {
             throw new Error("App not found.");
         }
 
@@ -251,12 +262,21 @@ exports.updateRemoteApp = async (req, res) => {
         // Rename the folder to match the appId
         fs.renameSync(tempExtractPath, properDestPath);
 
+        // Optionally install dependencies right away
+        try {
+            await installDependencies(properDestPath);
+            console.log(`Dependencies installed for ${manifest.appId}`);
+        } catch (err) {
+            console.error(`Error installing dependencies for ${manifest.appId}:`, err);
+            // Continue despite dependency installation errors
+        }
+
         // Cleanup the zip file since we don't need it anymore
         cleanupFiles([zipPath]);
 
         return res.status(200).json({
             error: false,
-            message: "The integration is being updated. Update will complete shortly."
+            message: "The integration has been updated successfully."
         });
 
     } catch (error) {
@@ -276,53 +296,46 @@ exports.updateRemoteApp = async (req, res) => {
 exports.removeInstalledApp = async (req, res) => {
     try {
         validateUser(req.user);
-
         const appId = req.params.appId;
 
-        // Check if app exists in database
-        const app = await App.findOne({
-            where: { appId }
-        });
-
-        if (!app) {
+        // Get app details from filesystem
+        const appDetails = getAppDetails(appId);
+        
+        if (!appDetails) {
             throw new Error("App not found.");
         }
 
-        // Check if this is a system app with updates
-        const isSystemAppWithUpdates = app.appType === 'system' && app.isUpdated === 1;
-        
-        // If this is a system app without updates, prevent removal
-        if (app.appType === 'system' && !isSystemAppWithUpdates) {
+        // Check if this is a system app without updates
+        if (appDetails.appType === 'system' && !appDetails.isUpdated) {
             throw new Error("System apps cannot be removed. They are part of the core system.");
         }
 
-        // Update listings that use this app
-        await Listing.update(
-            { integration: null },
-            {
-                where: {
-                    integration: {
-                        [Op.ne]: null
+        // For system apps with updates, we only want to remove the update, not the app itself
+        if (appDetails.appType === 'system' && appDetails.isUpdated) {
+            // Only remove the version in storage/apps, not in server/apps
+            const storageAppPath = path.join(__dirname, `../../storage/apps/${appId}`);
+            
+            // Update any listings that use this app to reference the original app
+            const listings = await Listing.findAll();
+            let updatedListings = 0;
+            
+            for (const listing of listings) {
+                if (listing.integration && typeof listing.integration === 'string') {
+                    try {
+                        const integrationData = JSON.parse(listing.integration);
+                        if (integrationData && integrationData.appId === appId) {
+                            // No need to update the integration as it will still work with the system app
+                            updatedListings++;
+                        }
+                    } catch (e) {
+                        console.warn(`Invalid integration data for listing ${listing.id}`);
                     }
                 }
             }
-        );
-
-        // For system apps with updates, we only want to remove the update, not the app itself
-        if (isSystemAppWithUpdates) {
-            // Just reset the app in the database to show it's no longer updated
-            await App.update(
-                { 
-                    isUpdated: 0 
-                },
-                {
-                    where: { appId }
-                }
-            );
             
-            // Only remove the version in storage/apps, not in server/apps
-            const storageAppPath = path.join(__dirname, `../../storage/apps/${appId}`);
-            cleanupFiles([storageAppPath]);
+            if (fs.existsSync(storageAppPath)) {
+                fs.rmSync(storageAppPath, { recursive: true });
+            }
             
             return res.status(200).json({
                 error: false,
@@ -330,17 +343,9 @@ exports.removeInstalledApp = async (req, res) => {
             });
         }
         
-        // For user apps, proceed with normal removal
-        // Delete the app from database
-        await App.destroy({
-            where: { appId }
-        });
-
-        // Only remove from storage/apps for user apps
-        // Never remove from server/apps
-        const storageAppPath = path.join(__dirname, `../../storage/apps/${appId}`);
-        cleanupFiles([storageAppPath]);
-
+        // For user apps, proceed with normal removal via the removeApp utility
+        const result = await removeApp(appId);
+        
         return res.status(200).json({
             error: false,
             message: "App removed successfully."
@@ -357,7 +362,7 @@ exports.removeInstalledApp = async (req, res) => {
 exports.serveLogo = (req, res) => {
     try {
         const appId = req.params.appId;
-        
+
         // Get the effective app directory (prioritizing storage/apps)
         const appDirectory = getAppDirectory(appId);
         if (!appDirectory) {
@@ -374,7 +379,7 @@ exports.serveLogo = (req, res) => {
         const appIcon = manifest.appIcon || "integration.png";
 
         // Check if icon exists
-        const iconPath = path.join(appDirectory, 'icons', appIcon);
+        const iconPath = path.join(appDirectory, 'public', appIcon);
         if (fs.existsSync(iconPath)) {
             return res.sendFile(iconPath);
         }
@@ -394,13 +399,8 @@ exports.serveLogo = (req, res) => {
 
 exports.allInstalledApps = async (req, res) => {
     try {
-        // Get apps from database
-        const apps = await App.findAll({
-            where: {
-                npmInstalled: 1
-            },
-            order: [['appName', 'ASC']]
-        });
+        // Get apps directly from filesystem
+        const apps = await getAllInstalledApps();
 
         return res.status(200).json({
             error: false,
@@ -419,23 +419,16 @@ exports.installedApps = async (req, res) => {
     try {
         const page = parseInt(req.query.page, 10) || 1;
         const limit = 20;
-        const offset = (page - 1) * limit;
+        
+        // Get all apps directly from filesystem
+        const apps = await getAllInstalledApps();
 
-        // Get apps from database with pagination
-        const { count, rows } = await App.findAndCountAll({
-            order: [['appName', 'ASC']],
-            limit,
-            offset
-        });
+        // Paginate the apps array
+        const paginatedResult = paginateApps(apps, page, limit);
 
         return res.status(200).json({
             error: false,
-            message: {
-                appList: rows,
-                total: count,
-                page,
-                pages: Math.ceil(count / limit)
-            }
+            message: paginatedResult
         });
 
     } catch (error) {
@@ -466,11 +459,10 @@ exports.connectTest = async (req, res) => {
     }
 
     try {
-        const app = await App.findOne({
-            where: { appId }
-        });
-
-        if (!app) {
+        // Check if app exists
+        const appDetails = getAppDetails(appId);
+        
+        if (!appDetails) {
             return res.status(400).json({
                 error: true,
                 message: "Application not found."
@@ -762,7 +754,58 @@ exports.runIntegratedApp = async (req, res) => {
             return res.status(400).send();
         }
     } catch (err) {
-        console.log(err);
+        //console.log(err);
         return res.status(400).send();
+    }
+};
+
+exports.reinstallNpmDependencies = async (req, res) => {
+    try {
+        console.log("Reinstalling npm dependencies for appId:", req.params.appId);
+        validateUser(req.user);
+        const appId = req.params.appId;
+
+        if (!appId) {
+            throw new Error("No application id provided.");
+        }
+
+        // Get app details from filesystem
+        const appDetails = getAppDetails(appId);
+        
+        if (!appDetails) {
+            throw new Error("App not found.");
+        }
+
+        // Get the effective app directory
+        const appDirectory = getAppDirectory(appId);
+        if (!appDirectory) {
+            throw new Error("Application directory not found.");
+        }
+
+        console.log("App directory:", appDirectory);
+
+        // Remove existing node_modules folder if it exists
+        const nodeModulesPath = path.join(appDirectory, 'node_modules');
+        if (fs.existsSync(nodeModulesPath)) {
+            fs.rmSync(nodeModulesPath, { recursive: true, force: true });
+            console.log(`Removed existing node_modules for ${appId}`);
+        }
+
+        // Reinstall dependencies
+        const result = await installDependencies(appDirectory);
+        console.log(`Dependencies reinstalled for ${appId}: ${result}`);
+
+        return res.status(200).json({
+            error: false,
+            message: "Dependencies reinstalled successfully",
+            result
+        });
+
+    } catch (error) {
+        console.error(`Error reinstalling dependencies:`, error);
+        return res.status(400).json({
+            error: true,
+            message: error.message || "Error in reinstalling dependencies."
+        });
     }
 };

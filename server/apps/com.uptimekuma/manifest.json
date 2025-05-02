@@ -2,6 +2,7 @@
     "appName": "Uptime Kuma",
     "appId": "com.uptimekuma",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "website": "https://uptime.kuma.pet",
     "description": "It is a self-hosted monitoring tool similar to \"Uptime Robot\".",
     "autoRefreshAfterSeconds": 30,

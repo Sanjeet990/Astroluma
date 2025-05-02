@@ -2,6 +2,7 @@
     "appName": "HTML Code",
     "appId": "com.html",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "description": "",
     "alwaysShowDetailedView": false,
     "autoRefreshAfterSeconds": 0,

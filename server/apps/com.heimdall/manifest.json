@@ -2,6 +2,7 @@
     "appName": "Heimdall",
     "appId": "com.heimdall",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "description": "Displays statistics from Heimdall.",
     "alwaysShowDetailedView": true,
     "autoRefreshAfterSeconds": 60,

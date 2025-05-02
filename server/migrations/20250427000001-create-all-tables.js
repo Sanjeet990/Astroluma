@@ -119,68 +119,6 @@ module.exports = {
       }
     });
 
-    // Create Apps table
-    await queryInterface.createTable('Apps', {
-      id: {
-        type: Sequelize.INTEGER,
-        primaryKey: true,
-        autoIncrement: true
-      },
-      appName: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      appId: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      version: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      description: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      appIcon: {
-        type: Sequelize.STRING,
-        allowNull: false
-      },
-      npmInstalled: {
-        type: Sequelize.INTEGER,
-        allowNull: true,
-        defaultValue: 0
-      },
-      coreSettings: {
-        type: Sequelize.BOOLEAN,
-        allowNull: true,
-        defaultValue: false
-      },
-      configured: {
-        type: Sequelize.BOOLEAN,
-        allowNull: true,
-        defaultValue: true
-      },
-      appType: {
-        type: Sequelize.STRING,
-        allowNull: false,
-        defaultValue: 'user'
-      },
-      isUpdated: {
-        type: Sequelize.INTEGER,
-        allowNull: false,
-        defaultValue: 0
-      },
-      createdAt: {
-        type: Sequelize.DATE,
-        allowNull: false
-      },
-      updatedAt: {
-        type: Sequelize.DATE,
-        allowNull: false
-      }
-    });
-
     // Create Authenticators table
     await queryInterface.createTable('Authenticators', {
       id: {
@@ -667,7 +605,6 @@ module.exports = {
     await queryInterface.dropTable('Icons');
     await queryInterface.dropTable('GlobalSettings');
     await queryInterface.dropTable('Authenticators');
-    await queryInterface.dropTable('Apps');
     await queryInterface.dropTable('Users');
   }
 };

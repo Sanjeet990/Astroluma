@@ -2,6 +2,7 @@
     "appName": "Immich",
     "appId": "com.immich",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "website": "https://immich.app/",
     "description": "High performance self-hosted photo and video backup solution directly from your mobile phone",
     "autoRefreshAfterSeconds": 60,

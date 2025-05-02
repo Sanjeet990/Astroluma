@@ -2,6 +2,7 @@
     "appName": "ProxMox",
     "appId": "com.proxmox",
     "appIcon": "logo.png",
+    "version": "1.0.0",
     "description": "",
     "autoRefreshAfterSeconds": 60,
     "alwaysShowDetailedView": true,
