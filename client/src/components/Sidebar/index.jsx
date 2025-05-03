@@ -187,6 +187,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   </ul>
                   :
                   <>
+                    {/* Navigation */}
                     <ul className="mb-3 flex flex-col gap-1.5">
                       <SidebarLinkItem
                         icon={<FaHome />}
@@ -203,13 +204,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                       <SidebarLinkItem
                         icon={<IoSettingsSharp />}
                         active={activeRoute === '/manage/general'}
-                        text="General"
+                        text="General Settings"
                         to="/manage/general" />
-
                     </ul>
 
-                    <SidebarItemHeader title="Content" />
-
+                    {/* Content Management */}
+                    <SidebarItemHeader title="Content Management" />
                     <ul className="mb-3 flex flex-col gap-1.5">
                       <SidebarLinkItem
                         icon={<MdListAlt />}
@@ -222,13 +222,23 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         text="Pages"
                         active={activeRoute === '/manage/page'}
                         to="/manage/page" />
-
+                        
                       <SidebarLinkItem
                         icon={<FaCloudSunRain />}
                         text="Weather"
                         active={activeRoute === '/manage/weather'}
                         to="/manage/weather" />
 
+                      <SidebarLinkItem
+                        icon={<BsAppIndicator />}
+                        text="Live Apps"
+                        active={activeRoute === '/manage/apps'}
+                        to="/manage/apps" />
+                    </ul>
+
+                    {/* System Features */}
+                    <SidebarItemHeader title="System Features" />
+                    <ul className="mb-3 flex flex-col gap-1.5">
                       {userData?.camerafeed &&
                         <SidebarLinkItem
                           icon={<MdSmartDisplay />}
@@ -252,11 +262,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                           active={activeRoute === '/manage/totp'}
                           to="/manage/totp" />
                       }
-
                     </ul>
 
-                    <SidebarItemHeader title="Customization" />
-
+                    {/* Appearance & Customization */}
+                    <SidebarItemHeader title="Appearance" />
                     <ul className="mb-3 flex flex-col gap-1.5">
                       <SidebarLinkItem
                         icon={<FaTshirt />}
@@ -271,21 +280,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         to="/manage/iconpack" />
                     </ul>
 
-                    <SidebarItemHeader title="Utility" />
-
+                    {/* User Management */}
+                    <SidebarItemHeader title="User Management" />
                     <ul className="mb-3 flex flex-col gap-1.5">
-                      <SidebarLinkItem
-                        icon={<BsAppIndicator />}
-                        text="Live Apps"
-                        active={activeRoute === '/manage/apps'}
-                        to="/manage/apps" />
-
-                    </ul>
-
-                    <SidebarItemHeader title="Account" />
-
-                    <ul className="mb-3 flex flex-col gap-1.5">
-
                       {userData?.isSuperAdmin &&
                         <>
                           <SidebarLinkItem
@@ -307,13 +304,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         text="My Profile"
                         active={activeRoute === '/manage/profile'}
                         to="/manage/profile" />
-
                     </ul>
 
-                    <SidebarItemHeader title="Account" />
-
+                    {/* Help & Support */}
+                    <SidebarItemHeader title="Help & Support" />
                     <ul className="mb-3 flex flex-col gap-1.5">
-
                       <SidebarLinkItem
                         icon={<MdContactSupport />}
                         text="Get Support"

@@ -291,25 +291,101 @@ exports.deleteUser = async (req, res) => {
     const userId = req.params.userId;
 
     try {
-        const deletedRows = await User.destroy({
+        // First get the user to make sure they exist and aren't a super admin
+        const userToDelete = await User.findOne({
             where: {
                 id: userId,
                 isSuperAdmin: false
             }
         });
 
-        if (deletedRows === 0) {
+        if (!userToDelete) {
             return res.status(400).json({
                 error: true,
                 message: "User not found or is a super admin."
             });
         }
 
-        return res.status(200).json({
-            error: false,
-            message: "User deleted successfully."
-        });
+        // Get all models to delete user data
+        const { 
+            Authenticator, 
+            Listing, 
+            Page, 
+            Snippet, 
+            Todo, 
+            Icon, 
+            NetworkDevice 
+        } = require('../models');
+        
+        const fs = require('fs').promises;
+        const path = require('path');
+        const uploadsDir = path.join(__dirname, '../../storage/uploads');
+
+        // Use a transaction to ensure database consistency
+        const sequelize = User.sequelize;
+        const transaction = await sequelize.transaction();
+
+        try {
+            // 1. Delete user's icons and their physical files
+            const userIcons = await Icon.findAll({
+                where: { userId },
+                transaction
+            });
+            
+            // Prepare to delete physical files
+            for (const icon of userIcons) {
+                if (icon.iconPath) {
+                    const iconFilePath = path.join(uploadsDir, icon.iconPath);
+                    try {
+                        await fs.access(iconFilePath); // Check if file exists
+                        await fs.unlink(iconFilePath); // Delete the file
+                    } catch (err) {
+                        // File might not exist, just log and continue
+                        console.warn(`Could not delete icon file: ${iconFilePath}`, err.message);
+                    }
+                }
+            }
+            
+            // Delete icon records
+            await Icon.destroy({ 
+                where: { userId },
+                transaction
+            });
+            
+            // 2. Delete all other user data
+            await Promise.all([
+                Authenticator.destroy({ where: { userId }, transaction }),
+                Listing.destroy({ where: { userId }, transaction }),
+                NetworkDevice.destroy({ where: { userId }, transaction }),
+                Page.destroy({ where: { userId }, transaction }),
+                Snippet.destroy({ where: { userId }, transaction }),
+                Todo.destroy({ where: { userId }, transaction })
+            ]);
+            
+            // 3. Finally, delete the user
+            await User.destroy({
+                where: {
+                    id: userId,
+                    isSuperAdmin: false
+                },
+                transaction
+            });
+            
+            // Commit the transaction if everything succeeded
+            await transaction.commit();
+
+            return res.status(200).json({
+                error: false,
+                message: "User and all associated data deleted successfully."
+            });
+        } catch (error) {
+            // Roll back the transaction if anything failed
+            await transaction.rollback();
+            console.error("Transaction error:", error);
+            throw error;
+        }
     } catch (error) {
+        console.error("Error in deleteUser:", error);
         return res.status(400).json({
             error: true,
             message: "Error in deleting user."
