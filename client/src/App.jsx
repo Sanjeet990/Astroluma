@@ -43,6 +43,7 @@ import EditSnippetList from './components/Snippet/EditSnippetList';
 import ThemeList from './components/Theme/ThemeList';
 import WeatherSettings from './components/Settings/WeatherSettings';
 import GeneralSettings from './components/Settings/GeneralSettings';
+import ImportMigration from './components/Settings/ImportMigration';
 import IconPacks from './components/IconPacks/index';
 import AddIconPack from './components/IconPacks/AddIconPack';
 
@@ -175,6 +176,7 @@ const App = () => {
                             <Route key={Math.random()} path="/manage/totp" element={<AuthenticatorListing />} />
                             <Route key={Math.random()} path="/manage/totp/save" element={<EditAuthenticator />} />
                             <Route key={Math.random()} path="/manage/totp/save/:authId" element={<EditAuthenticator />} />
+                            <Route key={Math.random()} path="/manage/import" element={<ImportMigration />} />
                             <Route path="*" element={<NotFoundRedirect />} />
                           </Route>
                         </Routes>

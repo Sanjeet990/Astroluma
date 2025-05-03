@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import { FaPlus } from 'react-icons/fa';
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import { contentLoadingState, loginState, newDeleteCodeModalState, newSnippetCodeModalState } from "../../atoms";
@@ -21,8 +21,11 @@ const SingleSnippetItem = ({ snippet }) => {
     const setModalState = useSetRecoilState(newSnippetCodeModalState);
     const setDeleteModalState = useSetRecoilState(newDeleteCodeModalState);
     const [fileList, setFileList] = useState([]);
+    const reloadCodeSnippetsRef = useRef(null);
 
     const reloadCodeSnippets = useCallback(() => {
+        console.log("Reloading code snippets...");
+
         setLoading(true);
         ApiService.get(`/api/v1/snippet/list/${snippet?.id}`, loginData?.token, navigate)
             .then(data => {
@@ -35,11 +38,25 @@ const SingleSnippetItem = ({ snippet }) => {
             });
     }, [snippet, loginData, setLoading, navigate]);
 
+    // Store the current callback in a ref so we can access it in the cleanup function
     useEffect(() => {
-        emitter.on(RELOAD_CODE_SNIPPET, reloadCodeSnippets);
-
-        return emitter.off(RELOAD_CODE_SNIPPET, reloadCodeSnippets);
+        reloadCodeSnippetsRef.current = reloadCodeSnippets;
     }, [reloadCodeSnippets]);
+
+    useEffect(() => {
+        // Use the current function from ref to ensure consistent reference
+        const handleReload = () => {
+            if (reloadCodeSnippetsRef.current) {
+                reloadCodeSnippetsRef.current();
+            }
+        };
+
+        emitter.on(RELOAD_CODE_SNIPPET, handleReload);
+
+        return () => {
+            emitter.off(RELOAD_CODE_SNIPPET, handleReload);
+        };
+    }, []);
 
     useEffect(() => {
         reloadCodeSnippets();
@@ -81,7 +98,7 @@ const SingleSnippetItem = ({ snippet }) => {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
                                 transition={{ duration: 0.3, delay: index * 0.1 }}
-                                key={file.id}
+                                key={`${file.id}-${index}`}
                             >
                                 <SingleCodeItem key={index} snippet={file} editCodeFile={() => editCodeFile(file)} deleteCodeFile={() => deleteCodeFile(file)} />
                             </motion.div>

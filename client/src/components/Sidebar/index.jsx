@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BsAppIndicator } from "react-icons/bs";
-import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdDashboardCustomize, MdContactSupport } from "react-icons/md";
+import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdDashboardCustomize, MdContactSupport, MdBackup } from "react-icons/md";
 import { FaGlobeAsia, FaRegListAlt, FaHome, FaCloudSunRain, FaTshirt, FaIcons, FaUserCircle, FaCoffee } from "react-icons/fa";
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import SidebarButtonItem from './SidebarButtonItem';
@@ -262,6 +262,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                           active={activeRoute === '/manage/totp'}
                           to="/manage/totp" />
                       }
+
+                      <SidebarLinkItem
+                        icon={<MdBackup />}
+                        text="Import Migration"
+                        active={activeRoute === '/manage/import'}
+                        to="/manage/import" />
                     </ul>
 
                     {/* Appearance & Customization */}

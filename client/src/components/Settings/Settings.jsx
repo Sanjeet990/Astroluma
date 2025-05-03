@@ -6,7 +6,7 @@ import { Helmet } from 'react-helmet';
 import useDynamicFilter from '../../hooks/useDynamicFilter';
 import useCurrentRoute from '../../hooks/useCurrentRoute';
 import SingleSettingsItem from './SingleSettingsItem';
-import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdContactSupport } from "react-icons/md";
+import { MdOutlineImportantDevices, MdSmartDisplay, MdFace, MdMenuBook, MdListAlt, MdContactSupport, MdBackup } from "react-icons/md";
 import { FaCloudSunRain, FaTshirt, FaHome, FaIcons, FaUserCircle, FaCoffee } from "react-icons/fa";
 import { IoSettingsSharp, IoQrCode } from "react-icons/io5";
 import { BsAppIndicator } from "react-icons/bs";
@@ -138,6 +138,14 @@ const Settings = () => {
             icon: <FaUserCircle />,
             show: true,
             route: '/manage/profile'
+        },
+        {
+            id: 16,
+            title: 'Import Migration',
+            description: 'Import data from a backup file',
+            icon: <MdBackup />,
+            show: true,
+            route: '/manage/import'
         },
         {
             id: 14,
