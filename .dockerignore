@@ -1,0 +1,27 @@
+# Ignore node_modules directories anywhere in the project
+node_modules
+**/node_modules
+
+# Ignore all .env files anywhere in the project
+.env
+**/.env
+
+# Ignore logs
+*.log
+**/*.log
+
+# Ignore local development files
+.git
+.vscode
+.idea
+
+# Ignore storage folder
+storage/
+
+# Ignore all package-lock.json files
+package-lock.json
+**/package-lock.json
+
+# Ignore any temporary files
+*.tmp
+.DS_Store

@@ -14,19 +14,6 @@ const ensureDirectoryExists = (dirPath) => {
   }
 };
 
-// Function to copy directory
-const copyDirectory = (source, destination) => {
-  try {
-    console.log(`Copying ${source} to ${destination}`);
-    fs.cpSync(source, destination, { recursive: true });
-    console.log('Directory copied successfully.');
-  } catch (error) {
-    console.error(`Failed to copy directory from ${source} to ${destination}`);
-    console.error(error);
-    throw error;
-  }
-};
-
 // Function to install npm dependencies
 const installDependencies = (moduleDir) => {
   try {
@@ -60,7 +47,7 @@ const main = async () => {
         console.log(`Found package.json at ${sourcePackageJsonPath}`);
         
         // Copy the directory to server/apps
-        copyDirectory(sourceModuleDir, destinationModuleDir);
+        //copyDirectory(sourceModuleDir, destinationModuleDir);
         
         // Install dependencies in the copied directory
         installDependencies(destinationModuleDir);
