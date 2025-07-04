@@ -30,6 +30,7 @@ const EditLink = () => {
     const setReloadData = useSetRecoilState(reloadDashboardDataState);
 
     const [linkName, setLinkName] = useState("");
+    const [linkDescription, setLinkDescription] = useState("");
     const [linkURL, setLinkURL] = useState("");
     const [localUrl, setLocalUrl] = useState("");
     const [showInSidebar, setShowInSidebar] = useState(false);
@@ -59,6 +60,7 @@ const EditLink = () => {
                 setIntegrationList(data?.message?.integrations);
                 if (data?.message?.listing) {
                     setLinkName(data?.message?.listing?.listingName || "");
+                    setLinkDescription(data?.message?.listing?.listingDescription || "");
                     setLinkURL(data?.message?.listing?.listingUrl || "");
                     setLocalUrl(data?.message?.listing?.localUrl || "");
                     setShowInSidebar(data?.message?.listing?.inSidebar);
@@ -99,6 +101,7 @@ const EditLink = () => {
                         }
                     });
                     setLinkName("");
+                    setLinkDescription("");
                     setLinkURL("");
                     setLocalUrl("");
                     setShowInSidebar(false);
@@ -146,6 +149,7 @@ const EditLink = () => {
             listingId,
             parentId,
             linkName,
+            linkDescription,
             linkIcon: selectedImage?.image,
             linkURL: tempLink,
             localUrl,
@@ -162,6 +166,7 @@ const EditLink = () => {
             .then(() => {
                 setSelectedImage(null);
                 setLinkName("");
+                setLinkDescription("");
                 setLinkURL("");
                 setLocalUrl("");
                 setShowInSidebar(false);
@@ -283,6 +288,16 @@ const EditLink = () => {
                                     placeholder="Select or upload icon"
                                 />
                             </div>
+                        </div>
+
+                        <div className="mt-4">
+                            <NiceInput
+                                label="Link Description (Optional)"
+                                className='border bg-inputBg border-inputBorder text-inputText placeholder-inputPlaceholder'
+                                value={linkDescription}
+                                onChange={(e) => setLinkDescription(e.target.value)}
+                                placeholder="Enter link description"
+                            />
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
