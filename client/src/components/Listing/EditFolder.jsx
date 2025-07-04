@@ -33,6 +33,7 @@ const EditFolder = () => {
     const setReloadData = useSetRecoilState(reloadDashboardDataState);
 
     const [folderName, setFolderName] = useState("");
+    const [folderDescription, setFolderDescription] = useState("");
     const [showInSidebar, setShowInSidebar] = useState(false);
     const [showOnFeatured, setShowOnFeatured] = useState(!parentId ? true : false);
 
@@ -53,6 +54,7 @@ const EditFolder = () => {
             .then(data => {
                 if (data?.message?.listing) {
                     setFolderName(data?.message?.listing?.listingName);
+                    setFolderDescription(data?.message?.listing?.listingDescription || "");
                     setShowInSidebar(data?.message?.listing?.inSidebar);
                     setShowOnFeatured(data?.message?.listing?.onFeatured);
 
@@ -72,6 +74,7 @@ const EditFolder = () => {
                         }
                     });
                     setFolderName("");
+                    setFolderDescription("");
                     setShowInSidebar(false);
                     setShowOnFeatured(false);
                     setFolderReloadStatus(true);
@@ -99,10 +102,11 @@ const EditFolder = () => {
         //Call the API to store the data
 
         setLoading(true);
-        ApiService.post('/api/v1/listing/save/folder', { listingId, parentId, folderName, folderIcon: selectedImage?.image, showInSidebar, showOnFeatured }, loginData?.token, navigate)
+        ApiService.post('/api/v1/listing/save/folder', { listingId, parentId, folderName, folderDescription, folderIcon: selectedImage?.image, showInSidebar, showOnFeatured }, loginData?.token, navigate)
             .then(() => {
                 setSelectedImage(null);
                 setFolderName("");
+                setFolderDescription("");
                 setShowInSidebar(false);
                 setShowOnFeatured(false);
                 setFolderReloadStatus(true);
@@ -135,6 +139,13 @@ const EditFolder = () => {
                             value={folderName}
                             onChange={(e) => setFolderName(e.target.value)}
                             placeholder="Enter folder name"
+                        />
+                        <NiceInput
+                            label="Folder Description (Optional)"
+                            className='border bg-inputBg border-inputBorder text-inputText placeholder-inputPlaceholder'
+                            value={folderDescription}
+                            onChange={(e) => setFolderDescription(e.target.value)}
+                            placeholder="Enter folder description"
                         />
                         <NiceUploader
                             label="Folder Icon"

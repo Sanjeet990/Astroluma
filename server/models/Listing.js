@@ -50,6 +50,11 @@ const listingSchema = new Schema(
       type: String,
       required: true,
     },
+    listingDescription: {
+      type: String,
+      required: false,
+      default: null,
+    },
     listingIcon: {
       type: Schema.Types.Mixed,
       required: false,

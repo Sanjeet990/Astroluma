@@ -10,7 +10,7 @@ const path = require('path');
 
 exports.saveFolder = async (req, res) => {
     const userId = req.user._id;
-    let { parentId, listingId, folderName, folderIcon, folderURL, showInSidebar, showOnFeatured } = req.body;
+    let { parentId, listingId, folderName, folderDescription, folderIcon, folderURL, showInSidebar, showOnFeatured } = req.body;
 
     if (listingId === 'undefined') listingId = null;
 
@@ -32,6 +32,7 @@ exports.saveFolder = async (req, res) => {
 
             if (parentFolder) {
                 parentFolder.listingName = folderName;
+                parentFolder.listingDescription = folderDescription;
                 parentFolder.listingIcon = folderIcon;
                 parentFolder.listingUrl = folderURL;
                 parentFolder.inSidebar = showInSidebar;
@@ -52,6 +53,7 @@ exports.saveFolder = async (req, res) => {
             // Add the new folder
             const newFolder = new Listing({
                 listingName: folderName,
+                listingDescription: folderDescription,
                 listingIcon: folderIcon,
                 listingUrl: folderURL,
                 listingType: "category",
@@ -378,7 +380,7 @@ exports.manageListItems = async (req, res) => {
 
 exports.saveLink = async (req, res) => {
     const userId = req.user._id;
-    const { parentId, listingId, linkName, linkIcon, linkURL, localUrl, showInSidebar, showOnFeatured } = req.body;
+    const { parentId, listingId, linkName, linkDescription, linkIcon, linkURL, localUrl, showInSidebar, showOnFeatured } = req.body;
     let integration = req.body.integration;
 
     if (!integration || integration === 'undefined' || integration === 'null') integration = null;
@@ -418,6 +420,7 @@ exports.saveLink = async (req, res) => {
                 { _id: listingId, userId },
                 {
                     listingName: linkName,
+                    listingDescription: linkDescription,
                     listingIcon: linkIcon,
                     listingUrl: linkURL,
                     localUrl,
@@ -442,6 +445,7 @@ exports.saveLink = async (req, res) => {
         } else {
             await Listing.create({
                 listingName: linkName,
+                listingDescription: linkDescription,
                 listingIcon: linkIcon,
                 listingUrl: linkURL,
                 localUrl,
